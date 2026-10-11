@@ -7,77 +7,192 @@
 
 
     <style>
-        header{
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            padding: 20px 40px;
-        }
+        * {
+    box-sizing: border-box;
+}
 
-        header button{
-            width: 50px;
-            height:50px;
-            border-radius: 50%;
-            background-color: #4B2348;
-            color: white;
-            border: none;
-            transition: background-color 0.2s ease;
-            
-        }
+body {
+    margin: 0;
+    font-family: system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+    background-color: #FAF8FA;
+    color: #2B1A29;
+}
 
-        #profile-btn:hover{
-            background-color: #75436F;
-        }
+header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    max-width: 760px;
+    margin: 0 auto;
+    padding: 32px 24px 8px;
+}
 
+header h1 {
+    margin: 0;
+    font-size: 2rem;
+    color: #4B2348;
+}
 
-        #add-ingredient-form input {
-            padding: 12px;
-            border: 1px solid #cccccc;
-            border-radius: 10px;
-        }
+header button {
+    width: 50px;
+    height: 50px;
+    border-radius: 50%;
+    background-color: #4B2348;
+    color: white;
+    border: none;
+    transition: background-color 0.2s ease;
+}
 
-        #add-ingredient-form button{
-            background-color: #4B2348;
-            color: aliceblue;
-            height: 40px;
-            border-radius: 10px;
-            border: none;
-            cursor: pointer;
-            transition: background-color 0.2s ease;
-        }
+#profile-btn:hover {
+    background-color: #75436F;
+}
 
-        #add-ingredient-form{
-            display: flex;
-            gap: 10px;
-            align-items: center;
-        }
+main {
+    max-width: 760px;
+    margin: 0 auto;
+    padding: 16px 24px 48px;
+}
 
-        #add-ingredient-form input{
-            flex: 1;
-        }
+/* Add ingredient form */
+#add-ingredient-form {
+    display: flex;
+    gap: 10px;
+    align-items: center;
+}
 
-        #add-ingredient-form button:hover{
-            background-color: #75436F;
-        }
+#add-ingredient-form input {
+    flex: 1;
+    min-width: 0;
+    height: 46px;
+    padding: 0 14px;
+    font: inherit;
+    border: 1px solid #CFC6CE;
+    border-radius: 10px;
+    background-color: white;
+}
 
-    
-        #pantry{
-            margin-top: 30px;
-            padding: 20px;
-            border-radius: 12px;
-            background-color: #F5F5F5;
-        }
+#add-ingredient-form input:focus,
+.ingredient-name:focus {
+    outline: 2px solid #75436F;
+    outline-offset: 1px;
+}
 
-        #ingredient-list{
-            list-style: none;
-            padding: 0;
-            margin: 0;
-        }
+#add-ingredient-form button {
+    height: 46px;
+    padding: 0 22px;
+    font: inherit;
+    font-weight: 600;
+    white-space: nowrap;
+    background-color: #4B2348;
+    color: white;
+    border: none;
+    border-radius: 10px;
+    cursor: pointer;
+    transition: background-color 0.2s ease;
+}
 
-        .ingredient-card{
-            background-color: lightblue;
-        }
+#add-ingredient-form button:hover {
+    background-color: #75436F;
+}
 
+/* Pantry list */
+#pantry {
+    margin-top: 28px;
+    padding: 24px;
+    border-radius: 14px;
+    background-color: #F1ECF0;
+}
+
+#pantry h2 {
+    margin: 0 0 16px;
+    font-size: 1.25rem;
+    color: #4B2348;
+}
+
+#ingredient-list {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+}
+
+.ingredient-card {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 12px;
+    padding: 12px 16px;
+    margin-bottom: 10px;
+    background-color: white;
+    border: 1px solid #E3DBE2;
+    border-radius: 10px;
+}
+
+.ingredient-card:last-child {
+    margin-bottom: 0;
+}
+
+.ingredient-name {
+    flex: 1 1 180px;
+    min-width: 0;
+    padding: 8px 10px;
+    font: inherit;
+    font-weight: 600;
+    color: #2B1A29;
+    background-color: white;
+    border: 1px solid #CFC6CE;
+    border-radius: 8px;
+}
+
+/* When not editing, the name looks like plain text */
+.ingredient-name:disabled {
+    border-color: transparent;
+    background-color: transparent;
+    color: #2B1A29;
+    -webkit-text-fill-color: #2B1A29;
+    opacity: 1;
+}
+
+.ingredient-qty {
+    width: 130px;
+    accent-color: #4B2348;
+}
+
+.ingredient-status {
+    width: 135px;
+    font-size: 0.9rem;
+    color: #6B5A69;
+}
+
+.ingredient-edit,
+.ingredient-delete {
+    padding: 8px 14px;
+    font: inherit;
+    font-size: 0.9rem;
+    background-color: white;
+    border-radius: 8px;
+    cursor: pointer;
+    transition: background-color 0.2s ease, color 0.2s ease;
+}
+
+.ingredient-edit {
+    border: 1px solid #4B2348;
+    color: #4B2348;
+}
+
+.ingredient-edit:hover {
+    background-color: #4B2348;
+    color: white;
+}
+
+.ingredient-delete {
+    border: 1px solid #B3261E;
+    color: #B3261E;
+}
+
+.ingredient-delete:hover {
+    background-color: #B3261E;
+    color: white;
+}
 
     </style>
 
@@ -153,7 +268,8 @@
         async function LoadIngredients(){
             const {data, error } = await obj_supabase
                 .from("ingredients")
-                .select("*");
+                .select("*")
+                .order("ingredient_id");
 
             // catches error if runs into problem trying to load ingredients table
             if (error)
