@@ -12,6 +12,7 @@ Database: **Supabase (PostgreSQL)**. The full schema lives in `supabase/schema.s
    npm install
    ```
 3. **Add your keys** – copy `.env.example` to `.env`, then paste in the Project URL and the
+
    **publishable** key from Supabase → Project Settings → API Keys. `.env` is git-ignored, so keys never get committed.
 4. **Test it**
    ```bash

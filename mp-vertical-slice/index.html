@@ -1,0 +1,459 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Meal-Planner</title>
+
+
+    <style>
+        header{
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 20px 40px;
+        }
+
+        header button{
+            width: 50px;
+            height:50px;
+            border-radius: 50%;
+            background-color: #4B2348;
+            color: white;
+            border: none;
+            transition: background-color 0.2s ease;
+            
+        }
+
+        #profile-btn:hover{
+            background-color: #75436F;
+        }
+
+
+        #add-ingredient-form input {
+            padding: 12px;
+            border: 1px solid #cccccc;
+            border-radius: 10px;
+        }
+
+        #add-ingredient-form button{
+            background-color: #4B2348;
+            color: aliceblue;
+            height: 40px;
+            border-radius: 10px;
+            border: none;
+            cursor: pointer;
+            transition: background-color 0.2s ease;
+        }
+
+        #add-ingredient-form{
+            display: flex;
+            gap: 10px;
+            align-items: center;
+        }
+
+        #add-ingredient-form input{
+            flex: 1;
+        }
+
+        #add-ingredient-form button:hover{
+            background-color: #75436F;
+        }
+
+    
+        #pantry{
+            margin-top: 30px;
+            padding: 20px;
+            border-radius: 12px;
+            background-color: #F5F5F5;
+        }
+
+        #ingredient-list{
+            list-style: none;
+            padding: 0;
+            margin: 0;
+        }
+
+        .ingredient-card{
+            background-color: lightblue;
+        }
+
+
+    </style>
+
+</head>
+
+<body>
+
+    <header>
+        <h1>Virtual Pantry</h1>
+    </header>
+
+    <main>
+        <form id="add-ingredient-form">
+            <input type="text" placeholder="Enter ingredient">
+            <button type="submit">Add+</button>
+        </form>
+
+        <section id="pantry">
+            <h2>My Ingredients</h2>
+
+            <ul id="ingredient-list"></ul>
+        </section>
+
+        <template id="ingredient-template">
+
+            <li class="ingredient-card">
+
+                <input 
+                type="text"
+                class="ingredient-name"
+                disabled
+                >
+
+                <input 
+                type="range"
+                class="ingredient-qty"
+                min="0"
+                max="2"
+                step="1"
+                value="0"
+                disabled
+                >
+
+                <span class="ingredient-status">Plenty left</span>
+
+                <button type="button" class="ingredient-edit">Edit</button>
+                <button type="button" class="ingredient-delete">Delete</button>
+            </li>
+        </template>
+    </main>
+
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+
+    <script>
+
+        // Connects to supabase api- database
+        const SUPABASE_URL = "https://qziufzfboybtykrarcls.supabase.co";
+        const SUPABASE_KEY = "sb_publishable_UTaXbWt2ff5MQyM1PtvwQg_Zl47Lf0q";
+
+        //creates callable super base obeject for refejcne and data callble action
+        const obj_supabase = supabase.createClient(
+            SUPABASE_URL,
+            SUPABASE_KEY
+        );
+
+        // notifies devloper that supabase object connectioned was established
+        console.log("Supabase client initialized:", obj_supabase);
+
+        // asycornus fucntion that allows the the fcuntion perfom at the same time other needed functions or code is needed to be extued,
+        // makes sure screen does not freese or that subproccess does not take priorty
+        //calls the supabase obj, and perfoms sql, requiesting all data from its ingredient table
+
+        async function LoadIngredients(){
+            const {data, error } = await obj_supabase
+                .from("ingredients")
+                .select("*");
+
+            // catches error if runs into problem trying to load ingredients table
+            if (error)
+            {
+                console.error("Error loading ingredients:", error);
+                return;
+            }
+
+            console.log("Ingredients from database:", data);
+
+            // loops over all the ingredient data returned from the sql query and funnles it throuh the add ingredient function
+            // which will display the html objects, and corsponding data needed to populate
+            data.forEach(function(ingredient) {
+                addIngredient(
+                    ingredient.ingredient_name,
+                    ingredient.pantry_amount_id,
+                    ingredient.ingredient_id
+                );
+            });
+        }
+
+        // function that saves the edit/modify data of the recordm that of the ingredient
+        async function SaveIngredient(sIngredientName) {
+
+            const {data, error } = await obj_supabase
+                .from("ingredients")
+                .insert({
+                    ingredient_name: sIngredientName,
+                    pantry_amount_id: 0
+                })
+
+                .select("ingredient_id")
+                .single();
+
+            if (error) {
+                console.error("Error saving ingredient:", error);
+                return null;
+            }
+
+            return data.ingredient_id;
+        }
+
+
+        // in scenario of user updating the ingreedient name, the supabase is updated
+        async function UpdateIngredientName(nIngredientID, sUpdateName) {
+
+            const { error } = await obj_supabase
+                .from("ingredients")
+                .update({
+                    ingredient_name: sUpdateName
+                })
+                .eq("ingredient_id", nIngredientID);
+
+            if (error) {
+                console.error("Error updating ingredient:", error);
+                return false;
+            }
+
+            return true;
+        }
+
+
+        // saves the values associates with the sldier, be query the supa base, fidning corespodning record, 
+        // and adjusting amount id aka value associaited with value
+        async function UpdateIngredientAmount(nIngredientID, nPantryAmount) {
+
+            const { error } = await obj_supabase
+                .from("ingredients")
+                .update({
+                    pantry_amount_id: nPantryAmount
+                })
+                .eq("ingredient_id", nIngredientID);
+
+            if (error) {
+                console.error("Error updating ingredient amount:", error);
+                return false;
+            }
+
+            return true;
+        }
+
+
+        // finds a specifc aregreind and deltes the ingredient from virutal pantry
+        async function DeleteIngredient(nIngredientID) {
+
+            const { data, error } = await obj_supabase
+                .from("ingredients")
+                .delete()
+                .eq("ingredient_id", nIngredientID)
+                .select("ingredient_id");
+
+            if (error) {
+                console.error("Error deleting ingredient:", error);
+                return false;
+            }
+
+            if (data.length === 0) {
+                console.error("No ingredient was deleted.");
+                return false;
+            }
+
+            return true;
+        }
+
+
+
+        //Fethces the html struture that houses the ingredients data, and will duplicate the html
+        //Fetches the template
+        const obj_template = document.getElementById("ingredient-template");
+
+        //Fetches the acutal list object that we will be appending populated templates to 
+        const obj_ingredient_list = document.getElementById("ingredient-list");
+
+        //gathers a refrence to the form object, than saves the an object refernce to the input object in form 
+        const obj_form = document.getElementById("add-ingredient-form");
+        const obj_input = obj_form.querySelector("input");
+
+
+
+
+        function addIngredient (sIngredientName, nPantryAmount, nIngredientID) {
+            // Valiadates wheter there is user input for ingredient add
+            sIngredientName = sIngredientName.trim();
+
+            if (sIngredientName === "") {
+                alert("Please enter an ingredient before adding it.");
+                obj_input.focus();
+                return;
+            }
+        
+            //saves a copie of the template to variable for us to populate with data
+            const obj_new_ingredient = obj_template.content.cloneNode(true);
+
+            //access the ingredient name form the template object that was created
+            const obj_name = obj_new_ingredient.querySelector(".ingredient-name");
+
+            //retrives the slider object, 
+            const obj_slider = obj_new_ingredient.querySelector(".ingredient-qty");
+
+           // Retrives the  current stauts of the slider,
+            const obj_status = obj_new_ingredient.querySelector(".ingredient-status");
+
+            // changes the valu of slider to current pantry amount remebers the current value of the slider qnty
+            obj_slider.value = nPantryAmount;
+
+            //retrives a current refercne to the edit button object 
+            const obj_edit = obj_new_ingredient.querySelector(".ingredient-edit");
+
+
+            // finds the object to deleite from the data base, and saves the it values, than locates the card that holds the ingrdeitns value
+            // then stroes that objects refrece in a varible for further manipulation
+            const obj_delete = obj_new_ingredient.querySelector(".ingredient-delete");
+            const obj_card = obj_new_ingredient.querySelector(".ingredient-card");
+
+
+            // segments listens for the edit button of the ingredient feature
+            obj_edit.addEventListener("click", async function() { 
+                // if the current element is disbled that means that user in not in the editing phase
+                // which changes the flow to the editing stage
+                if (obj_name.disabled)
+                {
+                   obj_name.disabled=false;
+                   obj_slider.disabled=false;
+                   
+                   obj_edit.textContent="Done";
+                
+                } else {
+
+                    //gathers current ingred name
+                    const sUpdateName = obj_name.value.trim();
+
+                    //defeisve code making sure it is not left empty
+                    if (sUpdateName === ""){
+
+                        alert("Please enter in an ingredient name");
+                        obj_name.focus();
+                        return;
+                    }
+
+                    //checks if ingredient is possible to update, or ingredient exist within the db to update
+                    const bUpdated = await UpdateIngredientName(nIngredientID, sUpdateName);
+
+                    // error messge displayd
+                    if (!bUpdated) {
+                        alert("Could not save ingredient name.");
+                        return;
+                    }
+
+
+                    // gets the slider value to input into the dabtabse
+                    const nUpdatedAmount = Number(obj_slider.value);
+
+                    // actually saved the  slider value to supabase. 
+                    const bAmountUpdated = await UpdateIngredientAmount(nIngredientID, nUpdatedAmount);
+
+                    // checks whether the amount was saved successfully, this verfication of the value, and proceess. 
+                    if (!bAmountUpdated) {
+                        alert("Could not save ingredient amount.");
+                        return;
+                    }
+
+                    //updates corespdnding object refrences, and locks the html elements for non interactive behaviors
+                    obj_name.value = sUpdateName;
+                    obj_name.disabled=true;
+                    obj_slider.disabled=true;
+
+                    obj_edit.textContent = "Edit";
+                }
+
+            });
+
+
+
+            // repsonds to the change of the input object everytime a chage is made(everytim somthing is inputed) 
+            // and displays which HTML object event us coming from.
+            obj_slider.addEventListener("input", function(event){
+   
+                if (event.target.value === "0") {
+                    obj_status.textContent = "Plenty Left";
+                }
+                else if (event.target.value === "1") {
+                    obj_status.textContent = "Running Out Soon";
+                }
+                else if (event.target.value === "2") {
+                    obj_status.textContent = "None";
+                }
+            });
+
+            // intiates a phantom type of load, to keep values refreshed on html page, such as sliders, and current ingred items. 
+            obj_slider.dispatchEvent(new Event("input"));
+
+
+            // listens to object delete button beling clicked
+            obj_delete.addEventListener("click", async function() {
+
+                // makes sure user wants to delete he object
+                const bConfirmed = confirm("Are you sure you want to delete this ingredient?");
+                if (!bConfirmed) {
+                    return;
+                }
+
+                // acutually deletes the record form the db
+                const bDeleted = await DeleteIngredient(nIngredientID);
+
+                // locates the coresponding card that would be used by the record in the html, and delets html recipe
+                // if not found notifes user
+                if (bDeleted) {
+                    obj_card.remove();
+                } else {
+                    alert("Could not delete ingredient.");
+                }
+
+            });
+
+            // assigns the value from the input box to the ingredient list
+            obj_name.value = sIngredientName;
+
+            obj_ingredient_list.appendChild(obj_new_ingredient);
+            obj_input.value = "";
+
+        }
+        
+        //========================================================================================================================================================================
+
+
+        // listens for sumit action from the add button for pantry, it listend for any raised events from the from, more specifcally any submit type
+        // then we check what caused that event object to arise, which html object caused etc, valuble data
+        obj_form.addEventListener("submit", async function (event) {
+
+            // stops browser form perfoming it normal defualt action when this event accours
+            event.preventDefault();
+
+            // saves the singredient name in trims and white space from the input
+            const sIngredientName = obj_input.value.trim();
+
+            //checks if ingredient name is populated
+            if (sIngredientName === "") {
+                alert("Please enter an ingredient before adding it.");
+                obj_input.focus();
+                return;
+            }   
+
+
+            // saves the ingredient to database and retruns its unique id for any other other process that may need at the time, such modification
+            // modifcation of ingredient, sucessfull if able to find an id in db, no id == new ingredient to add
+            const nIngredientID = await SaveIngredient(sIngredientName);
+
+            // if ingredient is null no entry was found meaning the ingredient is being added
+            if (nIngredientID !== null) {
+                addIngredient(sIngredientName, 0, nIngredientID);
+            }
+        });
+
+
+
+        // calls the load ingreidn
+        LoadIngredients();
+
+
+
+    </script>
+</body>
+</html>
