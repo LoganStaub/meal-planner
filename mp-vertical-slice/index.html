@@ -244,35 +244,26 @@ main {
         </template>
     </main>
 
-    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-
     <script>
 
-        // Connects to supabase api- database
-        const SUPABASE_URL = "https://qziufzfboybtykrarcls.supabase.co";
-        const SUPABASE_KEY = "sb_publishable_UTaXbWt2ff5MQyM1PtvwQg_Zl47Lf0q";
-
-        //creates callable super base obeject for refejcne and data callble action
-        const obj_supabase = supabase.createClient(
-            SUPABASE_URL,
-            SUPABASE_KEY
-        );
-
-        // notifies devloper that supabase object connectioned was established
-        console.log("Supabase client initialized:", obj_supabase);
+        // All data goes through our Express server (src/server.js), which talks to Postgres.
+        // The page must be opened from the server (npm start -> http://localhost:3000),
+        // not by double-clicking the file, so these relative /api URLs reach it.
+        const API_URL = "/api/ingredients";
 
         // asycornus fucntion that allows the the fcuntion perfom at the same time other needed functions or code is needed to be extued,
         // makes sure screen does not freese or that subproccess does not take priorty
-        //calls the supabase obj, and perfoms sql, requiesting all data from its ingredient table
+        //calls the server api, requiesting all data from its ingredient table
 
         async function LoadIngredients(){
-            const {data, error } = await obj_supabase
-                .from("ingredients")
-                .select("*")
-                .order("ingredient_id");
-
+            let data;
+            try {
+                const response = await fetch(API_URL);
+                if (!response.ok) throw new Error(await response.text());
+                data = await response.json();
+            }
             // catches error if runs into problem trying to load ingredients table
-            if (error)
+            catch (error)
             {
                 console.error("Error loading ingredients:", error);
                 return;
@@ -291,87 +282,69 @@ main {
             });
         }
 
+        // sends a request to the server and returns the response, or null if it failed
+        async function SendRequest(sUrl, sMethod, objBody) {
+            try {
+                const response = await fetch(sUrl, {
+                    method: sMethod,
+                    headers: { "Content-Type": "application/json" },
+                    body: objBody ? JSON.stringify(objBody) : undefined
+                });
+                if (!response.ok) throw new Error(await response.text());
+                return response;
+            } catch (error) {
+                console.error(`Error with ${sMethod} ${sUrl}:`, error);
+                return null;
+            }
+        }
+
         // function that saves the edit/modify data of the recordm that of the ingredient
         async function SaveIngredient(sIngredientName) {
 
-            const {data, error } = await obj_supabase
-                .from("ingredients")
-                .insert({
-                    ingredient_name: sIngredientName,
-                    pantry_amount_id: 0
-                })
+            const response = await SendRequest(API_URL, "POST", {
+                ingredient_name: sIngredientName,
+                pantry_amount_id: 0
+            });
 
-                .select("ingredient_id")
-                .single();
-
-            if (error) {
-                console.error("Error saving ingredient:", error);
+            if (!response) {
                 return null;
             }
 
+            const data = await response.json();
             return data.ingredient_id;
         }
 
 
-        // in scenario of user updating the ingreedient name, the supabase is updated
+        // in scenario of user updating the ingreedient name, the database is updated
         async function UpdateIngredientName(nIngredientID, sUpdateName) {
 
-            const { error } = await obj_supabase
-                .from("ingredients")
-                .update({
-                    ingredient_name: sUpdateName
-                })
-                .eq("ingredient_id", nIngredientID);
+            const response = await SendRequest(`${API_URL}/${nIngredientID}`, "PATCH", {
+                ingredient_name: sUpdateName
+            });
 
-            if (error) {
-                console.error("Error updating ingredient:", error);
-                return false;
-            }
-
-            return true;
+            return response !== null;
         }
 
 
-        // saves the values associates with the sldier, be query the supa base, fidning corespodning record, 
+        // saves the values associates with the sldier, be query the database, fidning corespodning record, 
         // and adjusting amount id aka value associaited with value
         async function UpdateIngredientAmount(nIngredientID, nPantryAmount) {
 
-            const { error } = await obj_supabase
-                .from("ingredients")
-                .update({
-                    pantry_amount_id: nPantryAmount
-                })
-                .eq("ingredient_id", nIngredientID);
+            const response = await SendRequest(`${API_URL}/${nIngredientID}`, "PATCH", {
+                pantry_amount_id: nPantryAmount
+            });
 
-            if (error) {
-                console.error("Error updating ingredient amount:", error);
-                return false;
-            }
-
-            return true;
+            return response !== null;
         }
 
 
         // finds a specifc aregreind and deltes the ingredient from virutal pantry
+        // (the server answers 404 if no ingredient was deleted)
         async function DeleteIngredient(nIngredientID) {
 
-            const { data, error } = await obj_supabase
-                .from("ingredients")
-                .delete()
-                .eq("ingredient_id", nIngredientID)
-                .select("ingredient_id");
+            const response = await SendRequest(`${API_URL}/${nIngredientID}`, "DELETE");
 
-            if (error) {
-                console.error("Error deleting ingredient:", error);
-                return false;
-            }
-
-            if (data.length === 0) {
-                console.error("No ingredient was deleted.");
-                return false;
-            }
-
-            return true;
+            return response !== null;
         }
 
 
@@ -462,7 +435,7 @@ main {
                     // gets the slider value to input into the dabtabse
                     const nUpdatedAmount = Number(obj_slider.value);
 
-                    // actually saved the  slider value to supabase. 
+                    // actually saved the  slider value to the database. 
                     const bAmountUpdated = await UpdateIngredientAmount(nIngredientID, nUpdatedAmount);
 
                     // checks whether the amount was saved successfully, this verfication of the value, and proceess. 

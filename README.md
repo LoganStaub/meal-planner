@@ -8,11 +8,11 @@ Deciding what to eat every day, and making sure the right groceries are in the h
 
 ![Entity relationship diagram for Meal Planner](docs/erd.png)
 
-The full schema lives in `supabase/schema.sql`.
+The full schema lives in `db/schema.sql`.
 
 | Table                  | Key                                    | What it holds                                             |
 | ---------------------- | -------------------------------------- | --------------------------------------------------------- |
-| `users`              | `user_id`                            | Profile info;`auth_id` links to the Supabase Auth login |
+| `users`              | `user_id`                            | Profile info; `password_hash` is reserved for login     |
 | `recipe_classes`     | `recipe_class_id`                    | Breakfast, Lunch, Dinner…                                |
 | `recipes`            | `recipe_id`                          | Title, cost, macros, prep time, instructions, liked       |
 | `ingredients`        | `ingredient_id`                      | Ingredient name, pantry amount, default measurement       |
@@ -24,81 +24,102 @@ Names are **snake_case** (`recipe_title`, not `RecipeTitle`).
 
 ## Tech Stack
 
-| Layer    | What we used                                                                                  |
-| -------- | --------------------------------------------------------------------------------------------- |
-| Frontend | Plain HTML, CSS, and JavaScript in a single page (`mp-vertical-slice/index.html`)           |
-| API      | Supabase's auto-generated REST API, called from the browser with the`supabase-js` v2 client |
-| Database | Supabase (hosted PostgreSQL), with Row Level Security controlling access                      |
-| Tooling  | Node.js 18+ for the connection check script (`npm run check`)                               |
+| Layer    | What we used                                                                        |
+| -------- | ----------------------------------------------------------------------------------- |
+| Frontend | Plain HTML, CSS, and JavaScript in a single page (`mp-vertical-slice/index.html`) |
+| API      | Node.js + Express 5 (`src/server.js`), called from the browser with `fetch`       |
+| Database | PostgreSQL, accessed from the server with `node-postgres` (`pg`)                  |
+| Tooling  | Node.js 18.18+ (`npm start`, `npm run db:init`, `npm run check`)                  |
 
-**Why this fits our team:** Supabase is a backend as a service, so we did not have to build or host our own server. Everyone on the team can see the tables in the Supabase dashboard, the schema is kept as SQL in this repo, and the free tier covers a class project. Keeping the frontend as plain HTML and JavaScript means there is no build step, so the page runs by opening one file.
+**Why this fits our team:** we started on Supabase's hosted backend, but lost access when the free trial ended. Running our own Express server on top of plain Postgres means nothing depends on a paid service: everyone runs the whole stack locally, the schema is SQL in this repo, and the same code can later point at any hosted Postgres (Render, Neon, Railway, etc.) by changing `DATABASE_URL`.
 
-**About the key in `index.html`:** it is Supabase's *publishable* key, which is designed to be used in a browser. Access to the data is controlled by Row Level Security, not by hiding this key. The secret key is never in this repo, and each teammate's `.env` file is git-ignored.
+**How the pieces connect:** the browser never talks to the database. The page calls `/api/...` on the Express server, the server runs SQL against Postgres and sends JSON back. The database password lives only in each teammate's git-ignored `.env` file.
 
 ## How to Get It Running
 
-### Run the app
-
-1. Clone the repo:
+1. **Install Node.js 18.18+ and PostgreSQL.** On Windows, the [PostgreSQL installer](https://www.postgresql.org/download/windows/) includes pgAdmin and `psql`. Remember the password you set for the `postgres` user.
+2. **Create an empty database** named `meal_planner` (in pgAdmin: right-click Databases → Create, or run `createdb -U postgres meal_planner`).
+3. **Clone and install:**
    ```bash
    git clone https://github.com/LoganStaub/meal-planner-backend.git
    cd meal-planner-backend
-   ```
-2. Open `mp-vertical-slice/index.html` in a browser. Double-clicking the file works, or in VS Code right-click it and choose **Open with Live Server**.
-
-That is all the page needs. It loads the Supabase client from a CDN and connects to our hosted database, so an internet connection is required but nothing has to be installed.
-
-### Teammate setup (optional connection check)
-
-1. **Accept the invites** – GitHub repo invite (check email) and Supabase team invite (valid 24 hours).
-2. **Install dependencies** (requires Node.js 18+):
-   ```bash
    npm install
    ```
-3. **Add your keys** – copy `.env.example` to `.env`, then paste in the Project URL and the **publishable** key from Supabase → Project Settings → API Keys. The Project URL looks like `https://<project-id>.supabase.co`, not the dashboard address. `.env` is git-ignored, so keys never get committed.
-4. **Test it**
+4. **Configure:** copy `.env.example` to `.env` and set `DATABASE_URL`, e.g. `postgres://postgres:YOUR_PASSWORD@localhost:5432/meal_planner`.
+5. **Create the tables.** This drops and recreates them, so only run it on a fresh or throwaway database:
+   ```bash
+   npm run db:init
+   ```
+6. **Check the connection.** You should see a table of recipe classes (Breakfast, Lunch, …):
    ```bash
    npm run check
    ```
+7. **Start the server** and open <http://localhost:3000>:
+   ```bash
+   npm start        # or: npm run dev  (restarts when you save a file)
+   ```
 
-   You should see a table of recipe classes (Breakfast, Lunch, …).
+> Opening `index.html` by double-clicking it no longer works. The page has to be loaded from the server so its `/api` calls reach Express.
 
 ## Verifying the Vertical Slice
 
 The vertical slice is **adding an ingredient to the Virtual Pantry**.
 
-1. Open `mp-vertical-slice/index.html`. The existing ingredients load from the database under **My Ingredients**.
+1. Run `npm start` and open <http://localhost:3000>. The existing ingredients load from the database under **My Ingredients**.
 2. Type an ingredient name (for example, `Beans`) into the **Enter ingredient** box.
-3. Click **Add+**. The page sends an insert to the `ingredients` table in Supabase, gets the new row's ID back, and shows the ingredient at the bottom of the list with the status "Plenty Left".
+3. Click **Add+**. The page sends `POST /api/ingredients`, the server inserts the row into Postgres and returns its new ID, and the ingredient appears at the bottom of the list with the status "Plenty Left".
 4. Refresh the page (F5). The ingredient is still in the list, because the page reloads everything from the database.
-5. Optional: in the Supabase dashboard, open Table Editor → `ingredients` to see the new row.
+5. Optional: run `select * from ingredients;` in pgAdmin or `psql` to see the new row.
+
+## API Reference
+
+All routes return JSON. Errors look like `{ "error": "message" }`.
+
+| Method | Route                                         | What it does                                                             |
+| ------ | --------------------------------------------- | ------------------------------------------------------------------------ |
+| GET    | `/api/ingredients`                          | All pantry ingredients                                                   |
+| POST   | `/api/ingredients`                          | Add one: `{ ingredient_name, pantry_amount_id? }`                      |
+| PATCH  | `/api/ingredients/:id`                      | Change `ingredient_name`, `pantry_amount_id`, and/or `measure_amount_id` |
+| DELETE | `/api/ingredients/:id`                      | Delete one (fails with 400 if a recipe uses it)                          |
+| GET    | `/api/recipes`                              | All recipes with their class name                                        |
+| GET    | `/api/recipes/:id`                          | One recipe with its ordered ingredient list                              |
+| POST   | `/api/recipes`                              | Add one: `{ recipe_title, recipe_class_id?, cost?, prep_time?, macros?, instructions? }` |
+| GET    | `/api/recipe-classes`                       | Breakfast, Lunch, …                                                      |
+| GET    | `/api/measurements`                         | Cup, Tablespoon, …                                                       |
+| GET    | `/api/users/:userId/calendar?start=…&end=…` | A user's meal plan between two `YYYY-MM-DD` dates                        |
 
 ## For Teammates
 
-### Using the database in the frontend
+### Calling the API from the frontend
 
 ```js
-import { supabase } from './src/supabaseClient.js'
-const { data, error } = await supabase.from('recipes').select('*')
+const response = await fetch('/api/recipes')
+const recipes = await response.json()
+
+await fetch('/api/ingredients', {
+  method: 'POST',
+  headers: { 'Content-Type': 'application/json' },
+  body: JSON.stringify({ ingredient_name: 'Beans' }),
+})
 ```
 
-More examples (joins, inserts, meal plan by date) are in `src/examples.js`.
+### Adding a new API route
 
-> In a Vite/React frontend, env vars must start with `VITE_` and are read with
-> `import.meta.env.VITE_SUPABASE_URL` instead of `process.env`.
+Routes live in `src/routes/`, one file per area. Use the shared pool from `src/db.js` and **always pass values as `$1, $2…` parameters**, never by pasting them into the SQL string:
 
-### Who can read/write what (Row Level Security)
+```js
+const { rows } = await pool.query('select * from recipes where recipe_id = $1', [req.params.id])
+```
 
-- **Ingredients:** anyone can read, add, edit, and delete (the Virtual Pantry page works without signing in).
-- **Recipes, classes, measurements:** anyone can read; signed-in users can add/edit.
-- **users and calendar:** signed-in users only see their own rows.
+Then mount the router in `src/server.js`.
 
-So `users` and `calendar` come back **empty** until someone signs in with
-`supabase.auth.signUp()` / `signInWithPassword()`. That's expected, not a bug.
+### Who can read/write what
+
+There is **no login yet**, so every route is open to anyone who can reach the server. Supabase Auth and Row Level Security used to restrict `users` and `calendar` to the signed-in user. That now has to be built in Express (for example sessions or JWTs, plus `bcrypt` for `users.password_hash`) before the calendar and profile features go live.
 
 ### Changing the database
 
-Don't edit tables only in the dashboard — teammates won't know. Instead:
+Don't edit tables only in pgAdmin, because teammates won't know. Instead:
 
-1. Write the change as SQL and run it in Supabase → SQL Editor.
-2. Add the same SQL to a new file in `supabase/` (e.g. `002_add_user_likes.sql`) and commit it.
+1. Write the change as SQL and run it against your local database.
+2. Add the same SQL to a new file in `db/` (e.g. `002_add_user_likes.sql`), update `db/schema.sql` so new setups get it too, and commit both.

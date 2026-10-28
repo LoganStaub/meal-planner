@@ -1,15 +1,16 @@
 // Run with:  npm run check
 // Confirms your .env is right and the database is reachable.
-import { supabase } from './supabaseClient.js'
+import { pool } from './db.js'
 
-const { data, error } = await supabase
-  .from('recipe_classes')
-  .select('recipe_class_id, recipe_class_desc')
-
-if (error) {
+try {
+  const { rows } = await pool.query(
+    'select recipe_class_id, recipe_class_desc from recipe_classes order by recipe_class_id'
+  )
+  console.log('✅ Connected to Postgres. Recipe classes:')
+  console.table(rows)
+} catch (error) {
   console.error('❌ Could not reach the database:', error.message)
-  process.exit(1)
+  process.exitCode = 1
+} finally {
+  await pool.end()
 }
-
-console.log('✅ Connected to Supabase. Recipe classes:')
-console.table(data)
