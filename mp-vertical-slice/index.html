@@ -147,12 +147,14 @@ button {
     place-items: center;
     width: 42px;
     height: 42px;
+    padding: 0;
     border-radius: 50%;
     color: white;
     background-color: rgba(255, 255, 255, 0.18);
     border: 1px solid rgba(255, 255, 255, 0.4);
     backdrop-filter: blur(10px);
     -webkit-backdrop-filter: blur(10px);
+    cursor: pointer;
     transition: background-color 0.2s ease;
 }
 
@@ -582,6 +584,293 @@ button {
     color: var(--text-muted);
 }
 
+/* ---------- Profile and settings popup ----------
+   Takes up most of the screen. Phones: a tall sheet from the bottom.
+   Wider screens: centered, with the content split into two columns. */
+.profile {
+    width: min(920px, calc(100% - 48px));
+    max-width: none;
+    height: min(820px, calc(100dvh - 48px));
+    max-height: none;
+    padding: 0;
+    border: none;
+    border-radius: 28px;
+    color: var(--text);
+    background-color: #FAF8F5;
+    box-shadow: 0 24px 60px rgba(0, 0, 0, 0.25);
+    overflow: hidden;
+}
+
+.profile[open] {
+    display: flex;
+    flex-direction: column;
+}
+
+.profile::backdrop {
+    background-color: rgba(20, 16, 14, 0.45);
+    backdrop-filter: blur(4px);
+    -webkit-backdrop-filter: blur(4px);
+}
+
+@media (max-width: 639px) {
+    .profile {
+        width: 100%;
+        height: calc(100dvh - 28px);
+        margin: auto 0 0;
+        border-radius: 26px 26px 0 0;
+    }
+}
+
+/* Back button on the left, title centered; the empty right cell keeps it centered */
+.profile-header {
+    display: grid;
+    grid-template-columns: 44px 1fr 44px;
+    align-items: center;
+    gap: 12px;
+    padding: 16px 20px;
+    border-bottom: 1px solid #E6E1DD;
+    flex-shrink: 0;
+}
+
+.profile-header h2 {
+    margin: 0;
+    font-size: 1.15rem;
+    font-weight: 600;
+    text-align: center;
+}
+
+.profile-back {
+    display: grid;
+    place-items: center;
+    width: 44px;
+    height: 44px;
+    border-radius: 50%;
+    border: none;
+    background-color: var(--surface);
+    box-shadow: 0 2px 8px rgba(31, 35, 40, 0.06);
+    cursor: pointer;
+    transition: background-color 0.2s ease;
+}
+
+.profile-back:hover {
+    background-color: #F1EEEB;
+}
+
+.profile-body {
+    flex: 1;
+    overflow-y: auto;
+    padding: 28px 20px calc(28px + env(safe-area-inset-bottom));
+}
+
+.profile-identity {
+    display: flex;
+    align-items: center;
+    gap: 20px;
+}
+
+.avatar {
+    display: grid;
+    place-items: center;
+    width: 80px;
+    height: 80px;
+    flex-shrink: 0;
+    border-radius: 50%;
+    font-size: 1.5rem;
+    font-weight: 700;
+    color: white;
+    background-color: var(--accent);
+}
+
+.profile-name {
+    margin: 0;
+    font-size: 1.75rem;
+    font-weight: 600;
+    letter-spacing: -0.01em;
+    line-height: 1.2;
+}
+
+.profile-sub {
+    margin: 6px 0 0;
+    color: var(--text-muted);
+}
+
+.taste-card {
+    margin-top: 28px;
+    padding: 18px 20px;
+    border-radius: 22px;
+    background-color: var(--accent-soft);
+}
+
+.taste-title {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    margin: 0;
+    font-size: 1rem;
+    font-weight: 600;
+    color: var(--accent);
+}
+
+.taste-title .icon {
+    width: 20px;
+    height: 20px;
+}
+
+.taste-text {
+    margin: 10px 0 0;
+    line-height: 1.6;
+    color: var(--text-muted);
+}
+
+.settings-list {
+    margin: 28px 0 0;
+    padding: 0;
+    list-style: none;
+    border: 1px solid #DCE0E6;
+    border-radius: 22px;
+    background-color: var(--surface);
+    overflow: hidden;
+}
+
+.settings-list li + li {
+    border-top: 1px solid #E6E8EC;
+}
+
+.settings-row {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+    width: 100%;
+    padding: 18px 20px;
+    text-align: left;
+    border: none;
+    background: none;
+    cursor: pointer;
+    transition: background-color 0.2s ease;
+}
+
+.settings-row:hover {
+    background-color: #FAF8F5;
+}
+
+.settings-icon {
+    display: grid;
+    place-items: center;
+    width: 48px;
+    height: 48px;
+    flex-shrink: 0;
+    border-radius: 14px;
+    color: var(--text-muted);
+    background-color: var(--page-bg);
+}
+
+.settings-text {
+    flex: 1;
+    min-width: 0;
+}
+
+.settings-title {
+    display: block;
+    font-size: 1.05rem;
+    font-weight: 600;
+}
+
+.settings-desc {
+    display: block;
+    margin-top: 2px;
+    font-size: 0.85rem;
+    color: var(--text-muted);
+}
+
+.settings-row > .icon {
+    width: 20px;
+    height: 20px;
+    color: var(--text-muted);
+}
+
+.section-label {
+    margin: 32px 0 12px;
+    font-size: 0.8rem;
+    font-weight: 700;
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
+    color: var(--text-muted);
+}
+
+.chips {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 10px;
+}
+
+.chip {
+    padding: 10px 16px;
+    border-radius: 999px;
+    border: 1px solid transparent;
+    font-size: 0.92rem;
+    font-weight: 600;
+    background-color: var(--page-bg);
+}
+
+.chip-green {
+    color: var(--pantry-green);
+    background-color: #DDEEDA;
+}
+
+.chip-add {
+    color: var(--accent);
+    background: none;
+    border: 1px dashed #E8B9A5;
+    font-weight: 500;
+    cursor: pointer;
+    transition: background-color 0.2s ease;
+}
+
+.chip-add:hover {
+    background-color: rgba(212, 85, 42, 0.06);
+}
+
+.profile-back:focus-visible,
+.settings-row:focus-visible,
+.chip-add:focus-visible {
+    outline: 2px solid var(--accent);
+    outline-offset: 2px;
+}
+
+.settings-row:focus-visible {
+    outline-offset: -2px;
+}
+
+/* Wider screens: identity, taste profile and restrictions on the left, settings on the right */
+@media (min-width: 768px) {
+    .profile-header {
+        padding: 18px 28px;
+    }
+
+    .profile-body {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        column-gap: 32px;
+        align-content: start;
+        padding: 36px 36px 40px;
+    }
+
+    .profile-main {
+        grid-column: 1;
+    }
+
+    .settings-list {
+        grid-column: 2;
+        grid-row: 1 / span 2;
+        margin-top: 0;
+        align-self: start;
+    }
+
+    .profile-restrictions {
+        grid-column: 1;
+    }
+}
+
 /* Sidebar brand: only shown on computers, where the nav moves to the left */
 .nav-brand {
     display: none;
@@ -778,6 +1067,9 @@ button {
         <symbol id="icon-list" viewBox="0 0 24 24"><path d="m3 17 2 2 4-4"/><path d="m3 7 2 2 4-4"/><path d="M13 6h8"/><path d="M13 12h8"/><path d="M13 18h8"/></symbol>
         <symbol id="icon-home" viewBox="0 0 24 24"><path d="M15 21v-8a1 1 0 0 0-1-1h-4a1 1 0 0 0-1 1v8"/><path d="M3 10a2 2 0 0 1 .709-1.528l7-5.999a2 2 0 0 1 2.582 0l7 5.999A2 2 0 0 1 21 10v9a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/></symbol>
         <symbol id="icon-search" viewBox="0 0 24 24"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.3-4.3"/></symbol>
+        <symbol id="icon-leaf" viewBox="0 0 24 24"><path d="M11 20A7 7 0 0 1 9.8 6.1C15.5 5 17 4.48 19 2c1 2 2 4.18 2 8 0 5.5-4.78 10-10 10Z"/><path d="M2 21c0-3 1.85-5.36 5.08-6C9.5 14.52 12 13 13 12"/></symbol>
+        <symbol id="icon-sliders" viewBox="0 0 24 24"><path d="M21 4h-7"/><path d="M10 4H3"/><path d="M21 12h-9"/><path d="M8 12H3"/><path d="M21 20h-5"/><path d="M12 20H3"/><path d="M14 2v4"/><path d="M8 10v4"/><path d="M16 18v4"/></symbol>
+        <symbol id="icon-bell" viewBox="0 0 24 24"><path d="M10.268 21a2 2 0 0 0 3.464 0"/><path d="M3.262 15.326A1 1 0 0 0 4 17h16a1 1 0 0 0 .74-1.673C19.41 13.956 18 12.499 18 8A6 6 0 0 0 6 8c0 4.499-1.411 5.956-2.738 7.326"/></symbol>
         <symbol id="icon-basket" viewBox="0 0 24 24"><path d="m15 11-1 9"/><path d="m19 11-4-7"/><path d="M2 11h20"/><path d="m3.5 11 1.6 7.4a2 2 0 0 0 2 1.6h9.8a2 2 0 0 0 2-1.6l1.7-7.4"/><path d="M4.5 15.5h15"/><path d="m5 11 4-7"/><path d="m9 11 1 9"/></symbol>
     </svg>
 
@@ -834,9 +1126,9 @@ button {
             <header class="app-header">
                 <div class="header-row">
                     <h1 class="brand">Meal Planner<span>.</span></h1>
-                    <a class="profile-btn" href="profile.html" aria-label="Profile">
+                    <button type="button" class="profile-btn" id="open-profile" aria-label="Profile and settings" aria-haspopup="dialog">
                         <svg class="icon"><use href="#icon-user"/></svg>
-                    </a>
+                    </button>
                 </div>
 
                 <div class="picks-row">
@@ -879,6 +1171,87 @@ button {
         </div>
         <div class="details-body" id="details-body">
             <!-- Recipe details go here -->
+        </div>
+    </dialog>
+
+    <!-- Profile and settings popup. Placeholder data until it loads from the database. -->
+    <dialog class="profile" id="profile" aria-labelledby="profile-title">
+        <div class="profile-header">
+            <button type="button" class="profile-back" id="close-profile" aria-label="Back">
+                <svg class="icon"><use href="#icon-chevron-left"/></svg>
+            </button>
+            <h2 id="profile-title">Profile and Settings</h2>
+        </div>
+
+        <div class="profile-body">
+            <section class="profile-main">
+                <div class="profile-identity">
+                    <div class="avatar" aria-hidden="true">LS</div>
+                    <div>
+                        <p class="profile-name">Logan's kitchen</p>
+                        <p class="profile-sub">Cooking for 2 · Denver</p>
+                    </div>
+                </div>
+
+                <div class="taste-card">
+                    <h3 class="taste-title"><svg class="icon"><use href="#icon-user"/></svg>Your taste profile</h3>
+                    <p class="taste-text">You lean toward quick, vegetable-forward meals with a little heat.</p>
+                </div>
+            </section>
+
+            <!-- TODO: each row opens its own settings screen -->
+            <ul class="settings-list">
+                <li>
+                    <button type="button" class="settings-row">
+                        <span class="settings-icon"><svg class="icon"><use href="#icon-heart"/></svg></span>
+                        <span class="settings-text">
+                            <span class="settings-title">Liked recipes</span>
+                            <span class="settings-desc">Your saved collection</span>
+                        </span>
+                        <svg class="icon"><use href="#icon-chevron-right"/></svg>
+                    </button>
+                </li>
+                <li>
+                    <button type="button" class="settings-row">
+                        <span class="settings-icon"><svg class="icon"><use href="#icon-leaf"/></svg></span>
+                        <span class="settings-text">
+                            <span class="settings-title">Dietary preferences</span>
+                            <span class="settings-desc">Vegetarian-friendly</span>
+                        </span>
+                        <svg class="icon"><use href="#icon-chevron-right"/></svg>
+                    </button>
+                </li>
+                <li>
+                    <button type="button" class="settings-row">
+                        <span class="settings-icon"><svg class="icon"><use href="#icon-sliders"/></svg></span>
+                        <span class="settings-text">
+                            <span class="settings-title">Recommendation settings</span>
+                            <span class="settings-desc">Balanced variety</span>
+                        </span>
+                        <svg class="icon"><use href="#icon-chevron-right"/></svg>
+                    </button>
+                </li>
+                <li>
+                    <button type="button" class="settings-row">
+                        <span class="settings-icon"><svg class="icon"><use href="#icon-bell"/></svg></span>
+                        <span class="settings-text">
+                            <span class="settings-title">Notifications</span>
+                            <span class="settings-desc">Weekly planning reminder</span>
+                        </span>
+                        <svg class="icon"><use href="#icon-chevron-right"/></svg>
+                    </button>
+                </li>
+            </ul>
+
+            <section class="profile-restrictions">
+                <h3 class="section-label">Dietary restrictions</h3>
+                <div class="chips">
+                    <span class="chip chip-green">Vegetarian meals</span>
+                    <span class="chip">No peanuts</span>
+                    <!-- TODO: open a picker and save the new restriction -->
+                    <button type="button" class="chip chip-add">+ Add preference</button>
+                </div>
+            </section>
         </div>
     </dialog>
 
@@ -959,6 +1332,7 @@ button {
         const obj_progress = document.getElementById("progress");
         const obj_like = document.getElementById("like-btn");
         const obj_dialog = document.getElementById("recipe-details");
+        const obj_profile = document.getElementById("profile");
         const obj_prevArrow = document.getElementById("prev-arrow");
         const obj_nextArrow = document.getElementById("next-arrow");
 
@@ -1020,7 +1394,7 @@ button {
         // moves to the next (+1) or previous (-1) meal with a slide animation.
         // nFromX is where the card was dragged to, so the animation continues from there.
         async function GoTo(nDirection, nFromX = 0) {
-            if (bAnimating || obj_dialog.open) return;
+            if (bAnimating || obj_dialog.open || obj_profile.open) return;
 
             // from the "all caught up" screen, going back shows the last meal again
             if (!obj_done.hidden) {
@@ -1194,6 +1568,22 @@ button {
         // clicking the dimmed background closes the popup
         obj_dialog.addEventListener("click", function(event) {
             if (event.target === obj_dialog) obj_dialog.close();
+        });
+
+
+        // ---------- Profile and settings popup ----------
+
+        document.getElementById("open-profile").addEventListener("click", function() {
+            obj_profile.showModal();
+        });
+
+        document.getElementById("close-profile").addEventListener("click", function() {
+            obj_profile.close();
+        });
+
+        // clicking the dimmed background closes the popup
+        obj_profile.addEventListener("click", function(event) {
+            if (event.target === obj_profile) obj_profile.close();
         });
 
 
