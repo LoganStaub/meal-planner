@@ -26,7 +26,7 @@ Names are **snake_case** (`recipe_title`, not `RecipeTitle`).
 
 | Layer    | What we used                                                                        |
 | -------- | ----------------------------------------------------------------------------------- |
-| Frontend | Plain HTML, CSS, and JavaScript in a single page (`mp-vertical-slice/index.html`) |
+| Frontend | Plain HTML, CSS, and JavaScript, one file per page in `mp-vertical-slice/`   |
 | API      | Node.js + Express 5 (`src/server.js`), called from the browser with `fetch`       |
 | Database | PostgreSQL, accessed from the server with `node-postgres` (`pg`)                  |
 | Tooling  | Node.js 18.18+ (`npm start`, `npm run db:init`, `npm run check`)                  |
@@ -59,13 +59,23 @@ Names are **snake_case** (`recipe_title`, not `RecipeTitle`).
    npm start        # or: npm run dev  (restarts when you save a file)
    ```
 
-> Opening `index.html` by double-clicking it no longer works. The page has to be loaded from the server so its `/api` calls reach Express.
+> Opening the pages by double-clicking them doesn't work for anything that loads data. Pages have to be loaded from the server so their `/api` calls reach Express.
+
+## Pages
+
+| Page    | File                             | URL                                  | Status                                                    |
+| ------- | -------------------------------- | ------------------------------------ | --------------------------------------------------------- |
+| Home    | `mp-vertical-slice/index.html`  | <http://localhost:3000>              | Design done: swipe through 5 meals, recipe popup opens. Meals are placeholder data |
+| Pantry  | `mp-vertical-slice/pantry.html` | <http://localhost:3000/pantry.html>  | Working with the database                                 |
+| Calendar, Shopping, Search, Profile | `calendar.html`, `shopping.html`, `search.html`, `profile.html` | | Not built yet. The home page already links to these names |
+
+The home page's recipe details popup is the `<dialog id="recipe-details">` near the bottom of `index.html`. Its content goes in `#details-body`, and the open recipe's ID is in `dialog.dataset.recipeId`.
 
 ## Verifying the Vertical Slice
 
 The vertical slice is **adding an ingredient to the Virtual Pantry**.
 
-1. Run `npm start` and open <http://localhost:3000>. The existing ingredients load from the database under **My Ingredients**.
+1. Run `npm start` and open <http://localhost:3000/pantry.html>. The existing ingredients load from the database under **My Ingredients**.
 2. Type an ingredient name (for example, `Beans`) into the **Enter ingredient** box.
 3. Click **Add+**. The page sends `POST /api/ingredients`, the server inserts the row into Postgres and returns its new ID, and the ingredient appears at the bottom of the list with the status "Plenty Left".
 4. Refresh the page (F5). The ingredient is still in the list, because the page reloads everything from the database.

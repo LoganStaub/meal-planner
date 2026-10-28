@@ -2,546 +2,982 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Meal-Planner</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+    <title>Meal Planner</title>
 
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=DM+Sans:opsz,wght@9..40,400;9..40,500;9..40,600;9..40,700&display=swap" rel="stylesheet">
 
     <style>
-        * {
+* {
     box-sizing: border-box;
+}
+
+:root {
+    --accent: #D4552A;
+    --accent-hover: #BC4720;
+    --accent-soft: #FCDCCD;
+    --pantry-green: #4C7A3A;
+    --text: #1F2328;
+    --text-muted: #5B6068;
+    --page-bg: #E9EDF3;
+    --nav-bg: #F7F4F1;
+    --surface: #FFFFFF;
+    --glass: rgba(255, 255, 255, 0.74);
+    --glass-border: rgba(255, 255, 255, 0.65);
+}
+
+html,
+body {
+    height: 100%;
 }
 
 body {
     margin: 0;
-    font-family: system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
-    background-color: #FAF8FA;
-    color: #2B1A29;
+    font-family: "DM Sans", system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+    background-color: var(--page-bg);
+    color: var(--text);
+    -webkit-font-smoothing: antialiased;
 }
 
-header {
+button {
+    font: inherit;
+    color: inherit;
+}
+
+.icon {
+    width: 22px;
+    height: 22px;
+    fill: none;
+    stroke: currentColor;
+    stroke-width: 1.8;
+    stroke-linecap: round;
+    stroke-linejoin: round;
+    flex-shrink: 0;
+}
+
+/* ---------- App frame ----------
+   Phones: fills the screen. Computers: a centered column like the prototype. */
+.app {
+    position: relative;
+    display: grid;
+    grid-template-rows: 1fr auto;
+    height: 100vh;
+    height: 100dvh;
+    max-width: 520px;
+    margin: 0 auto;
+    overflow: hidden;
+    background-color: var(--nav-bg);
+}
+
+@media (min-width: 640px) {
+    .app {
+        height: calc(100vh - 48px);
+        height: calc(100dvh - 48px);
+        margin: 24px auto;
+        border-radius: 32px;
+        box-shadow: 0 24px 60px rgba(31, 35, 40, 0.14), 0 2px 8px rgba(31, 35, 40, 0.06);
+    }
+}
+
+/* ---------- Swipe area ---------- */
+.stage {
+    position: relative;
+    overflow: hidden;
+    background-color: #2A2522;
+    touch-action: pan-y;
+    user-select: none;
+    -webkit-user-select: none;
+}
+
+.slide {
+    position: absolute;
+    inset: 0;
+    cursor: grab;
+    /* shown if a photo fails to load */
+    background: linear-gradient(160deg, #E9A27A, #B9542F 60%, #6E2E1B);
+}
+
+.slide.dragging {
+    cursor: grabbing;
+}
+
+.photo {
+    position: absolute;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    -webkit-user-drag: none;
+}
+
+.photo.broken {
+    visibility: hidden;
+}
+
+/* Darkens the top of the photo so the white header text is readable */
+.top-scrim {
+    position: absolute;
+    inset: 0 0 auto;
+    height: 170px;
+    background: linear-gradient(to bottom, rgba(0, 0, 0, 0.5), rgba(0, 0, 0, 0));
+    pointer-events: none;
+    z-index: 1;
+}
+
+/* ---------- Header ---------- */
+.app-header {
+    position: absolute;
+    inset: 0 0 auto;
+    z-index: 2;
+    padding: calc(14px + env(safe-area-inset-top)) 20px 0;
+    color: white;
+}
+
+.header-row {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+}
+
+.brand {
+    margin: 0;
+    font-size: 1.3rem;
+    font-weight: 700;
+    letter-spacing: -0.01em;
+    text-shadow: 0 1px 8px rgba(0, 0, 0, 0.25);
+}
+
+.brand span {
+    color: #FFB48F;
+}
+
+.profile-btn {
+    display: grid;
+    place-items: center;
+    width: 42px;
+    height: 42px;
+    border-radius: 50%;
+    color: white;
+    background-color: rgba(255, 255, 255, 0.18);
+    border: 1px solid rgba(255, 255, 255, 0.4);
+    backdrop-filter: blur(10px);
+    -webkit-backdrop-filter: blur(10px);
+    transition: background-color 0.2s ease;
+}
+
+.profile-btn:hover {
+    background-color: rgba(255, 255, 255, 0.3);
+}
+
+.picks-row {
     display: flex;
     justify-content: space-between;
-    align-items: center;
-    max-width: 760px;
-    margin: 0 auto;
-    padding: 32px 24px 8px;
+    align-items: baseline;
+    margin-top: 14px;
+    font-size: 0.75rem;
+    text-shadow: 0 1px 6px rgba(0, 0, 0, 0.3);
 }
 
-header h1 {
-    margin: 0;
-    font-size: 2rem;
-    color: #4B2348;
+.picks-label {
+    font-weight: 700;
+    letter-spacing: 0.16em;
+    text-transform: uppercase;
 }
 
-header button {
-    width: 50px;
-    height: 50px;
-    border-radius: 50%;
-    background-color: #4B2348;
-    color: white;
-    border: none;
-    transition: background-color 0.2s ease;
+.picks-count {
+    font-size: 0.85rem;
+    opacity: 0.9;
 }
 
-#profile-btn:hover {
-    background-color: #75436F;
-}
-
-main {
-    max-width: 760px;
-    margin: 0 auto;
-    padding: 16px 24px 48px;
-}
-
-/* Add ingredient form */
-#add-ingredient-form {
+.progress {
     display: flex;
-    gap: 10px;
-    align-items: center;
+    gap: 6px;
+    margin-top: 8px;
 }
 
-#add-ingredient-form input {
+.progress span {
     flex: 1;
-    min-width: 0;
-    height: 46px;
-    padding: 0 14px;
-    font: inherit;
-    border: 1px solid #CFC6CE;
-    border-radius: 10px;
+    height: 4px;
+    border-radius: 4px;
+    background-color: rgba(255, 255, 255, 0.35);
+    transition: background-color 0.25s ease;
+}
+
+.progress span.filled {
     background-color: white;
 }
 
-#add-ingredient-form input:focus,
-.ingredient-name:focus {
-    outline: 2px solid #75436F;
-    outline-offset: 1px;
+/* ---------- Recipe card ---------- */
+.card {
+    position: absolute;
+    left: 16px;
+    right: 16px;
+    bottom: 16px;
+    padding: 20px;
+    border-radius: 26px;
+    background-color: var(--glass);
+    border: 1px solid var(--glass-border);
+    backdrop-filter: blur(18px) saturate(1.3);
+    -webkit-backdrop-filter: blur(18px) saturate(1.3);
+    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.12);
 }
 
-#add-ingredient-form button {
-    height: 46px;
-    padding: 0 22px;
-    font: inherit;
-    font-weight: 600;
-    white-space: nowrap;
-    background-color: #4B2348;
-    color: white;
-    border: none;
-    border-radius: 10px;
-    cursor: pointer;
-    transition: background-color 0.2s ease;
+.meta {
+    margin: 0 0 6px;
+    font-size: 0.85rem;
+    color: var(--text-muted);
 }
 
-#add-ingredient-form button:hover {
-    background-color: #75436F;
+.meta-time {
+    font-weight: 700;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    color: var(--accent);
 }
 
-/* Pantry list */
-#pantry {
-    margin-top: 28px;
-    padding: 24px;
-    border-radius: 14px;
-    background-color: #F1ECF0;
+.meta-dot {
+    margin: 0 6px;
 }
 
-#pantry h2 {
-    margin: 0 0 16px;
-    font-size: 1.25rem;
-    color: #4B2348;
-}
-
-#ingredient-list {
-    list-style: none;
+/* Title + description: clicking opens the recipe details popup */
+.summary {
+    display: block;
+    width: 100%;
     padding: 0;
     margin: 0;
-}
-
-.ingredient-card {
-    display: flex;
-    flex-wrap: wrap;
-    align-items: center;
-    gap: 12px;
-    padding: 12px 16px;
-    margin-bottom: 10px;
-    background-color: white;
-    border: 1px solid #E3DBE2;
-    border-radius: 10px;
-}
-
-.ingredient-card:last-child {
-    margin-bottom: 0;
-}
-
-.ingredient-name {
-    flex: 1 1 180px;
-    min-width: 0;
-    padding: 8px 10px;
-    font: inherit;
-    font-weight: 600;
-    color: #2B1A29;
-    background-color: white;
-    border: 1px solid #CFC6CE;
-    border-radius: 8px;
-}
-
-/* When not editing, the name looks like plain text */
-.ingredient-name:disabled {
-    border-color: transparent;
-    background-color: transparent;
-    color: #2B1A29;
-    -webkit-text-fill-color: #2B1A29;
-    opacity: 1;
-}
-
-.ingredient-qty {
-    width: 130px;
-    accent-color: #4B2348;
-}
-
-.ingredient-status {
-    width: 135px;
-    font-size: 0.9rem;
-    color: #6B5A69;
-}
-
-.ingredient-edit,
-.ingredient-delete {
-    padding: 8px 14px;
-    font: inherit;
-    font-size: 0.9rem;
-    background-color: white;
-    border-radius: 8px;
+    text-align: left;
+    background: none;
+    border: none;
+    border-radius: 12px;
     cursor: pointer;
-    transition: background-color 0.2s ease, color 0.2s ease;
 }
 
-.ingredient-edit {
-    border: 1px solid #4B2348;
-    color: #4B2348;
+.summary:focus-visible {
+    outline: 2px solid var(--accent);
+    outline-offset: 4px;
 }
 
-.ingredient-edit:hover {
-    background-color: #4B2348;
+.recipe-title {
+    margin: 0;
+    font-size: clamp(1.6rem, 6.4vw, 2rem);
+    font-weight: 600;
+    line-height: 1.22;
+    letter-spacing: -0.01em;
+    color: var(--text);
+    transition: color 0.2s ease;
+}
+
+.summary:hover .recipe-title {
+    color: var(--accent-hover);
+}
+
+.recipe-desc {
+    margin: 10px 0 0;
+    font-size: 0.97rem;
+    line-height: 1.45;
+    color: var(--text-muted);
+}
+
+/* Short screens (small phones, landscape): tighten the card so more photo shows */
+@media (max-height: 740px) {
+    .card {
+        padding: 16px;
+    }
+
+    .recipe-title {
+        font-size: 1.45rem;
+    }
+
+    .recipe-desc {
+        display: -webkit-box;
+        -webkit-line-clamp: 2;
+        line-clamp: 2;
+        -webkit-box-orient: vertical;
+        overflow: hidden;
+        margin-top: 6px;
+        font-size: 0.92rem;
+    }
+
+    .pantry-pill {
+        margin-top: 12px;
+    }
+
+    .card-actions {
+        margin-top: 12px;
+    }
+
+    .action-btn {
+        height: 50px;
+    }
+}
+
+.pantry-pill {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    margin-top: 16px;
+    padding: 10px 16px;
+    border-radius: 999px;
+    background-color: rgba(255, 255, 255, 0.85);
+    font-size: 0.88rem;
+}
+
+.pantry-label {
+    font-size: 0.75rem;
+    font-weight: 700;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    color: var(--pantry-green);
+    white-space: nowrap;
+}
+
+.pantry-items {
+    min-width: 0;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.pantry-buy {
+    margin-left: auto;
+    font-weight: 600;
+    color: var(--accent);
+    white-space: nowrap;
+}
+
+.card-actions {
+    display: grid;
+    grid-template-columns: 1fr 2fr 1fr;
+    gap: 12px;
+    margin-top: 14px;
+}
+
+.action-btn {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    height: 56px;
+    border-radius: 20px;
+    border: 1px solid rgba(31, 35, 40, 0.06);
+    background-color: rgba(255, 255, 255, 0.9);
+    color: var(--text-muted);
+    cursor: pointer;
+    transition: background-color 0.2s ease, transform 0.15s ease;
+}
+
+.action-btn:hover {
+    background-color: white;
+}
+
+.action-btn:active {
+    transform: scale(0.96);
+}
+
+.action-btn:focus-visible,
+.profile-btn:focus-visible,
+.nav-link:focus-visible {
+    outline: 2px solid var(--accent);
+    outline-offset: 2px;
+}
+
+.like-btn {
+    font-size: 1.15rem;
+    font-weight: 700;
     color: white;
+    background-color: var(--accent);
+    border-color: transparent;
 }
 
-.ingredient-delete {
-    border: 1px solid #B3261E;
-    color: #B3261E;
+.like-btn:hover {
+    background-color: var(--accent-hover);
 }
 
-.ingredient-delete:hover {
-    background-color: #B3261E;
-    color: white;
+.like-btn[aria-pressed="true"] .icon {
+    fill: currentColor;
 }
 
+/* ---------- "All caught up" screen after the 5th meal ---------- */
+.done {
+    position: absolute;
+    inset: 0;
+    display: grid;
+    place-items: center;
+    padding: 24px;
+    background: radial-gradient(circle at 50% 35%, #5A3A2C, #221B18 70%);
+    z-index: 1;
+}
+
+.done[hidden] {
+    display: none;
+}
+
+.done-card {
+    max-width: 340px;
+    padding: 28px 24px;
+    text-align: center;
+    border-radius: 26px;
+    background-color: var(--glass);
+    border: 1px solid var(--glass-border);
+}
+
+.done-card h2 {
+    margin: 0 0 8px;
+    font-size: 1.5rem;
+    font-weight: 600;
+}
+
+.done-card p {
+    margin: 0 0 20px;
+    color: var(--text-muted);
+    line-height: 1.45;
+}
+
+.done-card .like-btn {
+    width: 100%;
+    font-size: 1rem;
+}
+
+/* ---------- Footer navigation ---------- */
+.nav {
+    padding: 12px 12px calc(12px + env(safe-area-inset-bottom));
+    background-color: var(--nav-bg);
+}
+
+.nav ul {
+    display: grid;
+    grid-template-columns: repeat(5, 1fr);
+    margin: 0;
+    padding: 10px 6px;
+    list-style: none;
+    border-radius: 26px;
+    background-color: var(--surface);
+    box-shadow: 0 4px 18px rgba(31, 35, 40, 0.06);
+}
+
+.nav-link {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 4px;
+    padding: 2px 0;
+    border-radius: 14px;
+    font-size: 0.75rem;
+    color: var(--text-muted);
+    text-decoration: none;
+    transition: color 0.2s ease;
+}
+
+.nav-link:hover {
+    color: var(--text);
+}
+
+.nav-icon {
+    display: grid;
+    place-items: center;
+    width: 42px;
+    height: 42px;
+    border-radius: 50%;
+    transition: background-color 0.2s ease;
+}
+
+.nav-link[aria-current="page"] {
+    color: var(--accent);
+}
+
+.nav-link[aria-current="page"] .nav-icon {
+    background-color: var(--accent-soft);
+}
+
+/* ---------- Recipe details popup ----------
+   Phones: slides up from the bottom. Computers: centered. */
+.details {
+    width: min(560px, calc(100% - 32px));
+    max-height: 85vh;
+    padding: 0;
+    border: none;
+    border-radius: 26px;
+    color: var(--text);
+    background-color: var(--surface);
+    box-shadow: 0 24px 60px rgba(0, 0, 0, 0.25);
+}
+
+.details::backdrop {
+    background-color: rgba(20, 16, 14, 0.45);
+    backdrop-filter: blur(4px);
+    -webkit-backdrop-filter: blur(4px);
+}
+
+@media (max-width: 639px) {
+    .details {
+        width: 100%;
+        max-width: 100%;
+        max-height: 88dvh;
+        margin: auto 0 0;
+        border-radius: 26px 26px 0 0;
+        padding-bottom: env(safe-area-inset-bottom);
+    }
+}
+
+.details-header {
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    gap: 16px;
+    padding: 22px 22px 0;
+}
+
+.details-header h2 {
+    margin: 0;
+    font-size: 1.4rem;
+    font-weight: 600;
+    line-height: 1.25;
+}
+
+.details-close {
+    display: grid;
+    place-items: center;
+    width: 40px;
+    height: 40px;
+    flex-shrink: 0;
+    border-radius: 50%;
+    border: none;
+    background-color: #F1EEEB;
+    color: var(--text-muted);
+    cursor: pointer;
+}
+
+.details-close:hover {
+    background-color: #E6E1DD;
+}
+
+.details-body {
+    min-height: 220px;
+    padding: 16px 22px 26px;
+    color: var(--text-muted);
+}
+
+@media (prefers-reduced-motion: reduce) {
+    * {
+        transition: none !important;
+    }
+}
     </style>
-
 </head>
 
 <body>
 
-    <header>
-        <h1>Virtual Pantry</h1>
-    </header>
+    <!-- Icon set (Lucide-style line icons), used below with <svg><use href="#icon-..."> -->
+    <svg width="0" height="0" style="position: absolute" aria-hidden="true">
+        <symbol id="icon-user" viewBox="0 0 24 24"><path d="M19 21v-2a4 4 0 0 0-4-4H9a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></symbol>
+        <symbol id="icon-x" viewBox="0 0 24 24"><path d="M18 6 6 18"/><path d="m6 6 12 12"/></symbol>
+        <symbol id="icon-heart" viewBox="0 0 24 24"><path d="M19 14c1.49-1.46 3-3.21 3-5.5A5.5 5.5 0 0 0 16.5 3c-1.76 0-3 .5-4.5 2-1.5-1.5-2.74-2-4.5-2A5.5 5.5 0 0 0 2 8.5c0 2.3 1.5 4.05 3 5.5l7 7Z"/></symbol>
+        <symbol id="icon-calendar-plus" viewBox="0 0 24 24"><path d="M8 2v4"/><path d="M16 2v4"/><path d="M21 13V6a2 2 0 0 0-2-2H5a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h8"/><path d="M3 10h18"/><path d="M16 19h6"/><path d="M19 16v6"/></symbol>
+        <symbol id="icon-calendar" viewBox="0 0 24 24"><path d="M8 2v4"/><path d="M16 2v4"/><rect width="18" height="18" x="3" y="4" rx="2"/><path d="M3 10h18"/><path d="M8 14h.01"/><path d="M12 14h.01"/><path d="M16 14h.01"/><path d="M8 18h.01"/><path d="M12 18h.01"/><path d="M16 18h.01"/></symbol>
+        <symbol id="icon-list" viewBox="0 0 24 24"><path d="m3 17 2 2 4-4"/><path d="m3 7 2 2 4-4"/><path d="M13 6h8"/><path d="M13 12h8"/><path d="M13 18h8"/></symbol>
+        <symbol id="icon-home" viewBox="0 0 24 24"><path d="M15 21v-8a1 1 0 0 0-1-1h-4a1 1 0 0 0-1 1v8"/><path d="M3 10a2 2 0 0 1 .709-1.528l7-5.999a2 2 0 0 1 2.582 0l7 5.999A2 2 0 0 1 21 10v9a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/></symbol>
+        <symbol id="icon-search" viewBox="0 0 24 24"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.3-4.3"/></symbol>
+        <symbol id="icon-basket" viewBox="0 0 24 24"><path d="m15 11-1 9"/><path d="m19 11-4-7"/><path d="M2 11h20"/><path d="m3.5 11 1.6 7.4a2 2 0 0 0 2 1.6h9.8a2 2 0 0 0 2-1.6l1.7-7.4"/><path d="M4.5 15.5h15"/><path d="m5 11 4-7"/><path d="m9 11 1 9"/></symbol>
+    </svg>
 
-    <main>
-        <form id="add-ingredient-form">
-            <input type="text" placeholder="Enter ingredient">
-            <button type="submit">Add+</button>
-        </form>
+    <div class="app">
 
-        <section id="pantry">
-            <h2>My Ingredients</h2>
+        <main class="stage" id="stage">
 
-            <ul id="ingredient-list"></ul>
-        </section>
+            <!-- The current meal. Swipe left/right (or drag with the mouse) to change it. -->
+            <article class="slide" id="slide">
+                <img class="photo" id="meal-photo" alt="" draggable="false">
 
-        <template id="ingredient-template">
+                <div class="card">
+                    <p class="meta">
+                        <span class="meta-time" id="meal-time"></span><span class="meta-dot">·</span><span id="meal-tag"></span><span class="meta-dot">·</span><span id="meal-servings"></span>
+                    </p>
 
-            <li class="ingredient-card">
+                    <button type="button" class="summary" id="open-details" aria-haspopup="dialog">
+                        <h2 class="recipe-title" id="meal-title"></h2>
+                        <p class="recipe-desc" id="meal-desc"></p>
+                    </button>
 
-                <input 
-                type="text"
-                class="ingredient-name"
-                disabled
-                >
+                    <div class="pantry-pill">
+                        <span class="pantry-label">In pantry</span>
+                        <span class="pantry-items" id="meal-pantry"></span>
+                        <span class="pantry-buy" id="meal-buy"></span>
+                    </div>
 
-                <input 
-                type="range"
-                class="ingredient-qty"
-                min="0"
-                max="2"
-                step="1"
-                value="0"
-                disabled
-                >
+                    <div class="card-actions">
+                        <button type="button" class="action-btn" id="next-btn" aria-label="Next meal">
+                            <svg class="icon"><use href="#icon-x"/></svg>
+                        </button>
+                        <button type="button" class="action-btn like-btn" id="like-btn" aria-pressed="false">
+                            <svg class="icon"><use href="#icon-heart"/></svg>
+                            <span id="like-label">Like</span>
+                        </button>
+                        <button type="button" class="action-btn" id="calendar-btn" aria-label="Add to calendar">
+                            <svg class="icon"><use href="#icon-calendar-plus"/></svg>
+                        </button>
+                    </div>
+                </div>
+            </article>
 
-                <span class="ingredient-status">Plenty left</span>
+            <!-- Shown after swiping past the 5th meal -->
+            <section class="done" id="done" hidden>
+                <div class="done-card">
+                    <h2>You're all caught up</h2>
+                    <p>That's all 5 of tonight's picks. Check back tomorrow for more.</p>
+                    <button type="button" class="action-btn like-btn" id="restart-btn">See them again</button>
+                </div>
+            </section>
 
-                <button type="button" class="ingredient-edit">Edit</button>
-                <button type="button" class="ingredient-delete">Delete</button>
-            </li>
-        </template>
-    </main>
+            <div class="top-scrim"></div>
+
+            <header class="app-header">
+                <div class="header-row">
+                    <h1 class="brand">Meal Planner<span>.</span></h1>
+                    <a class="profile-btn" href="profile.html" aria-label="Profile">
+                        <svg class="icon"><use href="#icon-user"/></svg>
+                    </a>
+                </div>
+
+                <div class="picks-row">
+                    <span class="picks-label">Tonight's picks</span>
+                    <span class="picks-count" id="picks-count"></span>
+                </div>
+                <div class="progress" id="progress"></div>
+            </header>
+        </main>
+
+        <nav class="nav" aria-label="Main">
+            <ul>
+                <li><a class="nav-link" href="calendar.html"><span class="nav-icon"><svg class="icon"><use href="#icon-calendar"/></svg></span>Calendar</a></li>
+                <li><a class="nav-link" href="shopping.html"><span class="nav-icon"><svg class="icon"><use href="#icon-list"/></svg></span>Shopping</a></li>
+                <li><a class="nav-link" href="index.html" aria-current="page"><span class="nav-icon"><svg class="icon"><use href="#icon-home"/></svg></span>Home</a></li>
+                <li><a class="nav-link" href="search.html"><span class="nav-icon"><svg class="icon"><use href="#icon-search"/></svg></span>Search</a></li>
+                <li><a class="nav-link" href="pantry.html"><span class="nav-icon"><svg class="icon"><use href="#icon-basket"/></svg></span>Pantry</a></li>
+            </ul>
+        </nav>
+    </div>
+
+    <!-- Recipe details popup. Left blank on purpose: the full details page is being built separately. -->
+    <dialog class="details" id="recipe-details" aria-labelledby="details-title">
+        <div class="details-header">
+            <h2 id="details-title"></h2>
+            <button type="button" class="details-close" id="close-details" aria-label="Close">
+                <svg class="icon"><use href="#icon-x"/></svg>
+            </button>
+        </div>
+        <div class="details-body" id="details-body">
+            <!-- Recipe details go here -->
+        </div>
+    </dialog>
 
     <script>
 
-        // All data goes through our Express server (src/server.js), which talks to Postgres.
-        // The page must be opened from the server (npm start -> http://localhost:3000),
-        // not by double-clicking the file, so these relative /api URLs reach it.
-        const API_URL = "/api/ingredients";
+        // The home page only ever shows this many meals at a time
+        const MAX_MEALS = 5;
 
-        // asycornus fucntion that allows the the fcuntion perfom at the same time other needed functions or code is needed to be extued,
-        // makes sure screen does not freese or that subproccess does not take priorty
-        //calls the server api, requiesting all data from its ingredient table
-
-        async function LoadIngredients(){
-            let data;
-            try {
-                const response = await fetch(API_URL);
-                if (!response.ok) throw new Error(await response.text());
-                data = await response.json();
-            }
-            // catches error if runs into problem trying to load ingredients table
-            catch (error)
+        // Placeholder meals until this page loads from GET /api/recipes.
+        // recipe_id, recipe_title, prep_time and recipe_class_desc match the database.
+        // description, servings, image_url and the pantry fields don't exist in the schema yet.
+        const SAMPLE_MEALS = [
             {
-                console.error("Error loading ingredients:", error);
+                recipe_id: 1,
+                recipe_title: "Smoky chicken & red onion flatbread",
+                description: "Crisp-edged flatbread with roasted chicken, sweet red onion and melted mozzarella, finished with fresh herbs.",
+                prep_time: 35,
+                recipe_class_desc: "Dinner",
+                servings: 4,
+                image_url: "https://images.unsplash.com/photo-1565299624946-b28f40a0ae38?w=1200&q=80&auto=format&fit=crop",
+                in_pantry: ["flour", "onion", "mozzarella"],
+                to_buy: 2
+            },
+            {
+                recipe_id: 2,
+                recipe_title: "Basil pesto farfalle with cherry tomatoes",
+                description: "Bow-tie pasta tossed in bright basil pesto with burst cherry tomatoes and a handful of greens.",
+                prep_time: 20,
+                recipe_class_desc: "Lunch",
+                servings: 2,
+                image_url: "https://images.unsplash.com/photo-1473093295043-cdd812d0e601?w=1200&q=80&auto=format&fit=crop",
+                in_pantry: ["pasta", "basil", "olive oil"],
+                to_buy: 1
+            },
+            {
+                recipe_id: 3,
+                recipe_title: "Salmon poke bowl",
+                description: "Seared salmon over rice with cucumber, corn, red cabbage and a soft-boiled egg.",
+                prep_time: 25,
+                recipe_class_desc: "Dinner",
+                servings: 2,
+                image_url: "https://images.unsplash.com/photo-1546069901-ba9599a7e63c?w=1200&q=80&auto=format&fit=crop",
+                in_pantry: ["rice", "eggs", "soy sauce"],
+                to_buy: 3
+            },
+            {
+                recipe_id: 4,
+                recipe_title: "Rainbow chickpea Buddha bowl",
+                description: "Roasted sweet potato, crispy chickpeas, avocado and crunchy veggies with a lemon-tahini drizzle.",
+                prep_time: 30,
+                recipe_class_desc: "Vegan",
+                servings: 2,
+                image_url: "https://images.unsplash.com/photo-1512621776951-a57141f2eefd?w=1200&q=80&auto=format&fit=crop",
+                in_pantry: ["chickpeas", "sweet potato", "lemon"],
+                to_buy: 2
+            },
+            {
+                recipe_id: 5,
+                recipe_title: "Brioche French toast with berries",
+                description: "Thick-cut brioche soaked in vanilla custard, pan-fried golden and topped with banana and blueberries.",
+                prep_time: 15,
+                recipe_class_desc: "Breakfast",
+                servings: 2,
+                image_url: "https://images.unsplash.com/photo-1484723091739-30a097e8f929?w=1200&q=80&auto=format&fit=crop",
+                in_pantry: ["eggs", "milk", "cinnamon"],
+                to_buy: 2
+            }
+        ];
+
+        const meals = SAMPLE_MEALS.slice(0, MAX_MEALS);
+        let nCurrent = 0;
+        let bAnimating = false;
+
+        const obj_stage = document.getElementById("stage");
+        const obj_slide = document.getElementById("slide");
+        const obj_photo = document.getElementById("meal-photo");
+        const obj_done = document.getElementById("done");
+        const obj_progress = document.getElementById("progress");
+        const obj_like = document.getElementById("like-btn");
+        const obj_dialog = document.getElementById("recipe-details");
+
+        const bReducedMotion = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+
+
+        // one progress bar segment per meal
+        meals.forEach(function() {
+            obj_progress.appendChild(document.createElement("span"));
+        });
+
+        // start downloading every photo now so swiping doesn't wait on them
+        meals.forEach(function(meal) {
+            new Image().src = meal.image_url;
+        });
+
+        // if a photo can't load, hide it and let the slide's gradient background show
+        obj_photo.addEventListener("error", function() { obj_photo.classList.add("broken"); });
+        obj_photo.addEventListener("load", function() { obj_photo.classList.remove("broken"); });
+
+
+        // fills the card with the current meal's data
+        function RenderMeal() {
+            const meal = meals[nCurrent];
+
+            obj_photo.src = meal.image_url;
+            obj_photo.alt = meal.recipe_title;
+            document.getElementById("meal-time").textContent = `${meal.prep_time} min`;
+            document.getElementById("meal-tag").textContent = meal.recipe_class_desc;
+            document.getElementById("meal-servings").textContent = `${meal.servings} servings`;
+            document.getElementById("meal-title").textContent = meal.recipe_title;
+            document.getElementById("meal-desc").textContent = meal.description;
+            document.getElementById("meal-pantry").textContent = meal.in_pantry.join(", ");
+            document.getElementById("meal-buy").textContent = meal.to_buy > 0 ? `+${meal.to_buy} to buy` : "";
+
+            RenderLike();
+            RenderProgress(nCurrent + 1);
+        }
+
+        // fills the progress bars up to the current meal, and shows "2 of 5"
+        function RenderProgress(nShown) {
+            [...obj_progress.children].forEach(function(obj_bar, i) {
+                obj_bar.classList.toggle("filled", i < nShown);
+            });
+            document.getElementById("picks-count").textContent = `${Math.min(nShown, meals.length)} of ${meals.length}`;
+        }
+
+        function RenderLike() {
+            const bLiked = Boolean(meals[nCurrent].liked);
+            obj_like.setAttribute("aria-pressed", String(bLiked));
+            document.getElementById("like-label").textContent = bLiked ? "Liked" : "Like";
+        }
+
+
+        // moves to the next (+1) or previous (-1) meal with a slide animation.
+        // nFromX is where the card was dragged to, so the animation continues from there.
+        async function GoTo(nDirection, nFromX = 0) {
+            if (bAnimating || obj_dialog.open) return;
+
+            // from the "all caught up" screen, going back shows the last meal again
+            if (!obj_done.hidden) {
+                if (nDirection === -1) {
+                    obj_done.hidden = true;
+                    RenderMeal();
+                    await SlideIn(-1);
+                }
                 return;
             }
 
-            console.log("Ingredients from database:", data);
-
-            // loops over all the ingredient data returned from the sql query and funnles it throuh the add ingredient function
-            // which will display the html objects, and corsponding data needed to populate
-            data.forEach(function(ingredient) {
-                addIngredient(
-                    ingredient.ingredient_name,
-                    ingredient.pantry_amount_id,
-                    ingredient.ingredient_id
-                );
-            });
-        }
-
-        // sends a request to the server and returns the response, or null if it failed
-        async function SendRequest(sUrl, sMethod, objBody) {
-            try {
-                const response = await fetch(sUrl, {
-                    method: sMethod,
-                    headers: { "Content-Type": "application/json" },
-                    body: objBody ? JSON.stringify(objBody) : undefined
-                });
-                if (!response.ok) throw new Error(await response.text());
-                return response;
-            } catch (error) {
-                console.error(`Error with ${sMethod} ${sUrl}:`, error);
-                return null;
-            }
-        }
-
-        // function that saves the edit/modify data of the recordm that of the ingredient
-        async function SaveIngredient(sIngredientName) {
-
-            const response = await SendRequest(API_URL, "POST", {
-                ingredient_name: sIngredientName,
-                pantry_amount_id: 0
-            });
-
-            if (!response) {
-                return null;
-            }
-
-            const data = await response.json();
-            return data.ingredient_id;
-        }
-
-
-        // in scenario of user updating the ingreedient name, the database is updated
-        async function UpdateIngredientName(nIngredientID, sUpdateName) {
-
-            const response = await SendRequest(`${API_URL}/${nIngredientID}`, "PATCH", {
-                ingredient_name: sUpdateName
-            });
-
-            return response !== null;
-        }
-
-
-        // saves the values associates with the sldier, be query the database, fidning corespodning record, 
-        // and adjusting amount id aka value associaited with value
-        async function UpdateIngredientAmount(nIngredientID, nPantryAmount) {
-
-            const response = await SendRequest(`${API_URL}/${nIngredientID}`, "PATCH", {
-                pantry_amount_id: nPantryAmount
-            });
-
-            return response !== null;
-        }
-
-
-        // finds a specifc aregreind and deltes the ingredient from virutal pantry
-        // (the server answers 404 if no ingredient was deleted)
-        async function DeleteIngredient(nIngredientID) {
-
-            const response = await SendRequest(`${API_URL}/${nIngredientID}`, "DELETE");
-
-            return response !== null;
-        }
-
-
-
-        //Fethces the html struture that houses the ingredients data, and will duplicate the html
-        //Fetches the template
-        const obj_template = document.getElementById("ingredient-template");
-
-        //Fetches the acutal list object that we will be appending populated templates to 
-        const obj_ingredient_list = document.getElementById("ingredient-list");
-
-        //gathers a refrence to the form object, than saves the an object refernce to the input object in form 
-        const obj_form = document.getElementById("add-ingredient-form");
-        const obj_input = obj_form.querySelector("input");
-
-
-
-
-        function addIngredient (sIngredientName, nPantryAmount, nIngredientID) {
-            // Valiadates wheter there is user input for ingredient add
-            sIngredientName = sIngredientName.trim();
-
-            if (sIngredientName === "") {
-                alert("Please enter an ingredient before adding it.");
-                obj_input.focus();
+            const nTarget = nCurrent + nDirection;
+            if (nTarget < 0) {
+                SnapBack(nFromX);
                 return;
             }
-        
-            //saves a copie of the template to variable for us to populate with data
-            const obj_new_ingredient = obj_template.content.cloneNode(true);
 
-            //access the ingredient name form the template object that was created
-            const obj_name = obj_new_ingredient.querySelector(".ingredient-name");
+            bAnimating = true;
+            await SlideOut(nDirection, nFromX);
 
-            //retrives the slider object, 
-            const obj_slider = obj_new_ingredient.querySelector(".ingredient-qty");
-
-           // Retrives the  current stauts of the slider,
-            const obj_status = obj_new_ingredient.querySelector(".ingredient-status");
-
-            // changes the valu of slider to current pantry amount remebers the current value of the slider qnty
-            obj_slider.value = nPantryAmount;
-
-            //retrives a current refercne to the edit button object 
-            const obj_edit = obj_new_ingredient.querySelector(".ingredient-edit");
-
-
-            // finds the object to deleite from the data base, and saves the it values, than locates the card that holds the ingrdeitns value
-            // then stroes that objects refrece in a varible for further manipulation
-            const obj_delete = obj_new_ingredient.querySelector(".ingredient-delete");
-            const obj_card = obj_new_ingredient.querySelector(".ingredient-card");
-
-
-            // segments listens for the edit button of the ingredient feature
-            obj_edit.addEventListener("click", async function() { 
-                // if the current element is disbled that means that user in not in the editing phase
-                // which changes the flow to the editing stage
-                if (obj_name.disabled)
-                {
-                   obj_name.disabled=false;
-                   obj_slider.disabled=false;
-                   
-                   obj_edit.textContent="Done";
-                
-                } else {
-
-                    //gathers current ingred name
-                    const sUpdateName = obj_name.value.trim();
-
-                    //defeisve code making sure it is not left empty
-                    if (sUpdateName === ""){
-
-                        alert("Please enter in an ingredient name");
-                        obj_name.focus();
-                        return;
-                    }
-
-                    //checks if ingredient is possible to update, or ingredient exist within the db to update
-                    const bUpdated = await UpdateIngredientName(nIngredientID, sUpdateName);
-
-                    // error messge displayd
-                    if (!bUpdated) {
-                        alert("Could not save ingredient name.");
-                        return;
-                    }
-
-
-                    // gets the slider value to input into the dabtabse
-                    const nUpdatedAmount = Number(obj_slider.value);
-
-                    // actually saved the  slider value to the database. 
-                    const bAmountUpdated = await UpdateIngredientAmount(nIngredientID, nUpdatedAmount);
-
-                    // checks whether the amount was saved successfully, this verfication of the value, and proceess. 
-                    if (!bAmountUpdated) {
-                        alert("Could not save ingredient amount.");
-                        return;
-                    }
-
-                    //updates corespdnding object refrences, and locks the html elements for non interactive behaviors
-                    obj_name.value = sUpdateName;
-                    obj_name.disabled=true;
-                    obj_slider.disabled=true;
-
-                    obj_edit.textContent = "Edit";
-                }
-
-            });
-
-
-
-            // repsonds to the change of the input object everytime a chage is made(everytim somthing is inputed) 
-            // and displays which HTML object event us coming from.
-            obj_slider.addEventListener("input", function(event){
-   
-                if (event.target.value === "0") {
-                    obj_status.textContent = "Plenty Left";
-                }
-                else if (event.target.value === "1") {
-                    obj_status.textContent = "Running Out Soon";
-                }
-                else if (event.target.value === "2") {
-                    obj_status.textContent = "None";
-                }
-            });
-
-            // intiates a phantom type of load, to keep values refreshed on html page, such as sliders, and current ingred items. 
-            obj_slider.dispatchEvent(new Event("input"));
-
-
-            // listens to object delete button beling clicked
-            obj_delete.addEventListener("click", async function() {
-
-                // makes sure user wants to delete he object
-                const bConfirmed = confirm("Are you sure you want to delete this ingredient?");
-                if (!bConfirmed) {
-                    return;
-                }
-
-                // acutually deletes the record form the db
-                const bDeleted = await DeleteIngredient(nIngredientID);
-
-                // locates the coresponding card that would be used by the record in the html, and delets html recipe
-                // if not found notifes user
-                if (bDeleted) {
-                    obj_card.remove();
-                } else {
-                    alert("Could not delete ingredient.");
-                }
-
-            });
-
-            // assigns the value from the input box to the ingredient list
-            obj_name.value = sIngredientName;
-
-            obj_ingredient_list.appendChild(obj_new_ingredient);
-            obj_input.value = "";
-
-        }
-        
-        //========================================================================================================================================================================
-
-
-        // listens for sumit action from the add button for pantry, it listend for any raised events from the from, more specifcally any submit type
-        // then we check what caused that event object to arise, which html object caused etc, valuble data
-        obj_form.addEventListener("submit", async function (event) {
-
-            // stops browser form perfoming it normal defualt action when this event accours
-            event.preventDefault();
-
-            // saves the singredient name in trims and white space from the input
-            const sIngredientName = obj_input.value.trim();
-
-            //checks if ingredient name is populated
-            if (sIngredientName === "") {
-                alert("Please enter an ingredient before adding it.");
-                obj_input.focus();
+            if (nTarget >= meals.length) {
+                obj_done.hidden = false;
+                RenderProgress(meals.length);
+                obj_slide.style.transform = "";
+                obj_slide.style.opacity = "";
+                bAnimating = false;
                 return;
-            }   
-
-
-            // saves the ingredient to database and retruns its unique id for any other other process that may need at the time, such modification
-            // modifcation of ingredient, sucessfull if able to find an id in db, no id == new ingredient to add
-            const nIngredientID = await SaveIngredient(sIngredientName);
-
-            // if ingredient is null no entry was found meaning the ingredient is being added
-            if (nIngredientID !== null) {
-                addIngredient(sIngredientName, 0, nIngredientID);
             }
+
+            nCurrent = nTarget;
+            RenderMeal();
+            await SlideIn(nDirection);
+            bAnimating = false;
+        }
+
+        function SlideOut(nDirection, nFromX) {
+            const sEnd = `translateX(${-nDirection * obj_stage.clientWidth}px)`;
+            const animation = obj_slide.animate(
+                [{ transform: `translateX(${nFromX}px)`, opacity: 1 }, { transform: sEnd, opacity: 0 }],
+                { duration: bReducedMotion ? 0 : 220, easing: "ease-in" }
+            );
+            // keep the card off-screen once the animation ends
+            obj_slide.style.transform = sEnd;
+            obj_slide.style.opacity = "0";
+            return animation.finished;
+        }
+
+        function SlideIn(nDirection) {
+            obj_slide.style.transform = "";
+            obj_slide.style.opacity = "";
+            return obj_slide.animate(
+                [{ transform: `translateX(${nDirection * obj_stage.clientWidth * 0.35}px)`, opacity: 0 },
+                 { transform: "translateX(0)", opacity: 1 }],
+                { duration: bReducedMotion ? 0 : 260, easing: "ease-out" }
+            ).finished;
+        }
+
+        // drag wasn't far enough: return the card to the middle
+        function SnapBack(nFromX) {
+            obj_slide.style.transform = "";
+            obj_slide.animate(
+                [{ transform: `translateX(${nFromX}px)` }, { transform: "translateX(0)" }],
+                { duration: bReducedMotion ? 0 : 200, easing: "ease-out" }
+            );
+        }
+
+
+        // ---------- Swiping (touch and mouse) ----------
+        let objDrag = null;
+        let bSuppressClick = false;
+
+        obj_stage.addEventListener("pointerdown", function(event) {
+            if (event.button !== 0 || bAnimating || !obj_done.hidden) return;
+            // the action buttons and header are for tapping, not dragging
+            if (event.target.closest(".card-actions, .app-header")) return;
+
+            objDrag = { nId: event.pointerId, nStartX: event.clientX, nStartY: event.clientY, nDx: 0, bMoved: false };
+        });
+
+        obj_stage.addEventListener("pointermove", function(event) {
+            if (!objDrag || event.pointerId !== objDrag.nId) return;
+
+            const nDx = event.clientX - objDrag.nStartX;
+            const nDy = event.clientY - objDrag.nStartY;
+
+            // only start dragging once the pointer clearly moves sideways,
+            // so taps still open the recipe and vertical scrolling still works
+            if (!objDrag.bMoved) {
+                if (Math.abs(nDx) < 8 || Math.abs(nDx) < Math.abs(nDy)) return;
+                objDrag.bMoved = true;
+                obj_stage.setPointerCapture(event.pointerId);
+                obj_slide.classList.add("dragging");
+            }
+
+            objDrag.nDx = nDx;
+            obj_slide.style.transform = `translateX(${nDx}px)`;
+        });
+
+        function EndDrag(event) {
+            if (!objDrag || event.pointerId !== objDrag.nId) return;
+            const { bMoved, nDx } = objDrag;
+            objDrag = null;
+            if (!bMoved) return;
+
+            obj_slide.classList.remove("dragging");
+            bSuppressClick = true;
+            setTimeout(function() { bSuppressClick = false; }, 0);
+
+            if (Math.abs(nDx) > obj_stage.clientWidth * 0.2) {
+                GoTo(nDx < 0 ? 1 : -1, nDx);
+            } else {
+                SnapBack(nDx);
+            }
+        }
+
+        obj_stage.addEventListener("pointerup", EndDrag);
+        obj_stage.addEventListener("pointercancel", EndDrag);
+
+        // arrow keys on a computer
+        document.addEventListener("keydown", function(event) {
+            if (event.key === "ArrowRight") GoTo(1);
+            if (event.key === "ArrowLeft") GoTo(-1);
         });
 
 
+        // ---------- Buttons ----------
 
-        // calls the load ingreidn
-        LoadIngredients();
+        // X skips to the next meal
+        document.getElementById("next-btn").addEventListener("click", function() {
+            GoTo(1);
+        });
+
+        // TODO: save likes to the database (recipes.liked)
+        obj_like.addEventListener("click", function() {
+            meals[nCurrent].liked = !meals[nCurrent].liked;
+            RenderLike();
+        });
+
+        // TODO: open a date/meal slot picker and save to the calendar table
+        document.getElementById("calendar-btn").addEventListener("click", function() {
+            console.log("Add to calendar:", meals[nCurrent].recipe_title);
+        });
+
+        document.getElementById("restart-btn").addEventListener("click", function() {
+            nCurrent = 0;
+            obj_done.hidden = true;
+            RenderMeal();
+            SlideIn(1);
+        });
 
 
+        // ---------- Recipe details popup ----------
+
+        document.getElementById("open-details").addEventListener("click", function() {
+            // a swipe that started on the title shouldn't also open the popup
+            if (bSuppressClick) return;
+
+            document.getElementById("details-title").textContent = meals[nCurrent].recipe_title;
+            obj_dialog.dataset.recipeId = meals[nCurrent].recipe_id;
+            obj_dialog.showModal();
+        });
+
+        document.getElementById("close-details").addEventListener("click", function() {
+            obj_dialog.close();
+        });
+
+        // clicking the dimmed background closes the popup
+        obj_dialog.addEventListener("click", function(event) {
+            if (event.target === obj_dialog) obj_dialog.close();
+        });
+
+
+        RenderMeal();
 
     </script>
 </body>
