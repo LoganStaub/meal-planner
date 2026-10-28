@@ -41,8 +41,8 @@ Names are **snake_case** (`recipe_title`, not `RecipeTitle`).
 2. **Create an empty database** named `meal_planner` (in pgAdmin: right-click Databases → Create, or run `createdb -U postgres meal_planner`).
 3. **Clone and install:**
    ```bash
-   git clone https://github.com/LoganStaub/meal-planner-backend.git
-   cd meal-planner-backend
+   git clone https://github.com/LoganStaub/meal-planner.git
+   cd meal-planner
    npm install
    ```
 4. **Configure:** copy `.env.example` to `.env` and set `DATABASE_URL`, e.g. `postgres://postgres:YOUR_PASSWORD@localhost:5432/meal_planner`.
