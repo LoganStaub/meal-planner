@@ -14,6 +14,10 @@
             box-sizing: border-box;
         }
 
+        [hidden] {
+            display: none !important;
+        }
+
         :root {
             --accent: #D4552A;
             --accent-hover: #BC4720;
@@ -271,6 +275,114 @@
             background-color: var(--accent-hover);
         }
 
+        .meal-list {
+            display: grid;
+            gap: 12px;
+            margin: 28px 0 0;
+            padding: 0;
+            list-style: none;
+        }
+
+        .meal-card {
+            position: relative;
+            display: flex;
+            flex-direction: column;
+            padding: 16px 20px;
+            border: 1px solid #D0D8E2;
+            border-radius: 22px;
+            background-color: var(--surface);
+            transition: border-color 0.2s ease, background-color 0.2s ease;
+        }
+
+        .meal-card:hover {
+            border-color: var(--accent);
+            background-color: #FFFAF7;
+        }
+
+        .meal-link {
+            display: flex;
+            flex-direction: column;
+            gap: 4px;
+            color: inherit;
+            text-decoration: none;
+        }
+
+        /* Stretches the link over the whole card so any click opens the recipe.
+           Anything else inside the card (e.g. the stage 3 remove button) must be
+           a sibling of .meal-link with position: relative; z-index: 1 so it sits
+           above this layer and doesn't trigger the link. */
+        .meal-link::after {
+            content: "";
+            position: absolute;
+            inset: 0;
+            border-radius: inherit;
+        }
+
+        .meal-link:focus-visible {
+            outline: none;
+        }
+
+        .meal-link:focus-visible::after {
+            outline: 2px solid var(--accent);
+            outline-offset: 3px;
+        }
+
+        .meal-slot {
+            color: var(--accent);
+            font-size: 0.75rem;
+            font-weight: 700;
+            letter-spacing: 0.12em;
+            text-transform: uppercase;
+        }
+
+        .meal-title {
+            font-size: 1.05rem;
+            font-weight: 600;
+        }
+
+        /* Empty-slot placeholders only show in the wide layout */
+        .meal-placeholder {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+            width: 100%;
+            height: 100%;
+            padding: 16px 20px;
+            border: 1px dashed #D0D8E2;
+            border-radius: 22px;
+            background: none;
+            color: var(--text-muted);
+            font-weight: 600;
+            cursor: pointer;
+            transition: color 0.2s ease, border-color 0.2s ease, background-color 0.2s ease;
+        }
+
+        .meal-placeholder:hover {
+            border-color: var(--accent);
+            background-color: rgba(212, 85, 42, 0.04);
+            color: var(--accent);
+        }
+
+        .meal-placeholder:focus-visible {
+            outline: 2px solid var(--accent);
+            outline-offset: 3px;
+        }
+
+        .meal-placeholder .icon {
+            width: 18px;
+            height: 18px;
+        }
+
+        .selected-day[data-state="loading"] .meal-list,
+        .selected-day[data-state="loading"] .empty-state,
+        .selected-day[data-state="empty"] .meal-list,
+        .selected-day[data-state="error"] .meal-list,
+        .selected-day[data-state="filled"] .empty-state,
+        .empty-slot {
+            display: none;
+        }
+
         .empty-state {
             display: flex;
             flex-direction: column;
@@ -463,6 +575,34 @@
             .selected-day {
                 margin-top: 42px;
             }
+
+            /* Wide layout: Breakfast / Lunch / Dinner side by side, with an
+               "Add …" placeholder in any empty slot */
+            .meal-list {
+                grid-template-columns: repeat(3, minmax(0, 1fr));
+                gap: 16px;
+            }
+
+            .selected-day[data-state="empty"] .meal-list {
+                display: grid;
+            }
+
+            .selected-day[data-state="empty"] .empty-state {
+                display: none;
+            }
+
+            .empty-slot {
+                display: block;
+            }
+
+            .meal-card {
+                min-height: 140px;
+                padding: 20px 22px;
+            }
+
+            .meal-placeholder {
+                min-height: 140px;
+            }
         }
 
         @media (prefers-reduced-motion: reduce) {
@@ -485,7 +625,7 @@
         <symbol id="icon-home" viewBox="0 0 24 24"><path d="M15 21v-8a1 1 0 0 0-1-1h-4a1 1 0 0 0-1 1v8"/><path d="M3 10a2 2 0 0 1 .709-1.528l7-5.999a2 2 0 0 1 2.582 0l7 5.999A2 2 0 0 1 21 10v9a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/></symbol>
         <symbol id="icon-search" viewBox="0 0 24 24"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.3-4.3"/></symbol>
         <symbol id="icon-basket" viewBox="0 0 24 24"><path d="m15 11-1 9"/><path d="m19 11-4-7"/><path d="M2 11h20"/><path d="m3.5 11 1.6 7.4a2 2 0 0 0 2 1.6h9.8a2 2 0 0 0 2-1.6l1.7-7.4"/><path d="M4.5 15.5h15"/><path d="m5 11 4-7"/><path d="m9 11 1 9"/></symbol>
-        <symbol id="icon-settings" viewBox="0 0 24 24"><path d="M12 8.5a3.5 3.5 0 1 0 0 7 3.5 3.5 0 0 0 0-7Z"/><path d="m19.4 15 .1.1a1.7 1.7 0 0 1-2.4 2.4l-.1-.1a1.7 1.7 0 0 0-2.9 1.2v.2a1.7 1.7 0 0 1-3.4 0v-.2a1.7 1.7 0 0 0-2.9-1.2l-.1.1a1.7 1.7 0 0 1-2.4-2.4l.1-.1a1.7 1.7 0 0 0-1.2-2.9H4a1.7 1.7 0 0 1 0-3.4h.2a1.7 1.7 0 0 0 1.2-2.9l-.1-.1a1.7 1.7 0 0 1 2.4-2.4l.1.1a1.7 1.7 0 0 0 2.9-1.2V2a1.7 1.7 0 0 1 3.4 0v.2a1.7 1.7 0 0 0 2.9 1.2l.1-.1a1.7 1.7 0 0 1 2.4 2.4l-.1.1a1.7 1.7 0 0 0 1.2 2.9h.2a1.7 1.7 0 0 1 0 3.4h-.2a1.7 1.7 0 0 0-1.2 2.9Z"/></symbol>
+        <symbol id="icon-settings" viewBox="0 0 24 24"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"/></symbol>
         <symbol id="icon-plus" viewBox="0 0 24 24"><path d="M12 5v14"/><path d="M5 12h14"/></symbol>
     </svg>
 
@@ -514,7 +654,7 @@
 
                 <section class="week-days" id="week-days" aria-label="Days of the week"></section>
 
-                <section class="selected-day" aria-labelledby="selected-heading">
+                <section class="selected-day" id="selected-day" data-state="loading" aria-labelledby="selected-heading">
                     <p class="selected-date" id="selected-date"></p>
                     <div class="selected-heading-row">
                         <h2 id="selected-heading">What's cooking</h2>
@@ -522,8 +662,9 @@
                             <svg class="icon"><use href="#icon-plus"/></svg>
                         </button>
                     </div>
-                    <div class="empty-state">
-                        <p>Nothing planned yet</p>
+                    <ul class="meal-list" id="meal-list"></ul>
+                    <div class="empty-state" id="empty-state">
+                        <p id="empty-message">Nothing planned yet</p>
                         <button type="button" class="find-recipe">Find a recipe</button>
                     </div>
                 </section>
@@ -543,12 +684,30 @@
     </div>
 
     <script>
+        // No login yet, so every request uses the same user (seeded in stage 3)
+        const USER_ID = 1;
+        const MEAL_SLOTS = { 1: "Breakfast", 2: "Lunch", 3: "Dinner" };
+
+        // Where a meal card links to. Change it here once the recipe page's URL is confirmed.
+        function recipeUrl(recipeId) {
+            return `recipe.html?id=${encodeURIComponent(recipeId)}`;
+        }
+
         const selectedDate = new Date();
         const weekDays = document.getElementById("week-days");
         const weekRange = document.getElementById("week-range");
         const weekRelative = document.getElementById("week-relative");
         const selectedDateLabel = document.getElementById("selected-date");
+        const selectedDaySection = document.getElementById("selected-day");
+        const mealList = document.getElementById("meal-list");
+        const emptyMessage = document.getElementById("empty-message");
         const dateFormatter = new Intl.DateTimeFormat("en-US", { month: "long", day: "numeric" });
+
+        // Meals for the visible week, keyed by "YYYY-MM-DD"
+        let weekMeals = new Map();
+        let loadedWeekStart = null;
+        let weekStatus = "loading"; // "loading" | "ready" | "error"
+        let latestRequest = 0;
 
         function getLocalDateKey(date) {
             const year = date.getFullYear();
@@ -557,11 +716,102 @@
             return `${year}-${month}-${day}`;
         }
 
-        function renderCalendar() {
-            const sunday = new Date(selectedDate);
+        function getWeekBounds(date) {
+            const sunday = new Date(date);
             sunday.setDate(sunday.getDate() - sunday.getDay());
             const saturday = new Date(sunday);
             saturday.setDate(saturday.getDate() + 6);
+            return { sunday, saturday };
+        }
+
+        // Loads the visible week with one request, unless it's already loaded
+        async function loadWeek() {
+            const { sunday, saturday } = getWeekBounds(selectedDate);
+            const start = getLocalDateKey(sunday);
+            if (start === loadedWeekStart) return;
+
+            loadedWeekStart = start;
+            weekMeals = new Map();
+            weekStatus = "loading";
+            renderCalendar();
+
+            // Ignore responses for a week the user has already moved past
+            const requestId = ++latestRequest;
+            const params = new URLSearchParams({ start, end: getLocalDateKey(saturday) });
+            try {
+                const response = await fetch(`/api/users/${USER_ID}/calendar?${params}`);
+                if (!response.ok) throw new Error(await response.text());
+                const rows = await response.json();
+                if (requestId !== latestRequest) return;
+
+                for (const row of rows) {
+                    if (!weekMeals.has(row.date)) weekMeals.set(row.date, []);
+                    weekMeals.get(row.date).push(row);
+                }
+                weekStatus = "ready";
+            } catch (error) {
+                if (requestId !== latestRequest) return;
+                console.error("Error loading meal plan:", error);
+                weekStatus = "error";
+                // Let the next week change (or coming back) try again
+                loadedWeekStart = null;
+            }
+            renderCalendar();
+        }
+
+        function createMealCard(meal) {
+            const item = document.createElement("li");
+            item.className = "meal-card";
+            const link = document.createElement("a");
+            link.className = "meal-link";
+            link.href = recipeUrl(meal.recipe_id);
+            const slot = document.createElement("span");
+            slot.className = "meal-slot";
+            slot.textContent = MEAL_SLOTS[meal.meal_slot] || `Meal ${meal.meal_slot}`;
+            const title = document.createElement("span");
+            title.className = "meal-title";
+            title.textContent = meal.recipe_title;
+            link.append(slot, title);
+            item.append(link);
+            return item;
+        }
+
+        // "+ Add lunch" etc. CSS only shows these in the wide layout
+        function createMealPlaceholder(slotName) {
+            const item = document.createElement("li");
+            item.className = "empty-slot";
+            const button = document.createElement("button");
+            button.type = "button";
+            button.className = "meal-placeholder";
+            button.innerHTML = '<svg class="icon"><use href="#icon-plus"/></svg>';
+            button.append(`Add ${slotName.toLowerCase()}`);
+            item.append(button);
+            return item;
+        }
+
+        function renderSelectedDay() {
+            const meals = weekMeals.get(getLocalDateKey(selectedDate)) || [];
+            mealList.replaceChildren();
+
+            // One entry per slot in meal order, then any slot numbers we don't have a name for
+            for (const [slotNumber, slotName] of Object.entries(MEAL_SLOTS)) {
+                const meal = meals.find((m) => m.meal_slot === Number(slotNumber));
+                mealList.append(meal ? createMealCard(meal) : createMealPlaceholder(slotName));
+            }
+            for (const meal of meals.filter((m) => !MEAL_SLOTS[m.meal_slot])) {
+                mealList.append(createMealCard(meal));
+            }
+
+            selectedDaySection.dataset.state = weekStatus === "ready"
+                ? (meals.length > 0 ? "filled" : "empty")
+                : weekStatus;
+            emptyMessage.textContent = weekStatus === "error"
+                ? "Couldn't load your meal plan"
+                : "Nothing planned yet";
+        }
+
+        function renderCalendar() {
+            const { sunday, saturday } = getWeekBounds(selectedDate);
 
             const sameMonth = sunday.getMonth() === saturday.getMonth();
             weekRange.textContent = sameMonth
@@ -588,11 +838,13 @@
                 button.type = "button";
                 button.className = "day-button";
                 button.setAttribute("aria-pressed", getLocalDateKey(date) === getLocalDateKey(selectedDate) ? "true" : "false");
-                button.setAttribute("aria-label", new Intl.DateTimeFormat("en-US", {
+                const hasMeals = weekMeals.has(getLocalDateKey(date));
+                const dayLabel = new Intl.DateTimeFormat("en-US", {
                     weekday: "long",
                     month: "long",
                     day: "numeric"
-                }).format(date));
+                }).format(date);
+                button.setAttribute("aria-label", hasMeals ? `${dayLabel}, meals planned` : dayLabel);
 
                 const dayName = document.createElement("span");
                 dayName.className = "day-name";
@@ -601,9 +853,14 @@
                 dayNumber.className = "day-number";
                 dayNumber.textContent = String(date.getDate());
                 button.append(dayName, dayNumber);
+                if (hasMeals) {
+                    const dot = document.createElement("span");
+                    dot.className = "day-dot";
+                    button.append(dot);
+                }
                 button.addEventListener("click", () => {
                     selectedDate.setTime(date.getTime());
-                    renderCalendar();
+                    showSelectedDate();
                 });
                 weekDays.append(button);
             }
@@ -613,18 +870,27 @@
                 month: "long",
                 day: "numeric"
             }).format(selectedDate).toUpperCase();
+
+            renderSelectedDay();
+        }
+
+        // Re-renders right away, then fetches only if the week changed
+        // (or the last load for this week failed)
+        function showSelectedDate() {
+            renderCalendar();
+            loadWeek();
         }
 
         document.getElementById("previous-week").addEventListener("click", () => {
             selectedDate.setDate(selectedDate.getDate() - 7);
-            renderCalendar();
+            showSelectedDate();
         });
         document.getElementById("next-week").addEventListener("click", () => {
             selectedDate.setDate(selectedDate.getDate() + 7);
-            renderCalendar();
+            showSelectedDate();
         });
 
-        renderCalendar();
+        showSelectedDate();
     </script>
 </body>
 </html>

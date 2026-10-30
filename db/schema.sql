@@ -117,3 +117,14 @@ insert into recipe_classes (recipe_class_desc) values
 
 insert into measurements (measurement_desc) values
   ('Cup'), ('Tablespoon'), ('Teaspoon'), ('Ounce'), ('Pound'), ('Gram'), ('Each');
+
+-- Test user 1: there's no login yet, so the frontend uses USER_ID = 1.
+-- Same as db/002_seed_test_user.sql. user_id is "generated always", so a
+-- fixed ID needs OVERRIDING SYSTEM VALUE, and the sequence is moved past it.
+insert into users (user_id, first_name, last_name, email)
+overriding system value
+values (1, 'Test', 'User', 'test.user@example.com')
+on conflict do nothing;
+
+select setval(pg_get_serial_sequence('users', 'user_id'),
+              (select max(user_id) from users));
