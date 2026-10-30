@@ -167,6 +167,277 @@
             color: var(--text-muted);
         }
 
+        .visually-hidden {
+            position: absolute;
+            width: 1px;
+            height: 1px;
+            overflow: hidden;
+            clip-path: inset(50%);
+            white-space: nowrap;
+        }
+
+        /* The week range opens the month view */
+        .month-toggle {
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            padding: 4px 10px;
+            border: 0;
+            border-radius: 14px;
+            background: none;
+            font: inherit;
+            cursor: pointer;
+            transition: background-color 0.2s ease;
+        }
+
+        .month-toggle:hover {
+            background-color: #F1EEEB;
+        }
+
+        .month-toggle .icon {
+            width: 18px;
+            height: 18px;
+            color: var(--accent);
+        }
+
+        /* ---------- Popups (month view, remove confirmation) ----------
+           Phones: a sheet from the bottom. Wider screens: a centered card. */
+        .month-picker,
+        .confirm-dialog {
+            width: min(420px, calc(100% - 48px));
+            max-width: none;
+            padding: 0;
+            border: none;
+            border-radius: 28px;
+            color: var(--text);
+            background-color: #FAF8F5;
+            box-shadow: 0 24px 60px rgba(0, 0, 0, 0.25);
+        }
+
+        .month-picker::backdrop,
+        .confirm-dialog::backdrop {
+            background-color: rgba(20, 16, 14, 0.45);
+            backdrop-filter: blur(4px);
+            -webkit-backdrop-filter: blur(4px);
+        }
+
+        .confirm-dialog {
+            width: min(380px, calc(100% - 48px));
+        }
+
+        .confirm-dialog form {
+            padding: 24px 24px calc(24px + env(safe-area-inset-bottom));
+            text-align: center;
+        }
+
+        .confirm-icon {
+            display: grid;
+            place-items: center;
+            width: 52px;
+            height: 52px;
+            margin: 0 auto 14px;
+            border-radius: 50%;
+            background-color: var(--accent-soft);
+            color: var(--accent);
+        }
+
+        .confirm-dialog h2 {
+            margin: 0;
+            font-size: 1.2rem;
+            font-weight: 700;
+        }
+
+        .confirm-dialog p {
+            margin: 8px 0 0;
+            color: var(--text-muted);
+            line-height: 1.45;
+        }
+
+        .confirm-dialog strong {
+            color: var(--text);
+            font-weight: 600;
+        }
+
+        .confirm-actions {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 10px;
+            margin-top: 22px;
+        }
+
+        .confirm-actions button {
+            padding: 12px 18px;
+            border: 1px solid #D0D8E2;
+            border-radius: 16px;
+            background-color: var(--surface);
+            font-weight: 600;
+            cursor: pointer;
+            transition: background-color 0.2s ease, border-color 0.2s ease;
+        }
+
+        .confirm-actions button:hover {
+            background-color: #F1EEEB;
+        }
+
+        .confirm-actions .confirm-danger {
+            border-color: var(--accent);
+            background-color: var(--accent);
+            color: white;
+        }
+
+        .confirm-actions .confirm-danger:hover {
+            border-color: var(--accent-hover);
+            background-color: var(--accent-hover);
+        }
+
+        .confirm-actions button:focus-visible {
+            outline: 2px solid var(--accent);
+            outline-offset: 2px;
+        }
+
+        .month-picker-body {
+            padding: 20px 20px calc(20px + env(safe-area-inset-bottom));
+        }
+
+        .month-header {
+            display: grid;
+            grid-template-columns: 44px 1fr 44px;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .month-header h2 {
+            margin: 0;
+            font-size: 1.15rem;
+            font-weight: 600;
+            text-align: center;
+        }
+
+        .month-arrow {
+            display: grid;
+            place-items: center;
+            width: 44px;
+            height: 44px;
+            padding: 0;
+            border: none;
+            border-radius: 50%;
+            background-color: var(--surface);
+            box-shadow: 0 2px 8px rgba(31, 35, 40, 0.06);
+            cursor: pointer;
+            transition: background-color 0.2s ease;
+        }
+
+        .month-arrow:hover {
+            background-color: #F1EEEB;
+        }
+
+        .month-weekdays,
+        .month-grid {
+            display: grid;
+            grid-template-columns: repeat(7, minmax(0, 1fr));
+            gap: 4px;
+        }
+
+        .month-weekdays {
+            margin-top: 18px;
+            color: var(--text-muted);
+            font-size: 0.72rem;
+            font-weight: 500;
+            text-align: center;
+        }
+
+        .month-grid {
+            margin-top: 8px;
+        }
+
+        .month-day {
+            position: relative;
+            display: grid;
+            place-items: center;
+            height: 46px;
+            padding: 0 0 6px;
+            border: 1px solid transparent;
+            border-radius: 14px;
+            background: none;
+            font-weight: 600;
+            cursor: pointer;
+            transition: background-color 0.2s ease, color 0.2s ease;
+        }
+
+        .month-day:hover {
+            background-color: #F1EEEB;
+        }
+
+        .month-day.is-outside {
+            color: #A3A9B1;
+            font-weight: 500;
+        }
+
+        .month-day[aria-current="date"] {
+            border-color: var(--accent);
+        }
+
+        .month-day[aria-pressed="true"] {
+            border-color: var(--accent);
+            background-color: var(--accent);
+            color: white;
+        }
+
+        .month-day .day-dot {
+            bottom: 7px;
+        }
+
+        .month-day[aria-pressed="true"] .day-dot {
+            background-color: white;
+        }
+
+        .month-status {
+            min-height: 1.2em;
+            margin: 10px 0 0;
+            color: #8A2E12;
+            font-size: 0.88rem;
+            font-weight: 600;
+            text-align: center;
+        }
+
+        .month-footer {
+            display: flex;
+            justify-content: space-between;
+            gap: 12px;
+            margin-top: 8px;
+        }
+
+        .month-footer button {
+            padding: 10px 18px;
+            border: 1px solid #D0D8E2;
+            border-radius: 16px;
+            background-color: var(--surface);
+            font-weight: 600;
+            cursor: pointer;
+            transition: background-color 0.2s ease;
+        }
+
+        .month-footer button:hover {
+            background-color: #F1EEEB;
+        }
+
+        .month-toggle:focus-visible,
+        .month-arrow:focus-visible,
+        .month-day:focus-visible,
+        .month-footer button:focus-visible {
+            outline: 2px solid var(--accent);
+            outline-offset: 2px;
+        }
+
+        @media (max-width: 639px) {
+            .month-picker,
+            .confirm-dialog {
+                width: 100%;
+                margin: auto 0 0;
+                border-radius: 26px 26px 0 0;
+            }
+        }
+
         .week-days {
             display: grid;
             grid-template-columns: repeat(7, minmax(0, 1fr));
@@ -267,12 +538,50 @@
             border-radius: 50%;
             background-color: var(--accent);
             color: white;
+            text-decoration: none;
             cursor: pointer;
             transition: background-color 0.2s ease, transform 0.15s ease;
         }
 
         .add-btn:hover {
             background-color: var(--accent-hover);
+        }
+
+        .page-error {
+            display: flex;
+            flex-wrap: wrap;
+            align-items: center;
+            justify-content: space-between;
+            gap: 8px 16px;
+            margin-top: 20px;
+            padding: 12px 18px;
+            border: 1px solid #F1B9A5;
+            border-radius: 18px;
+            background-color: #FDEEE8;
+            color: #8A2E12;
+            font-weight: 600;
+        }
+
+        .page-error p {
+            margin: 0;
+        }
+
+        .page-error button {
+            padding: 0;
+            border: 0;
+            background: none;
+            color: var(--accent);
+            font-weight: 700;
+            cursor: pointer;
+        }
+
+        .page-error button:hover {
+            color: var(--accent-hover);
+        }
+
+        .page-error button:focus-visible {
+            outline: 2px solid var(--accent);
+            outline-offset: 3px;
         }
 
         .meal-list {
@@ -287,7 +596,7 @@
             position: relative;
             display: flex;
             flex-direction: column;
-            padding: 16px 20px;
+            padding: 16px 60px 16px 20px;
             border: 1px solid #D0D8E2;
             border-radius: 22px;
             background-color: var(--surface);
@@ -308,9 +617,9 @@
         }
 
         /* Stretches the link over the whole card so any click opens the recipe.
-           Anything else inside the card (e.g. the stage 3 remove button) must be
-           a sibling of .meal-link with position: relative; z-index: 1 so it sits
-           above this layer and doesn't trigger the link. */
+           Anything else inside the card (like .meal-remove) must be a sibling of
+           .meal-link with z-index: 1 so it sits above this layer and doesn't
+           trigger the link. */
         .meal-link::after {
             content: "";
             position: absolute;
@@ -340,7 +649,45 @@
             font-weight: 600;
         }
 
-        /* Empty-slot placeholders only show in the wide layout */
+        .meal-remove {
+            position: absolute;
+            top: 10px;
+            right: 10px;
+            z-index: 1;
+            display: grid;
+            place-items: center;
+            width: 38px;
+            height: 38px;
+            padding: 0;
+            border: 0;
+            border-radius: 50%;
+            background: none;
+            color: var(--text-muted);
+            cursor: pointer;
+            transition: background-color 0.2s ease, color 0.2s ease;
+        }
+
+        .meal-remove:hover {
+            background-color: var(--accent-soft);
+            color: var(--accent);
+        }
+
+        .meal-remove:focus-visible {
+            outline: 2px solid var(--accent);
+            outline-offset: 2px;
+        }
+
+        .meal-remove:disabled {
+            opacity: 0.5;
+            cursor: wait;
+        }
+
+        .meal-remove .icon {
+            width: 18px;
+            height: 18px;
+        }
+
+        /* "+ Add lunch" etc. for each empty slot */
         .meal-placeholder {
             display: flex;
             align-items: center;
@@ -354,6 +701,7 @@
             background: none;
             color: var(--text-muted);
             font-weight: 600;
+            text-decoration: none;
             cursor: pointer;
             transition: color 0.2s ease, border-color 0.2s ease, background-color 0.2s ease;
         }
@@ -378,8 +726,8 @@
         .selected-day[data-state="loading"] .empty-state,
         .selected-day[data-state="empty"] .meal-list,
         .selected-day[data-state="error"] .meal-list,
-        .selected-day[data-state="filled"] .empty-state,
-        .empty-slot {
+        .selected-day[data-state="error"] .empty-state,
+        .selected-day[data-state="filled"] .empty-state {
             display: none;
         }
 
@@ -408,6 +756,7 @@
             color: var(--accent);
             font-size: 1rem;
             font-weight: 600;
+            text-decoration: none;
             cursor: pointer;
         }
 
@@ -591,13 +940,9 @@
                 display: none;
             }
 
-            .empty-slot {
-                display: block;
-            }
-
             .meal-card {
                 min-height: 140px;
-                padding: 20px 22px;
+                padding: 20px 60px 20px 22px;
             }
 
             .meal-placeholder {
@@ -627,6 +972,8 @@
         <symbol id="icon-basket" viewBox="0 0 24 24"><path d="m15 11-1 9"/><path d="m19 11-4-7"/><path d="M2 11h20"/><path d="m3.5 11 1.6 7.4a2 2 0 0 0 2 1.6h9.8a2 2 0 0 0 2-1.6l1.7-7.4"/><path d="M4.5 15.5h15"/><path d="m5 11 4-7"/><path d="m9 11 1 9"/></symbol>
         <symbol id="icon-settings" viewBox="0 0 24 24"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"/></symbol>
         <symbol id="icon-plus" viewBox="0 0 24 24"><path d="M12 5v14"/><path d="M5 12h14"/></symbol>
+        <symbol id="icon-x" viewBox="0 0 24 24"><path d="M18 6 6 18"/><path d="m6 6 12 12"/></symbol>
+        <symbol id="icon-chevron-down" viewBox="0 0 24 24"><path d="m6 9 6 6 6-6"/></symbol>
     </svg>
 
     <div class="app">
@@ -644,7 +991,12 @@
                         <svg class="icon"><use href="#icon-chevron-left"/></svg>
                     </button>
                     <div class="week-label" aria-live="polite">
-                        <h2 id="week-range"></h2>
+                        <h2>
+                            <button type="button" class="month-toggle" id="open-month" aria-haspopup="dialog">
+                                <span id="week-range"></span><span class="visually-hidden">, open month view</span>
+                                <svg class="icon"><use href="#icon-chevron-down"/></svg>
+                            </button>
+                        </h2>
                         <p id="week-relative"></p>
                     </div>
                     <button type="button" class="week-arrow" id="next-week" aria-label="Next week">
@@ -654,18 +1006,23 @@
 
                 <section class="week-days" id="week-days" aria-label="Days of the week"></section>
 
+                <div class="page-error" id="page-error" role="alert" hidden>
+                    <p id="page-error-message"></p>
+                    <button type="button" id="page-error-retry" hidden>Try again</button>
+                </div>
+
                 <section class="selected-day" id="selected-day" data-state="loading" aria-labelledby="selected-heading">
                     <p class="selected-date" id="selected-date"></p>
                     <div class="selected-heading-row">
                         <h2 id="selected-heading">What's cooking</h2>
-                        <button type="button" class="add-btn" aria-label="Add a meal">
+                        <a class="add-btn" id="add-meal" href="search.html" aria-label="Add a meal">
                             <svg class="icon"><use href="#icon-plus"/></svg>
-                        </button>
+                        </a>
                     </div>
                     <ul class="meal-list" id="meal-list"></ul>
-                    <div class="empty-state" id="empty-state">
-                        <p id="empty-message">Nothing planned yet</p>
-                        <button type="button" class="find-recipe">Find a recipe</button>
+                    <div class="empty-state">
+                        <p>Nothing planned yet</p>
+                        <a class="find-recipe" id="find-recipe" href="search.html">Find a recipe</a>
                     </div>
                 </section>
             </div>
@@ -683,25 +1040,85 @@
         </nav>
     </div>
 
+    <dialog class="confirm-dialog" id="confirm-remove" aria-labelledby="confirm-remove-title" aria-describedby="confirm-remove-text">
+        <form method="dialog">
+            <div class="confirm-icon" aria-hidden="true">
+                <svg class="icon"><use href="#icon-x"/></svg>
+            </div>
+            <h2 id="confirm-remove-title">Remove this meal?</h2>
+            <p id="confirm-remove-text"></p>
+            <div class="confirm-actions">
+                <button type="submit" value="cancel" autofocus>Cancel</button>
+                <button type="submit" value="remove" class="confirm-danger">Remove</button>
+            </div>
+        </form>
+    </dialog>
+
+    <dialog class="month-picker" id="month-picker" aria-labelledby="month-title">
+        <div class="month-picker-body">
+            <div class="month-header">
+                <button type="button" class="month-arrow" id="previous-month" aria-label="Previous month">
+                    <svg class="icon"><use href="#icon-chevron-left"/></svg>
+                </button>
+                <h2 id="month-title" aria-live="polite"></h2>
+                <button type="button" class="month-arrow" id="next-month" aria-label="Next month">
+                    <svg class="icon"><use href="#icon-chevron-right"/></svg>
+                </button>
+            </div>
+            <div class="month-weekdays" aria-hidden="true">
+                <span>Sun</span><span>Mon</span><span>Tue</span><span>Wed</span><span>Thu</span><span>Fri</span><span>Sat</span>
+            </div>
+            <div class="month-grid" id="month-grid"></div>
+            <p class="month-status" id="month-status" role="status"></p>
+            <div class="month-footer">
+                <button type="button" id="month-today">Today</button>
+                <button type="button" id="close-month">Close</button>
+            </div>
+        </div>
+    </dialog>
+
     <script>
         // No login yet, so every request uses the same user (seeded in stage 3)
         const USER_ID = 1;
         const MEAL_SLOTS = { 1: "Breakfast", 2: "Lunch", 3: "Dinner" };
 
-        // Where a meal card links to. Change it here once the recipe page's URL is confirmed.
+        // Links out to teammates' pages. Change the URLs here if theirs change.
+        // Search adds the recipe, then redirects back to calendar.html?date=YYYY-MM-DD
+        function searchUrl(date, slot) {
+            const params = new URLSearchParams({ date });
+            if (slot) params.set("slot", slot);
+            return `search.html?${params}`;
+        }
+
         function recipeUrl(recipeId) {
             return `recipe.html?id=${encodeURIComponent(recipeId)}`;
         }
 
-        const selectedDate = new Date();
         const weekDays = document.getElementById("week-days");
         const weekRange = document.getElementById("week-range");
         const weekRelative = document.getElementById("week-relative");
         const selectedDateLabel = document.getElementById("selected-date");
         const selectedDaySection = document.getElementById("selected-day");
         const mealList = document.getElementById("meal-list");
-        const emptyMessage = document.getElementById("empty-message");
+        const addMealLink = document.getElementById("add-meal");
+        const findRecipeLink = document.getElementById("find-recipe");
+        const pageError = document.getElementById("page-error");
+        const pageErrorMessage = document.getElementById("page-error-message");
+        const pageErrorRetry = document.getElementById("page-error-retry");
         const dateFormatter = new Intl.DateTimeFormat("en-US", { month: "long", day: "numeric" });
+
+        // "YYYY-MM-DD" -> local Date, or null if it isn't a real day
+        function parseDateKey(value) {
+            const match = /^(\d{4})-(\d{2})-(\d{2})$/.exec(value || "");
+            if (!match) return null;
+            const [year, month, day] = match.slice(1).map(Number);
+            const date = new Date(year, month - 1, day);
+            const isRealDay = date.getFullYear() === year && date.getMonth() === month - 1 && date.getDate() === day;
+            return isRealDay ? date : null;
+        }
+
+        // calendar.html?date=YYYY-MM-DD opens on that day (search redirects here after saving)
+        const selectedDate = parseDateKey(new URLSearchParams(location.search).get("date")) || new Date();
 
         // Meals for the visible week, keyed by "YYYY-MM-DD"
         let weekMeals = new Map();
@@ -722,6 +1139,16 @@
             const saturday = new Date(sunday);
             saturday.setDate(saturday.getDate() + 6);
             return { sunday, saturday };
+        }
+
+        function showError(message, { retry = false } = {}) {
+            pageErrorMessage.textContent = message;
+            pageErrorRetry.hidden = !retry;
+            pageError.hidden = false;
+        }
+
+        function clearError() {
+            pageError.hidden = true;
         }
 
         // Loads the visible week with one request, unless it's already loaded
@@ -749,14 +1176,71 @@
                     weekMeals.get(row.date).push(row);
                 }
                 weekStatus = "ready";
+                clearError();
             } catch (error) {
                 if (requestId !== latestRequest) return;
                 console.error("Error loading meal plan:", error);
                 weekStatus = "error";
-                // Let the next week change (or coming back) try again
+                // Let Try again, the next day click, or a week change load it again
                 loadedWeekStart = null;
+                showError("Couldn't load your meal plan.", { retry: true });
             }
             renderCalendar();
+        }
+
+        const confirmRemoveDialog = document.getElementById("confirm-remove");
+        const confirmRemoveText = document.getElementById("confirm-remove-text");
+
+        // Opens the on-page confirmation. Resolves true only if Remove was clicked;
+        // Cancel, Esc, and clicking the backdrop all resolve false.
+        function askToRemove(meal) {
+            const slotName = (MEAL_SLOTS[meal.meal_slot] || `meal ${meal.meal_slot}`).toLowerCase();
+            const day = new Intl.DateTimeFormat("en-US", { weekday: "long", month: "long", day: "numeric" })
+                .format(parseDateKey(meal.date));
+            const title = document.createElement("strong");
+            title.textContent = meal.recipe_title;
+            confirmRemoveText.replaceChildren(title, ` will be removed from ${slotName} on ${day}.`);
+
+            confirmRemoveDialog.returnValue = "";
+            confirmRemoveDialog.showModal();
+            return new Promise((resolve) => {
+                confirmRemoveDialog.addEventListener("close", () => {
+                    resolve(confirmRemoveDialog.returnValue === "remove");
+                }, { once: true });
+            });
+        }
+
+        confirmRemoveDialog.addEventListener("click", (event) => {
+            if (event.target === confirmRemoveDialog) confirmRemoveDialog.close("cancel");
+        });
+
+        async function removeMeal(meal, button) {
+            if (!(await askToRemove(meal))) return;
+
+            button.disabled = true;
+            try {
+                const response = await fetch(`/api/users/${USER_ID}/calendar/${meal.date}/${meal.meal_slot}`, {
+                    method: "DELETE"
+                });
+                // 404 means it's already gone, which is what we wanted anyway
+                if (!response.ok && response.status !== 404) throw new Error(await response.text());
+            } catch (error) {
+                console.error("Error removing meal:", error);
+                showError(`Couldn't remove ${meal.recipe_title}. Please try again.`);
+                button.disabled = false;
+                return;
+            }
+
+            const remaining = (weekMeals.get(meal.date) || []).filter((m) => m.meal_slot !== meal.meal_slot);
+            if (remaining.length > 0) {
+                weekMeals.set(meal.date, remaining);
+            } else {
+                weekMeals.delete(meal.date);
+            }
+            clearError();
+            renderCalendar();
+            // The card that had focus is gone, so keep keyboard users nearby
+            addMealLink.focus();
         }
 
         function createMealCard(meal) {
@@ -772,42 +1256,57 @@
             title.className = "meal-title";
             title.textContent = meal.recipe_title;
             link.append(slot, title);
+
+            // A sibling of the link (not inside it), so clicking it never opens the recipe
+            const remove = document.createElement("button");
+            remove.type = "button";
+            remove.className = "meal-remove";
+            remove.setAttribute("aria-label", `Remove ${meal.recipe_title} from ${slot.textContent.toLowerCase()}`);
+            remove.innerHTML = '<svg class="icon"><use href="#icon-x"/></svg>';
+            remove.addEventListener("click", () => removeMeal(meal, remove));
+
+            item.append(link, remove);
+            return item;
+        }
+
+        // "+ Add lunch" etc. for an empty slot
+        function createMealPlaceholder(dateKey, slotNumber, slotName) {
+            const item = document.createElement("li");
+            const link = document.createElement("a");
+            link.className = "meal-placeholder";
+            link.href = searchUrl(dateKey, slotNumber);
+            link.innerHTML = '<svg class="icon"><use href="#icon-plus"/></svg>';
+            link.append(`Add ${slotName.toLowerCase()}`);
             item.append(link);
             return item;
         }
 
-        // "+ Add lunch" etc. CSS only shows these in the wide layout
-        function createMealPlaceholder(slotName) {
-            const item = document.createElement("li");
-            item.className = "empty-slot";
-            const button = document.createElement("button");
-            button.type = "button";
-            button.className = "meal-placeholder";
-            button.innerHTML = '<svg class="icon"><use href="#icon-plus"/></svg>';
-            button.append(`Add ${slotName.toLowerCase()}`);
-            item.append(button);
-            return item;
-        }
-
         function renderSelectedDay() {
-            const meals = weekMeals.get(getLocalDateKey(selectedDate)) || [];
+            const dateKey = getLocalDateKey(selectedDate);
+            const meals = weekMeals.get(dateKey) || [];
             mealList.replaceChildren();
 
             // One entry per slot in meal order, then any slot numbers we don't have a name for
+            let firstEmptySlot = null;
             for (const [slotNumber, slotName] of Object.entries(MEAL_SLOTS)) {
                 const meal = meals.find((m) => m.meal_slot === Number(slotNumber));
-                mealList.append(meal ? createMealCard(meal) : createMealPlaceholder(slotName));
+                if (!meal && firstEmptySlot === null) firstEmptySlot = Number(slotNumber);
+                mealList.append(meal ? createMealCard(meal) : createMealPlaceholder(dateKey, slotNumber, slotName));
             }
             for (const meal of meals.filter((m) => !MEAL_SLOTS[m.meal_slot])) {
                 mealList.append(createMealCard(meal));
             }
 
+            // + goes to the first empty slot, or just the day if every slot is full
+            addMealLink.href = searchUrl(dateKey, firstEmptySlot);
+            addMealLink.setAttribute("aria-label", firstEmptySlot
+                ? `Add ${MEAL_SLOTS[firstEmptySlot].toLowerCase()}`
+                : "Add a meal");
+            findRecipeLink.href = searchUrl(dateKey, firstEmptySlot);
+
             selectedDaySection.dataset.state = weekStatus === "ready"
                 ? (meals.length > 0 ? "filled" : "empty")
                 : weekStatus;
-            emptyMessage.textContent = weekStatus === "error"
-                ? "Couldn't load your meal plan"
-                : "Nothing planned yet";
         }
 
         function renderCalendar() {
@@ -888,6 +1387,162 @@
         document.getElementById("next-week").addEventListener("click", () => {
             selectedDate.setDate(selectedDate.getDate() + 7);
             showSelectedDate();
+        });
+        pageErrorRetry.addEventListener("click", showSelectedDate);
+
+        // ---------- Month view popup ----------
+        const monthPicker = document.getElementById("month-picker");
+        const monthTitle = document.getElementById("month-title");
+        const monthGrid = document.getElementById("month-grid");
+        const monthStatus = document.getElementById("month-status");
+        const monthTitleFormatter = new Intl.DateTimeFormat("en-US", { month: "long", year: "numeric" });
+        const monthDayLabelFormatter = new Intl.DateTimeFormat("en-US", { weekday: "long", month: "long", day: "numeric", year: "numeric" });
+
+        // monthFocus is the day keyboard focus is on; the grid shows its month
+        let monthFocus = new Date();
+        let monthMealDates = new Set();
+        let loadedMonthStart = null;
+        let latestMonthRequest = 0;
+
+        // Always 6 weeks (Sunday before the 1st onward) so the popup doesn't change height
+        function getMonthGridBounds(date) {
+            const start = new Date(date.getFullYear(), date.getMonth(), 1);
+            start.setDate(start.getDate() - start.getDay());
+            const end = new Date(start);
+            end.setDate(end.getDate() + 41);
+            return { start, end };
+        }
+
+        // Which days in the grid have meals, with one request per month
+        async function loadMonth() {
+            const { start, end } = getMonthGridBounds(monthFocus);
+            const startKey = getLocalDateKey(start);
+            if (startKey === loadedMonthStart) return;
+
+            loadedMonthStart = startKey;
+            monthMealDates = new Set();
+            monthStatus.textContent = "";
+            renderMonth();
+
+            const requestId = ++latestMonthRequest;
+            const params = new URLSearchParams({ start: startKey, end: getLocalDateKey(end) });
+            try {
+                const response = await fetch(`/api/users/${USER_ID}/calendar?${params}`);
+                if (!response.ok) throw new Error(await response.text());
+                const rows = await response.json();
+                if (requestId !== latestMonthRequest) return;
+                monthMealDates = new Set(rows.map((row) => row.date));
+            } catch (error) {
+                if (requestId !== latestMonthRequest) return;
+                console.error("Error loading month:", error);
+                loadedMonthStart = null;
+                monthStatus.textContent = "Couldn't load which days have meals.";
+            }
+            renderMonth();
+        }
+
+        function renderMonth({ focus = false } = {}) {
+            const viewMonth = monthFocus.getMonth();
+            monthTitle.textContent = monthTitleFormatter.format(monthFocus);
+
+            const { start } = getMonthGridBounds(monthFocus);
+            const todayKey = getLocalDateKey(new Date());
+            const selectedKey = getLocalDateKey(selectedDate);
+            const focusKey = getLocalDateKey(monthFocus);
+            let focusButton = null;
+
+            monthGrid.replaceChildren();
+            for (let index = 0; index < 42; index += 1) {
+                const date = new Date(start);
+                date.setDate(start.getDate() + index);
+                const key = getLocalDateKey(date);
+                const hasMeals = monthMealDates.has(key);
+
+                const button = document.createElement("button");
+                button.type = "button";
+                button.className = date.getMonth() === viewMonth ? "month-day" : "month-day is-outside";
+                button.textContent = String(date.getDate());
+                button.dataset.date = key;
+                // Only the focused day is tabbable; arrow keys move between days
+                button.tabIndex = key === focusKey ? 0 : -1;
+                button.setAttribute("aria-pressed", key === selectedKey ? "true" : "false");
+                if (key === todayKey) button.setAttribute("aria-current", "date");
+                const label = monthDayLabelFormatter.format(date);
+                button.setAttribute("aria-label", hasMeals ? `${label}, meals planned` : label);
+                if (hasMeals) {
+                    const dot = document.createElement("span");
+                    dot.className = "day-dot";
+                    button.append(dot);
+                }
+                if (key === focusKey) focusButton = button;
+                monthGrid.append(button);
+            }
+            if (focus && focusButton) focusButton.focus();
+        }
+
+        function openMonthPicker() {
+            monthFocus = new Date(selectedDate);
+            // Meals may have changed since last time (removed here, added on search)
+            loadedMonthStart = null;
+            monthPicker.showModal();
+            renderMonth({ focus: true });
+            loadMonth();
+        }
+
+        // Jump the page to a day and its week
+        function pickDate(date) {
+            selectedDate.setTime(date.getTime());
+            monthPicker.close();
+            showSelectedDate();
+        }
+
+        // Moves by whole months, keeping the day number where possible (Jan 31 -> Feb 28)
+        function changeMonth(offset, options) {
+            const day = monthFocus.getDate();
+            const target = new Date(monthFocus.getFullYear(), monthFocus.getMonth() + offset, 1);
+            const daysInMonth = new Date(target.getFullYear(), target.getMonth() + 1, 0).getDate();
+            target.setDate(Math.min(day, daysInMonth));
+            monthFocus = target;
+            renderMonth(options);
+            loadMonth();
+        }
+
+        function moveFocusByDays(days) {
+            monthFocus.setDate(monthFocus.getDate() + days);
+            renderMonth({ focus: true });
+            loadMonth();
+        }
+
+        monthGrid.addEventListener("click", (event) => {
+            const button = event.target.closest(".month-day");
+            if (button) pickDate(parseDateKey(button.dataset.date));
+        });
+
+        monthGrid.addEventListener("keydown", (event) => {
+            const moves = { ArrowLeft: -1, ArrowRight: 1, ArrowUp: -7, ArrowDown: 7 };
+            if (event.key in moves) {
+                moveFocusByDays(moves[event.key]);
+            } else if (event.key === "PageUp" || event.key === "PageDown") {
+                changeMonth(event.key === "PageUp" ? -1 : 1, { focus: true });
+            } else {
+                return;
+            }
+            event.preventDefault();
+        });
+
+        document.getElementById("open-month").addEventListener("click", openMonthPicker);
+        document.getElementById("previous-month").addEventListener("click", () => changeMonth(-1));
+        document.getElementById("next-month").addEventListener("click", () => changeMonth(1));
+        // Shows the current month (popup stays open) with focus on today
+        document.getElementById("month-today").addEventListener("click", () => {
+            monthFocus = new Date();
+            renderMonth({ focus: true });
+            loadMonth();
+        });
+        document.getElementById("close-month").addEventListener("click", () => monthPicker.close());
+        // Clicking the dimmed backdrop closes it, like the popups on the home page
+        monthPicker.addEventListener("click", (event) => {
+            if (event.target === monthPicker) monthPicker.close();
         });
 
         showSelectedDate();

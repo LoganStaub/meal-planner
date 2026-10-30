@@ -67,7 +67,8 @@ Names are **snake_case** (`recipe_title`, not `RecipeTitle`).
 | ------- | -------------------------------- | ------------------------------------ | --------------------------------------------------------- |
 | Home    | `mp-vertical-slice/index.html`  | <http://localhost:3000>              | Design done: swipe through 5 meals, recipe popup opens. Meals are placeholder data |
 | Pantry  | `mp-vertical-slice/pantry.html` | <http://localhost:3000/pantry.html>  | Working with the database                                 |
-| Calendar, Shopping, Search, Profile | `calendar.html`, `shopping.html`, `search.html`, `profile.html` | | Not built yet. The home page already links to these names |
+| Calendar | `mp-vertical-slice/calendar.html` | <http://localhost:3000/calendar.html> | Working with the database: shows the week's meals and removes them. Adding goes through Search (see [Calendar handoff](#calendar-handoff)) |
+| Shopping, Search, Recipe, Profile | `shopping.html`, `search.html`, `recipe.html`, `profile.html` | | Not built yet. Other pages already link to these names |
 
 The home page's recipe details popup is the `<dialog id="recipe-details">` near the bottom of `index.html`. Its content goes in `#details-body`, and the open recipe's ID is in `dialog.dataset.recipeId`.
 
@@ -97,6 +98,10 @@ All routes return JSON. Errors look like `{ "error": "message" }`.
 | GET    | `/api/recipe-classes`                       | Breakfast, Lunch, …                                                      |
 | GET    | `/api/measurements`                         | Cup, Tablespoon, …                                                       |
 | GET    | `/api/users/:userId/calendar?start=…&end=…` | A user's meal plan between two `YYYY-MM-DD` dates                        |
+| POST   | `/api/users/:userId/calendar`               | Plan a meal: `{ date: "YYYY-MM-DD", meal_slot: 1-3, recipe_id }`. Replaces whatever was in that slot and returns the saved row |
+| DELETE | `/api/users/:userId/calendar/:date/:mealSlot` | Remove the meal in one slot, e.g. `/api/users/1/calendar/2026-10-30/3` (404 if that slot was empty) |
+
+`meal_slot` is 1 = Breakfast, 2 = Lunch, 3 = Dinner. There's no login yet, so the frontend uses user `1` (seeded by `db/002_seed_test_user.sql`).
 
 ## For Teammates
 
@@ -112,6 +117,38 @@ await fetch('/api/ingredients', {
   body: JSON.stringify({ ingredient_name: 'Beans' }),
 })
 ```
+
+### Calendar handoff
+
+The calendar doesn't add meals itself. It sends people to Search to pick a recipe and to the Recipe page to view one. Both pages are still being built, so here's how they connect.
+
+**Calendar → Search.** The + button and each empty "Add breakfast/lunch/dinner" slot link to:
+
+```
+search.html?date=2026-10-30&slot=2
+```
+
+| Parameter | Meaning |
+| --------- | ------- |
+| `date`    | The day being planned, `YYYY-MM-DD` |
+| `slot`    | `1` Breakfast, `2` Lunch, `3` Dinner. Missing when the + button is used on a day whose slots are all full, so Search should let the user choose (or replace one) |
+
+**Search → Calendar.** When the user picks a recipe, Search should save it and then send them back to that day:
+
+```js
+await fetch('/api/users/1/calendar', {
+  method: 'POST',
+  headers: { 'Content-Type': 'application/json' },
+  body: JSON.stringify({ date, meal_slot: Number(slot), recipe_id: recipeId }),
+})
+location.href = `calendar.html?date=${date}`
+```
+
+Check `response.ok` before redirecting, and show the `error` message if it isn't. `calendar.html?date=YYYY-MM-DD` opens on that day and its week. An invalid date falls back to today.
+
+**Calendar → Recipe.** Each planned meal card links to `recipe.html?id=<recipe_id>`, so the Recipe page should read `id` from the query string and load `GET /api/recipes/:id`.
+
+All three links are built in `searchUrl()` and `recipeUrl()` at the top of the script in `calendar.html`. If a page ends up with a different name or parameters, that's the only place to change.
 
 ### Adding a new API route
 
