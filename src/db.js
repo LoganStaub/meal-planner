@@ -11,4 +11,12 @@ if (!process.env.DATABASE_URL) {
 // which would otherwise shift by the server's time zone.
 pg.types.setTypeParser(pg.types.builtins.DATE, (value) => value)
 
-export const pool = new pg.Pool({ connectionString: process.env.DATABASE_URL })
+// Neon (and most hosted Postgres) requires SSL. The connection string from
+// Neon includes ?sslmode=require, so SSL turns on automatically for it and
+// stays off for a plain local database.
+const useSsl = process.env.DATABASE_URL.includes('sslmode=require')
+
+export const pool = new pg.Pool({
+  connectionString: process.env.DATABASE_URL,
+  ssl: useSsl ? { rejectUnauthorized: false } : false,
+})
