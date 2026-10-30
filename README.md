@@ -2,7 +2,7 @@
 
 ## App Summary
 
-Deciding what to eat every day, and making sure the right groceries are in the house, takes more time and mental energy than most people have to spare. Young adults and busy professionals feel this the most: they end up eating out, repeating the same few meals, or buying food that goes to waste. Meal Planner is a meal planning and recipe discovery app built for them. Users browse a short swipe feed of recipes, like the ones they want to keep, and place them on a calendar to build a meal plan. A virtual pantry tracks which ingredients they have at home and how much is left. A shopping list and recipe search round out the app, so planning, shopping, and cooking happen in one place. This repository holds the database and the first working feature, the Virtual Pantry.
+Deciding what to eat every day, and making sure the right groceries are in the house, takes more time and mental energy than most people have to spare. Young adults and busy professionals feel this the most: they end up eating out, repeating the same few meals, or buying food that goes to waste. Meal Planner is a meal planning and recipe discovery app built for them. Users browse a short swipe feed of recipes, like the ones they want to keep, and place them on a calendar to build a meal plan. A virtual pantry tracks which ingredients they have at home and how much is left. A shopping list and recipe search round out the app, so planning, shopping, and cooking happen in one place. This repository holds the database and the working Virtual Pantry and Calendar pages.
 
 ## ERD
 
@@ -46,10 +46,11 @@ Names are **snake_case** (`recipe_title`, not `RecipeTitle`).
    npm install
    ```
 4. **Configure:** copy `.env.example` to `.env` and set `DATABASE_URL`, e.g. `postgres://postgres:YOUR_PASSWORD@localhost:5432/meal_planner`.
-5. **Create the tables.** This drops and recreates them, so only run it on a fresh or throwaway database:
+5. **Create the tables.** This drops and recreates them, so only run it on a fresh or throwaway database. Never run it against a shared or hosted database, because it drops every table:
    ```bash
    npm run db:init
    ```
+   > Already have a database and aren't re-running `db:init`? Run `db/002_seed_test_user.sql` once so test user `1` exists: `psql "$DATABASE_URL" -f db/002_seed_test_user.sql`, or paste the file into pgAdmin's Query Tool.
 6. **Check the connection.** You should see a table of recipe classes (Breakfast, Lunch, …):
    ```bash
    npm run check
@@ -81,6 +82,24 @@ The vertical slice is **adding an ingredient to the Virtual Pantry**.
 3. Click **Add+**. The page sends `POST /api/ingredients`, the server inserts the row into Postgres and returns its new ID, and the ingredient appears at the bottom of the list with the status "Plenty Left".
 4. Refresh the page (F5). The ingredient is still in the list, because the page reloads everything from the database.
 5. Optional: run `select * from ingredients;` in pgAdmin or `psql` to see the new row.
+
+## Verifying the Calendar
+
+1. Run `npm start` and open <http://localhost:3000/calendar.html>. It opens on today's week, with any planned meals loaded from the database.
+2. Add a test meal for today with `POST /api/users/1/calendar`. A fresh database has no recipes, so this makes one first (use today's date in place of `2026-10-30`):
+   ```powershell
+   # PowerShell
+   $recipe = Invoke-RestMethod -Method Post -Uri http://localhost:3000/api/recipes -ContentType 'application/json' -Body '{"recipe_title":"Test Pasta"}'
+   Invoke-RestMethod -Method Post -Uri http://localhost:3000/api/users/1/calendar -ContentType 'application/json' -Body "{`"date`":`"2026-10-30`",`"meal_slot`":3,`"recipe_id`":$($recipe.recipe_id)}"
+   ```
+   ```bash
+   # curl (swap in the recipe_id the first call returns)
+   curl -X POST http://localhost:3000/api/recipes -H "Content-Type: application/json" -d '{"recipe_title":"Test Pasta"}'
+   curl -X POST http://localhost:3000/api/users/1/calendar -H "Content-Type: application/json" -d '{"date":"2026-10-30","meal_slot":3,"recipe_id":1}'
+   ```
+3. Refresh the page (F5). Today shows a dot under it, and selecting it shows a **Test Pasta** card in the Dinner slot.
+4. Click the card's remove button and confirm **Remove**. The card is replaced by an empty "Add dinner" slot and the dot goes away. It stays gone after a refresh.
+5. Open <http://localhost:3000/calendar.html?date=2026-12-25> (any `YYYY-MM-DD`). The calendar jumps to that week with that day selected.
 
 ## API Reference
 
@@ -169,4 +188,4 @@ There is **no login yet**, so every route is open to anyone who can reach the se
 Don't edit tables only in pgAdmin, because teammates won't know. Instead:
 
 1. Write the change as SQL and run it against your local database.
-2. Add the same SQL to a new file in `db/` (e.g. `002_add_user_likes.sql`), update `db/schema.sql` so new setups get it too, and commit both.
+2. Add the same SQL to a new file in `db/` (e.g. `003_add_user_likes.sql`), update `db/schema.sql` so new setups get it too, and commit both.
