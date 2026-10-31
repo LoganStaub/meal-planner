@@ -8,7 +8,28 @@ Deciding what to eat every day, and making sure the right groceries are in the h
 
 ![Entity relationship diagram for Meal Planner](docs/erd.png)
 
-The full schema lives in `db/schema.sql`.
+The full schema lives in `back/db/schema.sql`.
+
+## Folder Structure
+
+```text
+front/
+  views/                EJS page templates and reusable partials
+  public/               Browser assets served by Express
+    css/                Stylesheets
+    images/             Images served to the frontend
+    js/                 Browser JavaScript
+back/                  Express API, database code, and SQL schema
+  src/                 Server and API routes
+  db/                  PostgreSQL schema
+  scripts/             Database setup scripts
+docs/                  Project documentation and diagrams
+```
+
+Express renders EJS templates from `front/views/` and serves static assets from
+`front/public/`. The browser frontend talks to the backend through HTTP requests
+to `/api/...` on the same host, so it can use `fetch('/api/ingredients')` without
+extra CORS configuration. The browser never connects directly to PostgreSQL.
 
 | Table                  | Key                                    | What it holds                                             |
 | ---------------------- | -------------------------------------- | --------------------------------------------------------- |
@@ -26,8 +47,8 @@ Names are **snake_case** (`recipe_title`, not `RecipeTitle`).
 
 | Layer    | What we used                                                                        |
 | -------- | ----------------------------------------------------------------------------------- |
-| Frontend | Plain HTML, CSS, and JavaScript, one file per page in `mp-vertical-slice/`   |
-| API      | Node.js + Express 5 (`src/server.js`), called from the browser with `fetch`       |
+| Frontend | EJS page templates in `front/views/`, with CSS and JavaScript in `front/public/` |
+| API      | Node.js + Express 5 (`back/src/server.js`), called from the browser with `fetch`       |
 | Database | PostgreSQL, accessed from the server with `node-postgres` (`pg`)                  |
 | Tooling  | Node.js 18.18+ (`npm start`, `npm run db:init`, `npm run check`)                  |
 
@@ -43,9 +64,10 @@ Names are **snake_case** (`recipe_title`, not `RecipeTitle`).
    ```bash
    git clone https://github.com/LoganStaub/meal-planner.git
    cd meal-planner
+   cd back
    npm install
    ```
-4. **Configure:** copy `.env.example` to `.env` and set `DATABASE_URL`, e.g. `postgres://postgres:YOUR_PASSWORD@localhost:5432/meal_planner`.
+4. **Configure:** from `back/`, copy `.env.example` to `.env` and set `DATABASE_URL`, e.g. `postgres://postgres:YOUR_PASSWORD@localhost:5432/meal_planner`.
 5. **Create the tables.** This drops and recreates them, so only run it on a fresh or throwaway database:
    ```bash
    npm run db:init
@@ -65,17 +87,17 @@ Names are **snake_case** (`recipe_title`, not `RecipeTitle`).
 
 | Page    | File                             | URL                                  | Status                                                    |
 | ------- | -------------------------------- | ------------------------------------ | --------------------------------------------------------- |
-| Home    | `mp-vertical-slice/index.html`  | <http://localhost:3000>              | Design done: swipe through 5 meals, recipe popup opens. Meals are placeholder data |
-| Pantry  | `mp-vertical-slice/pantry.html` | <http://localhost:3000/pantry.html>  | Working with the database                                 |
+| Home    | `front/views/index.ejs` with `front/public/css/index.css` and `front/public/js/index.js` | <http://localhost:3000> | Design done: swipe through 5 meals, recipe popup opens. Meals and photos are placeholder data |
+| Pantry  | `front/views/pantry.ejs`, `front/public/css/pantry.css`, `front/public/js/pantry.js`, and `front/public/images/pantry-banner.jpeg` | <http://localhost:3000/pantry> or <http://localhost:3000/pantry.html> | Sorted by inventory level (Plenty left to None); search locally; add with a starting inventory amount, rename, update status, and delete through the database API |
 | Calendar, Shopping, Search, Profile | `calendar.html`, `shopping.html`, `search.html`, `profile.html` | | Not built yet. The home page already links to these names |
 
-The home page's recipe details popup is the `<dialog id="recipe-details">` near the bottom of `index.html`. Its content goes in `#details-body`, and the open recipe's ID is in `dialog.dataset.recipeId`.
+The home page's recipe details popup is the `<dialog id="recipe-details">` in `front/views/index.ejs`. Its content goes in `#details-body`, and the open recipe's ID is in `dialog.dataset.recipeId`.
 
 ## Verifying the Vertical Slice
 
 The vertical slice is **adding an ingredient to the Virtual Pantry**.
 
-1. Run `npm start` and open <http://localhost:3000/pantry.html>. The existing ingredients load from the database under **My Ingredients**.
+1. From `back/`, run `npm start` and open <http://localhost:3000/pantry.html>. The existing ingredients load from the database under **My Ingredients**.
 2. Type an ingredient name (for example, `Beans`) into the **Enter ingredient** box.
 3. Click **Add+**. The page sends `POST /api/ingredients`, the server inserts the row into Postgres and returns its new ID, and the ingredient appears at the bottom of the list with the status "Plenty Left".
 4. Refresh the page (F5). The ingredient is still in the list, because the page reloads everything from the database.
@@ -115,13 +137,13 @@ await fetch('/api/ingredients', {
 
 ### Adding a new API route
 
-Routes live in `src/routes/`, one file per area. Use the shared pool from `src/db.js` and **always pass values as `$1, $2…` parameters**, never by pasting them into the SQL string:
+Routes live in `back/src/routes/`, one file per area. Use the shared pool from `back/src/db.js` and **always pass values as `$1, $2…` parameters**, never by pasting them into the SQL string:
 
 ```js
 const { rows } = await pool.query('select * from recipes where recipe_id = $1', [req.params.id])
 ```
 
-Then mount the router in `src/server.js`.
+Then mount the router in `back/src/server.js`.
 
 ### Who can read/write what
 
@@ -132,4 +154,4 @@ There is **no login yet**, so every route is open to anyone who can reach the se
 Don't edit tables only in pgAdmin, because teammates won't know. Instead:
 
 1. Write the change as SQL and run it against your local database.
-2. Add the same SQL to a new file in `db/` (e.g. `002_add_user_likes.sql`), update `db/schema.sql` so new setups get it too, and commit both.
+2. Add the same SQL to a new file in `back/db/` (e.g. `002_add_user_likes.sql`), update `back/db/schema.sql` so new setups get it too, and commit both.
