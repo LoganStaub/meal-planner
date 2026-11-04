@@ -80,6 +80,10 @@ Names are **snake_case** (`recipe_title`, not `RecipeTitle`).
    ```bash
    npm start        # or: npm run dev  (restarts when you save a file)
    ```
+8. **Optional: add test data** for the calendar (user 1 and a few meals this week):
+   ```bash
+   npm run db:seed
+   ```
 
 > Opening the pages by double-clicking them doesn't work for anything that loads data. Pages have to be loaded from the server so their `/api` calls reach Express.
 
@@ -90,7 +94,8 @@ Names are **snake_case** (`recipe_title`, not `RecipeTitle`).
 | Home    | `front/views/index.ejs` with `front/public/css/index.css` and `front/public/js/index.js` | <http://localhost:3000> | Design done: swipe through 5 meals, recipe popup opens. Meals and photos are placeholder data |
 | Pantry  | `front/views/pantry.ejs`, `front/public/css/pantry.css`, `front/public/js/pantry.js`, and `front/public/images/pantry-banner.jpeg` | <http://localhost:3000/pantry> or <http://localhost:3000/pantry.html> | Sorted by inventory level (Plenty left to None); search locally; add with a starting inventory amount, rename, update status, and delete through the database API |
 | Liked recipes | `front/views/liked.ejs`, `front/public/css/liked.css`, and `front/public/images/recipes-header.webp` | <http://localhost:3000/liked> or <http://localhost:3000/liked.html> | Lists recipes marked `liked` in the database and summarizes their pantry ingredients |
-| Calendar, Shopping, Search, Profile | `calendar.html`, `shopping.html`, `search.html`, `profile.html` | | Not built yet. The home page already links to these names |
+| Calendar | `front/views/calendar.ejs`, `front/public/css/calendar.css`, and `front/public/js/calendar.js` | <http://localhost:3000/calendar> (add `?date=YYYY-MM-DD` to open a day) | Week view of the meal plan loaded from `/api/users/1/calendar`; remove a meal. Run `npm run db:seed` for test data |
+| Shopping, Search, Recipe, Profile | | `/shopping`, `/search?date=&slot=`, `/recipe?id=` | Not built yet. The calendar already links to these routes |
 
 The home page's recipe details popup is the `<dialog id="recipe-details">` in `front/views/index.ejs`. Its content goes in `#details-body`, and the open recipe's ID is in `dialog.dataset.recipeId`.
 
@@ -120,6 +125,7 @@ All routes return JSON. Errors look like `{ "error": "message" }`.
 | GET    | `/api/recipe-classes`                       | Breakfast, Lunch, …                                                      |
 | GET    | `/api/measurements`                         | Cup, Tablespoon, …                                                       |
 | GET    | `/api/users/:userId/calendar?start=…&end=…` | A user's meal plan between two `YYYY-MM-DD` dates                        |
+| DELETE | `/api/users/:userId/calendar/:date/:slot`   | Remove one planned meal (`204`, or `404` if that slot is empty)          |
 
 ## For Teammates
 
