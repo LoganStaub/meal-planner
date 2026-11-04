@@ -36,6 +36,11 @@ app.get(['/', '/index.html'], (req, res) => {
   res.render('index', { active: 'home', user: { initials: 'M' } })
 })
 
+// Render the meal plan page. Its script loads meals from /api/users/:userId/calendar.
+app.get(['/calendar', '/calendar.html'], (req, res) => {
+  res.render('calendar', { active: 'calendar', user: { initials: 'M' } })
+})
+
 // Render the user's saved recipes from the recipes table.
 app.get(['/liked', '/liked.html'], async (req, res, next) => {
   try {
