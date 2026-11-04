@@ -1,0 +1,91 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Mealio - Virtual pantry</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="/css/pantry.css">
+  <link rel="stylesheet" href="/css/profile-menu.css">
+</head>
+<body>
+
+<div class="laptop">
+  <%- include('partials/header') %>
+
+  <section class="pantry-hero" aria-labelledby="pantry-title">
+    <img
+      src="/images/pantry-banner.jpeg"
+      alt="Pasta, tomatoes, lemons, basil, olive oil, and garlic arranged on a kitchen counter"
+    >
+    <div class="pantry-hero-title">
+      <div class="eyebrow">Pantry</div>
+      <h1 id="pantry-title">Virtual pantry</h1>
+    </div>
+  </section>
+
+  <main>
+    <section>
+      <p class="lede">Keep a lightweight record of what is already at home, so your shopping list only shows what you actually need.</p>
+
+      <div class="summary">
+        <div class="eyebrow">At home</div>
+        <div class="count"><strong id="total"><%= items.length %></strong><span>ingredients</span></div>
+        <div class="legend">
+          <span class="chip plenty" id="legend-plenty">Plenty left</span>
+          <span class="chip low" id="legend-low">Running low</span>
+          <span class="chip none" id="legend-none">None</span>
+        </div>
+      </div>
+
+      <label class="field search">
+        <svg viewBox="0 0 24 24"><circle cx="11" cy="11" r="7"/><path d="M21 21l-4.5-4.5"/></svg>
+        <input id="search" type="search" placeholder="Search your pantry" aria-label="Search your pantry" autocomplete="off">
+      </label>
+
+      <form class="add-row" id="add-form">
+        <label class="field add-name-field">
+          <input id="add-input" type="text" placeholder="Add an item" aria-label="Ingredient name" autocomplete="off" required>
+        </label>
+        <label class="inventory-field">
+          <span>Starting inventory</span>
+          <select id="add-status" aria-label="Starting inventory">
+            <option value="0">Plenty left</option>
+            <option value="1">Running low</option>
+            <option value="2">None</option>
+          </select>
+        </label>
+        <button class="btn" type="submit">
+          <svg viewBox="0 0 24 24"><path d="M12 5v14M5 12h14"/></svg>Add
+        </button>
+      </form>
+      <p class="feedback" id="feedback" role="status" aria-live="polite" hidden></p>
+    </section>
+
+    <section>
+      <div class="list-head">
+        <h2>Your ingredients</h2>
+      </div>
+
+      <div class="grid" id="grid">
+        <% items.forEach(item => { %>
+          <%- include('partials/item', { item, statuses }) %>
+        <% }) %>
+      </div>
+      <div class="empty" id="empty" hidden></div>
+
+      <%# Blueprint cloned by the client script after the server creates an item %>
+      <template id="item-template">
+        <%- include('partials/item', { item: { ingredient_id: 0, pantry_amount_id: 0, name: '__NAME__', status: 'plenty' }, statuses }) %>
+      </template>
+    </section>
+  </main>
+</div>
+
+<%- include('partials/profile-menu') %>
+<script src="/js/profile-menu.js" defer></script>
+<script src="/js/pantry.js" defer></script>
+</body>
+</html>

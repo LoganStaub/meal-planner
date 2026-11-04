@@ -3,7 +3,7 @@
 -- Built from Meal_Planning_ERD.pdf
 --
 -- HOW TO RUN:  npm run db:init
---   (or: psql "$DATABASE_URL" -f db/schema.sql)
+--   (or, from back/: psql "$DATABASE_URL" -f db/schema.sql)
 -- WARNING: this drops and recreates every table, so all data is lost.
 --
 -- Naming: Postgres lowercases unquoted names, so tables/columns use
