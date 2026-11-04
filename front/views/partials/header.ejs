@@ -22,7 +22,7 @@
 
   <nav>
     <% links.forEach(link => { %>
-      <a href="<%= link.href %>"<%- active === link.key ? ' class="active"' : '' %>>
+      <a href="<%= link.href %>"<%- locals.active === link.key ? ' class="active"' : '' %>>
         <svg viewBox="0 0 24 24"><%- link.icon %></svg><%= link.label %>
       </a>
     <% }) %>

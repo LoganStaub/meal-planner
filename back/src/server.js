@@ -33,7 +33,7 @@ app.use('/api/users', calendarRouter)
 
 // Render the home page from its EJS view.
 app.get(['/', '/index.html'], (req, res) => {
-  res.render('index')
+  res.render('index', { active: 'home', user: { initials: 'M' } })
 })
 
 // Render the user's saved recipes from the recipes table.
@@ -63,6 +63,7 @@ app.get(['/liked', '/liked.html'], async (req, res, next) => {
     res.render('liked', {
       recipes: rows,
       title: 'Liked recipes',
+      active: 'liked',
       user: { initials: 'M' },
     })
   } catch (error) {
