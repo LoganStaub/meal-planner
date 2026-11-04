@@ -1,0 +1,82 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Mealio – <%= title %></title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="/css/liked.css">
+<link rel="stylesheet" href="/css/profile-menu.css">
+</head>
+<body>
+
+<!-- Reusable SVG symbols -->
+<svg width="0" height="0" style="position:absolute" aria-hidden="true">
+  <symbol id="ph" viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="16" rx="2"/><circle cx="9" cy="10" r="1.8"/><path d="M21 16l-5-5-8 9"/></symbol>
+  <symbol id="heart" viewBox="0 0 24 24"><path d="M12 21s-7.5-4.6-9.6-9.2C.9 8.4 3 5 6.4 5c2 0 3.6 1.1 4.6 2.7C12 6.1 13.6 5 15.6 5 19 5 21.1 8.4 19.6 11.8 19.5 11.8 12 21 12 21z"/></symbol>
+  <symbol id="check" viewBox="0 0 24 24"><path d="M5 12l5 5L20 7"/></symbol>
+</svg>
+
+<div class="app">
+
+  <nav class="nav">
+    <div class="brand"><span class="brand-logo">●</span> Mealio</div>
+    <div class="nav-links">
+      <a href="/"><svg viewBox="0 0 24 24"><path d="M3 11l9-8 9 8v10H3z"/></svg>Home</a>
+      <a href="#"><svg viewBox="0 0 24 24"><rect x="3" y="5" width="18" height="16" rx="2"/><path d="M3 10h18M8 3v4M16 3v4"/></svg>Calendar</a>
+      <a href="#"><svg viewBox="0 0 24 24"><path d="M5 7h14l-1.5 12h-11z"/><path d="M9 7a3 3 0 016 0"/></svg>Shopping</a>
+      <a href="#"><svg viewBox="0 0 24 24"><circle cx="11" cy="11" r="7"/><path d="M21 21l-5-5"/></svg>Search</a>
+      <a href="/pantry"><svg viewBox="0 0 24 24"><rect x="4" y="8" width="16" height="12" rx="2"/><path d="M8 8V5h8v3"/></svg>Pantry</a>
+      <a href="/liked" class="active" aria-current="page"><svg viewBox="0 0 24 24"><path d="M12 21s-7.5-4.6-9.6-9.2C.9 8.4 3 5 6.4 5c2 0 3.6 1.1 4.6 2.7C12 6.1 13.6 5 15.6 5 19 5 21.1 8.4 19.6 11.8 19.5 11.8 12 21 12 21z"/></svg>Liked</a>
+    </div>
+    <button class="nav-user profile-trigger" id="profile-trigger" type="button" aria-label="Logan's kitchen profile and settings" aria-controls="profile-menu" aria-expanded="false" title="Logan's kitchen">
+      LS
+    </button>
+  </nav>
+
+  <header class="hero">
+    <div class="hero-text">
+      <div class="eyebrow">Your collection</div>
+      <h1><%= title %></h1>
+      <p>Your saved dishes, ready when you are.</p>
+    </div>
+    <div class="saved-pill"><svg><use href="#heart"/></svg> <%= recipes.length %> saved</div>
+  </header>
+
+  <main class="grid">
+    <% if (recipes.length === 0) { %>
+    <section class="empty-state">
+      <h2>No saved recipes yet</h2>
+      <p>Like a recipe from Home and it will be waiting here.</p>
+    </section>
+    <% } %>
+    <% recipes.forEach(function (r) { %>
+    <article class="card">
+      <div class="thumb">
+        <% if (r.image) { %>
+          <img src="<%= r.image %>" alt="<%= r.title %>">
+        <% } else { %>
+          <svg class="placeholder"><use href="#ph"/></svg>
+        <% } %>
+        <span class="heart"><svg><use href="#heart"/></svg></span>
+      </div>
+      <div class="card-body">
+        <div class="tags"><span class="time"><%= r.time %> min</span><span class="diet"><%= r.tag %></span></div>
+        <h3><%= r.title %></h3>
+        <p><%= r.description %></p>
+      </div>
+      <div class="card-foot">
+        <span class="pantry"><svg viewBox="0 0 24 24"><use href="#check"/></svg><%= r.inPantry %> in pantry</span>
+        <span class="buy">+<%= r.toBuy %> to buy</span>
+      </div>
+    </article>
+    <% }); %>
+  </main>
+</div>
+
+<%- include('partials/profile-menu') %>
+<script src="/js/profile-menu.js" defer></script>
+</body>
+</html>

@@ -328,5 +328,4 @@
             if (event.target === obj_profile) obj_profile.close();
         });
 
-
         RenderMeal();

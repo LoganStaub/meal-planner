@@ -139,16 +139,20 @@ button {
     padding: 0;
     border-radius: 50%;
     color: white;
-    background-color: rgba(255, 255, 255, 0.18);
-    border: 1px solid rgba(255, 255, 255, 0.4);
+    background-color: var(--accent);
+    border: 1px solid var(--accent);
     backdrop-filter: blur(10px);
     -webkit-backdrop-filter: blur(10px);
     cursor: pointer;
     transition: background-color 0.2s ease;
+    font-size: 0.72rem;
+    font-weight: 700;
+    letter-spacing: 0.02em;
 }
 
 .profile-btn:hover {
-    background-color: rgba(255, 255, 255, 0.3);
+    background-color: var(--accent-hover);
+    border-color: var(--accent-hover);
 }
 
 .picks-row {
@@ -732,10 +736,15 @@ button {
     width: 100%;
     padding: 18px 20px;
     text-align: left;
+    color: inherit;
     border: none;
     background: none;
     cursor: pointer;
     transition: background-color 0.2s ease;
+}
+
+a.settings-row {
+    text-decoration: none;
 }
 
 .settings-row:hover {

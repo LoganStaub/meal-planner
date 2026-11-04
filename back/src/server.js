@@ -36,6 +36,40 @@ app.get(['/', '/index.html'], (req, res) => {
   res.render('index')
 })
 
+// Render the user's saved recipes from the recipes table.
+app.get(['/liked', '/liked.html'], async (req, res, next) => {
+  try {
+    const { rows } = await pool.query(
+      `select r.recipe_id,
+              r.recipe_title as title,
+              coalesce(r.prep_time, 0)::int as time,
+              coalesce(rc.recipe_class_desc, 'Recipe') as tag,
+              coalesce(r.instructions, 'A recipe saved to your collection.') as description,
+              count(ri.ingredient_id) filter (
+                where i.pantry_amount_id in (0, 1)
+              )::int as "inPantry",
+              count(ri.ingredient_id) filter (
+                where i.pantry_amount_id is null or i.pantry_amount_id = 2
+              )::int as "toBuy"
+       from recipes r
+       left join recipe_classes rc on rc.recipe_class_id = r.recipe_class_id
+       left join recipe_ingredients ri on ri.recipe_id = r.recipe_id
+       left join ingredients i on i.ingredient_id = ri.ingredient_id
+       where r.liked = true
+       group by r.recipe_id, rc.recipe_class_desc
+       order by r.recipe_title`
+    )
+
+    res.render('liked', {
+      recipes: rows,
+      title: 'Liked recipes',
+      user: { initials: 'M' },
+    })
+  } catch (error) {
+    next(error)
+  }
+})
+
 // Render the pantry with server-side data for EJS and its partials.
 app.get(['/pantry', '/pantry.html', '/pantry.ejs'], async (req, res, next) => {
   try {

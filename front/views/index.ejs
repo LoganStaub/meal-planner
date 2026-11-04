@@ -85,8 +85,8 @@
             <header class="app-header">
                 <div class="header-row">
                     <h1 class="brand">Meal Planner<span>.</span></h1>
-                    <button type="button" class="profile-btn" id="open-profile" aria-label="Profile and settings" aria-haspopup="dialog">
-                        <svg class="icon"><use href="#icon-user"/></svg>
+                    <button type="button" class="profile-btn" id="open-profile" aria-label="Logan's kitchen profile and settings" aria-haspopup="dialog" title="Logan's kitchen">
+                        LS
                     </button>
                 </div>
 
@@ -158,17 +158,17 @@
                 </div>
             </section>
 
-            <!-- TODO: each row opens its own settings screen -->
+            <!-- Settings destinations are wired as they become available. -->
             <ul class="settings-list">
                 <li>
-                    <button type="button" class="settings-row">
+                    <a class="settings-row" href="/liked">
                         <span class="settings-icon"><svg class="icon"><use href="#icon-heart"/></svg></span>
                         <span class="settings-text">
                             <span class="settings-title">Liked recipes</span>
                             <span class="settings-desc">Your saved collection</span>
                         </span>
                         <svg class="icon"><use href="#icon-chevron-right"/></svg>
-                    </button>
+                    </a>
                 </li>
                 <li>
                     <button type="button" class="settings-row">
