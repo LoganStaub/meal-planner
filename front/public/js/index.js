@@ -273,11 +273,41 @@
         obj_prevArrow.addEventListener("click", function() { GoTo(-1); });
         obj_nextArrow.addEventListener("click", function() { GoTo(1); });
 
-        // TODO: save likes to the database (recipes.liked)
-        obj_like.addEventListener("click", function() {
-            meals[nCurrent].liked = !meals[nCurrent].liked;
+        // Likes are saved per user: PUT likes a recipe, DELETE unlikes it.
+        // The button flips right away, and flips back if saving fails.
+        obj_like.addEventListener("click", async function() {
+            const meal = meals[nCurrent];
+            const bLiked = !meal.liked;
+            meal.liked = bLiked;
             RenderLike();
+
+            try {
+                const response = await fetch(`/api/me/likes/${encodeURIComponent(meal.recipe_id)}`, {
+                    method: bLiked ? "PUT" : "DELETE"
+                });
+                if (!response.ok) throw new Error(`Request failed (${response.status})`);
+            } catch (error) {
+                console.error("Could not save like:", error);
+                meal.liked = !bLiked;
+                if (meals[nCurrent] === meal) RenderLike();
+            }
         });
+
+        // marks the meals this user has already liked
+        async function LoadLikes() {
+            try {
+                const response = await fetch("/api/me/likes");
+                if (!response.ok) throw new Error(`Request failed (${response.status})`);
+                const likedIds = new Set(await response.json());
+                meals.forEach(function(meal) {
+                    meal.liked = likedIds.has(meal.recipe_id);
+                });
+                RenderLike();
+            } catch (error) {
+                console.error("Could not load likes:", error);
+            }
+        }
+        LoadLikes();
 
         // TODO: open a date/meal slot picker and save to the calendar table
         document.getElementById("calendar-btn").addEventListener("click", function() {

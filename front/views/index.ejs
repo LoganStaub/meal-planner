@@ -10,6 +10,7 @@
     <link href="https://fonts.googleapis.com/css2?family=DM+Sans:opsz,wght@9..40,400;9..40,500;9..40,600;9..40,700&display=swap" rel="stylesheet">
 
     <link rel="stylesheet" href="/css/index.css">
+    <script src="/js/no-back-cache.js"></script>
 </head>
 
 <body>
@@ -85,8 +86,8 @@
             <header class="app-header">
                 <div class="header-row">
                     <h1 class="brand">Meal Planner<span>.</span></h1>
-                    <button type="button" class="profile-btn" id="open-profile" aria-label="Logan's kitchen profile and settings" aria-haspopup="dialog" title="Logan's kitchen">
-                        LS
+                    <button type="button" class="profile-btn" id="open-profile" aria-label="<%= currentUser.display_name %>: profile and settings" aria-haspopup="dialog" title="<%= currentUser.display_name %>">
+                        <%= currentUser.initials %>
                     </button>
                 </div>
 
@@ -113,7 +114,7 @@
             <ul>
                 <li><a class="nav-link" href="/calendar"><span class="nav-icon"><svg class="icon"><use href="#icon-calendar"/></svg></span>Calendar</a></li>
                 <li><a class="nav-link" href="/shopping.html"><span class="nav-icon"><svg class="icon"><use href="#icon-list"/></svg></span>Shopping</a></li>
-                <li class="nav-home"><a class="nav-link" href="/" aria-current="page"><span class="nav-icon"><svg class="icon"><use href="#icon-home"/></svg></span>Home</a></li>
+                <li class="nav-home"><a class="nav-link" href="/home" aria-current="page"><span class="nav-icon"><svg class="icon"><use href="#icon-home"/></svg></span>Home</a></li>
                 <li><a class="nav-link" href="/search.html"><span class="nav-icon"><svg class="icon"><use href="#icon-search"/></svg></span>Search</a></li>
                 <li><a class="nav-link" href="/pantry"><span class="nav-icon"><svg class="icon"><use href="#icon-basket"/></svg></span>Pantry</a></li>
             </ul>
@@ -145,10 +146,10 @@
         <div class="profile-body">
             <section class="profile-main">
                 <div class="profile-identity">
-                    <div class="avatar" aria-hidden="true">LS</div>
+                    <div class="avatar" aria-hidden="true"><%= currentUser.initials %></div>
                     <div>
-                        <p class="profile-name">Logan's kitchen</p>
-                        <p class="profile-sub">Cooking for 2 · Denver</p>
+                        <p class="profile-name"><%= currentUser.display_name %></p>
+                        <p class="profile-sub"><%= currentUser.email %><% if (currentUser.is_admin) { %> · Admin<% } %></p>
                     </div>
                 </div>
 
@@ -211,6 +212,10 @@
                     <button type="button" class="chip chip-add">+ Add preference</button>
                 </div>
             </section>
+
+            <form class="profile-logout" method="post" action="/logout">
+                <button type="submit" class="logout-btn">Log out</button>
+            </form>
         </div>
     </dialog>
 

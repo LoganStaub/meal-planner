@@ -1048,3 +1048,35 @@ a.settings-row {
         transition: none !important;
     }
 }
+
+/* ---------- Log out (a form that POSTs to /logout) ---------- */
+.profile-logout {
+    margin-top: 24px;
+}
+
+.logout-btn {
+    width: 100%;
+    padding: 12px;
+    color: #B42318;
+    background: none;
+    border: 1px solid #F1C4BF;
+    border-radius: 999px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: background-color 0.2s ease;
+}
+
+.logout-btn:hover {
+    background-color: #FEF3F2;
+}
+
+.logout-btn:focus-visible {
+    outline: 2px solid var(--accent);
+    outline-offset: 2px;
+}
+
+@media (min-width: 768px) {
+    .profile-logout {
+        grid-column: 1;
+    }
+}

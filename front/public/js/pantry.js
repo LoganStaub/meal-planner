@@ -188,7 +188,7 @@ addForm.addEventListener('submit', async (event) => {
 
   addButton.disabled = true
   try {
-    const record = await requestApi('/api/ingredients', {
+    const record = await requestApi('/api/me/pantry', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
@@ -247,13 +247,15 @@ pantryGrid.addEventListener('click', async (event) => {
 
     setRowBusy(item, true)
     try {
-      const record = await requestApi(`/api/ingredients/${encodeURIComponent(item.dataset.ingredientId)}`, {
+      const record = await requestApi(`/api/me/pantry/${encodeURIComponent(item.dataset.ingredientId)}`, {
         method: 'PATCH',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ ingredient_name: ingredientName, pantry_amount_id: pantryAmountId }),
       })
       const savedName = record.ingredient_name
       const displayName = titleCaseIngredient(savedName)
+      // Renaming can point the item at a different ingredient, so its id can change
+      item.dataset.ingredientId = String(record.ingredient_id)
       item.querySelector('.item-name').textContent = displayName
       item.dataset.name = savedName.toLocaleLowerCase()
       item.querySelector('.del').setAttribute('aria-label', `Remove ${displayName}`)
@@ -292,7 +294,7 @@ pantryGrid.addEventListener('click', async (event) => {
 
   setRowBusy(item, true)
   try {
-    await requestApi(`/api/ingredients/${encodeURIComponent(item.dataset.ingredientId)}`, {
+    await requestApi(`/api/me/pantry/${encodeURIComponent(item.dataset.ingredientId)}`, {
       method: 'DELETE',
     })
     item.remove()

@@ -1,5 +1,5 @@
-// No login yet, so every request uses the same user (seeded by: npm run db:seed)
-const USER_ID = 1;
+// Meals load from /api/me/calendar: the server knows who is logged in from
+// the session cookie, so the page never sends a user id.
 const MEAL_SLOTS = { 1: "Breakfast", 2: "Lunch", 3: "Dinner" };
 
 // Links out to teammates' pages. Change the URLs here if theirs change.
@@ -86,7 +86,7 @@ async function loadWeek() {
     const requestId = ++latestRequest;
     const params = new URLSearchParams({ start, end: getLocalDateKey(saturday) });
     try {
-        const response = await fetch(`/api/users/${USER_ID}/calendar?${params}`);
+        const response = await fetch(`/api/me/calendar?${params}`);
         if (!response.ok) throw new Error(await response.text());
         const rows = await response.json();
         if (requestId !== latestRequest) return;
@@ -139,7 +139,7 @@ async function removeMeal(meal, button) {
 
     button.disabled = true;
     try {
-        const response = await fetch(`/api/users/${USER_ID}/calendar/${meal.date}/${meal.meal_slot}`, {
+        const response = await fetch(`/api/me/calendar/${meal.date}/${meal.meal_slot}`, {
             method: "DELETE"
         });
         // 404 means it's already gone, which is what we wanted anyway
@@ -347,7 +347,7 @@ async function loadMonth() {
     const requestId = ++latestMonthRequest;
     const params = new URLSearchParams({ start: startKey, end: getLocalDateKey(end) });
     try {
-        const response = await fetch(`/api/users/${USER_ID}/calendar?${params}`);
+        const response = await fetch(`/api/me/calendar?${params}`);
         if (!response.ok) throw new Error(await response.text());
         const rows = await response.json();
         if (requestId !== latestMonthRequest) return;

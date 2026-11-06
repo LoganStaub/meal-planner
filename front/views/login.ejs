@@ -1,0 +1,59 @@
+<%
+  // Locals the route can pass when re-rendering after a failed POST:
+  //   error  - message shown above the form
+  //   values - { email } so the user doesn't retype it
+  const values = locals.values || {}
+%>
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Log in · Meal Planner</title>
+
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=DM+Sans:opsz,wght@9..40,400;9..40,500;9..40,600;9..40,700&display=swap" rel="stylesheet">
+
+    <link rel="stylesheet" href="/css/auth.css">
+</head>
+
+<body>
+    <main class="auth">
+        <section class="auth-card" aria-labelledby="auth-title">
+            <p class="brand">Meal Planner<span>.</span></p>
+            <h1 class="auth-title" id="auth-title">Welcome back</h1>
+            <p class="auth-sub">Log in to see tonight's picks.</p>
+
+            <% if (locals.error) { %>
+                <p class="auth-error" role="alert"><%= error %></p>
+            <% } %>
+
+            <% if (locals.unverifiedEmail) { %>
+                <%# Shown when the password was right but the email isn't verified yet %>
+                <form class="auth-resend" method="post" action="/resend-verification">
+                    <input type="hidden" name="email" value="<%= unverifiedEmail %>">
+                    <button class="auth-btn auth-btn-secondary" type="submit">Resend verification email</button>
+                </form>
+            <% } %>
+
+            <form class="auth-form" method="post" action="/login" novalidate>
+                <div class="field">
+                    <label for="email">Email</label>
+                    <input id="email" name="email" type="email" autocomplete="email" required
+                           value="<%= values.email || '' %>">
+                </div>
+
+                <div class="field">
+                    <label for="password">Password</label>
+                    <input id="password" name="password" type="password" autocomplete="current-password" required>
+                </div>
+
+                <button class="auth-btn" type="submit">Log in</button>
+            </form>
+
+            <p class="auth-switch">New here? <a href="/signup">Create an account</a></p>
+        </section>
+    </main>
+</body>
+</html>

@@ -1,6 +1,10 @@
-// Virtual Pantry: /api/ingredients
+// Shared ingredient list: /api/ingredients
+// Anyone logged in can read it; only admins can change it, because every
+// user's pantry and every recipe points at these rows.
+// A user's own pantry lives at /api/me/pantry (routes/pantry.js).
 import { Router } from 'express'
 import { pool } from '../db.js'
+import { requireAdmin } from './auth.js'
 
 const router = Router()
 
@@ -11,7 +15,7 @@ router.get('/', async (req, res) => {
 })
 
 // POST /api/ingredients  { ingredient_name, pantry_amount_id? }  -> the new row
-router.post('/', async (req, res) => {
+router.post('/', requireAdmin, async (req, res) => {
   const name = req.body.ingredient_name?.trim()
   if (!name) {
     return res.status(400).json({ error: 'ingredient_name is required' })
@@ -27,7 +31,7 @@ router.post('/', async (req, res) => {
 })
 
 // PATCH /api/ingredients/:id  { ingredient_name?, pantry_amount_id?, measure_amount_id? }
-router.patch('/:id', async (req, res) => {
+router.patch('/:id', requireAdmin, async (req, res) => {
   const editable = ['ingredient_name', 'pantry_amount_id', 'measure_amount_id']
   const fields = editable.filter((field) => field in req.body)
 
@@ -56,7 +60,7 @@ router.patch('/:id', async (req, res) => {
 })
 
 // DELETE /api/ingredients/:id
-router.delete('/:id', async (req, res) => {
+router.delete('/:id', requireAdmin, async (req, res) => {
   const { rowCount } = await pool.query('delete from ingredients where ingredient_id = $1', [
     req.params.id,
   ])

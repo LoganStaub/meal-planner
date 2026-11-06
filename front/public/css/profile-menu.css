@@ -64,3 +64,9 @@ a.profile-menu-row:hover { background: #faf8f5; }
 @media (max-width: 620px) {
   .profile-menu { top: calc(70px + env(safe-area-inset-top)); right: 12px; width: min(360px, calc(100vw - 24px)); padding: 16px; }
 }
+
+/* Log out (a form that POSTs to /logout) */
+.profile-menu-logout { margin-top: 16px; padding-top: 14px; border-top: 1px solid #ece7e2; }
+.profile-menu-logout button { width: 100%; padding: 9px 12px; color: #b42318; background: transparent; border: 1px solid #f1c4bf; border-radius: 999px; font: inherit; font-size: 13px; font-weight: 600; cursor: pointer; }
+.profile-menu-logout button:hover { background: #fef3f2; }
+.profile-menu-logout button:focus-visible { outline: 2px solid #d9531e; outline-offset: 2px; }

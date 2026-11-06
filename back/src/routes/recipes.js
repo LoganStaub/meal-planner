@@ -1,23 +1,38 @@
 // Recipes: /api/recipes
 import { Router } from 'express'
 import { pool } from '../db.js'
+import { requireAdmin } from './auth.js'
 
 const router = Router()
 
-// GET /api/recipes  -> all recipes, with their class name joined in
+// GET /api/recipes  -> all recipes, with their class name joined in.
+// liked is true when the logged-in user has liked the recipe.
 router.get('/', async (req, res) => {
   const { rows } = await pool.query(
-    `select r.recipe_id, r.recipe_title, r.cost, r.prep_time, r.liked, rc.recipe_class_desc
+    `select r.recipe_id, r.recipe_title, r.cost, r.prep_time, rc.recipe_class_desc,
+            exists (
+              select 1 from user_liked_recipes ul
+              where ul.recipe_id = r.recipe_id and ul.user_id = $1
+            ) as liked
      from recipes r
      left join recipe_classes rc on rc.recipe_class_id = r.recipe_class_id
-     order by r.recipe_title`
+     order by r.recipe_title`,
+    [req.user.user_id]
   )
   res.json(rows)
 })
 
 // GET /api/recipes/:id  -> one recipe with its ingredient list (in order)
 router.get('/:id', async (req, res) => {
-  const recipe = await pool.query('select * from recipes where recipe_id = $1', [req.params.id])
+  // recipes.liked is the old shared column; liked here is this user's own like
+  const recipe = await pool.query(
+    `select r.*, exists (
+              select 1 from user_liked_recipes ul
+              where ul.recipe_id = r.recipe_id and ul.user_id = $2
+            ) as liked
+     from recipes r where r.recipe_id = $1`,
+    [req.params.id, req.user.user_id]
+  )
   if (recipe.rows.length === 0) {
     return res.status(404).json({ error: 'Recipe not found' })
   }
@@ -35,7 +50,8 @@ router.get('/:id', async (req, res) => {
 })
 
 // POST /api/recipes  { recipe_title, recipe_class_id?, cost?, prep_time?, macros?, instructions? }
-router.post('/', async (req, res) => {
+// Admins only: recipes are shared by every user.
+router.post('/', requireAdmin, async (req, res) => {
   const { recipe_title, recipe_class_id, cost, prep_time, macros, instructions } = req.body
   if (!recipe_title?.trim()) {
     return res.status(400).json({ error: 'recipe_title is required' })

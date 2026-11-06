@@ -2,7 +2,7 @@
 -- Meal Planner - database schema (PostgreSQL)
 -- Built from Meal_Planning_ERD.pdf
 --
--- HOW TO RUN:  npm run db:init
+-- HOW TO RUN:  npm run db:init   (runs this file, then db/migrations/*.sql)
 --   (or, from back/: psql "$DATABASE_URL" -f db/schema.sql)
 -- WARNING: this drops and recreates every table, so all data is lost.
 --
@@ -23,7 +23,11 @@
 -- (src/server.js), so the API routes decide who can read/write what.
 -- =====================================================================
 
-drop table if exists calendar, recipe_ingredients, ingredients, recipes,
+-- Also drops the tables added by db/migrations, so db:init (which runs the
+-- migrations right after this file) rebuilds everything from scratch.
+drop table if exists schema_migrations, session, pending_signups, email_verification_tokens,
+  user_pantry, user_liked_recipes,
+  calendar, recipe_ingredients, ingredients, recipes,
   users, measurements, recipe_classes cascade;
 
 
@@ -47,7 +51,7 @@ create table users (
   first_name     text,
   last_name      text,
   email          text unique not null,
-  password_hash  text,            -- bcrypt hash; null until login is built
+  password_hash  text,            -- bcrypt hash; null for seeded users who can't log in
   phone          text,
   profile_pic    text             -- URL
 );

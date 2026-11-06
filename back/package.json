@@ -8,16 +8,22 @@
   },
   "scripts": {
     "start": "node src/server.js",
-    "dev": "node --watch src/server.js",
+    "dev": "node --watch-path=./src --watch-path=./.env src/server.js",
     "check": "node src/checkConnection.js",
-    "db:init": "node scripts/initDb.js",
+    "db:init": "node scripts/initDb.js && node scripts/migrate.js",
     "db:seed": "node scripts/seedCalendar.js",
-    "db:seed-recipes": "node scripts/seedRecipes.js"
+    "db:seed-recipes": "node scripts/seedRecipes.js",
+    "db:migrate": "node scripts/migrate.js",
+    "user:role": "node scripts/setRole.js"
   },
   "dependencies": {
+    "bcryptjs": "^3.0.3",
+    "connect-pg-simple": "^10.0.0",
     "dotenv": "^16.4.5",
     "ejs": "^7.0.2",
     "express": "^5.1.0",
+    "express-session": "^1.19.0",
+    "nodemailer": "^10.3.1",
     "pg": "^8.13.0"
   }
 }

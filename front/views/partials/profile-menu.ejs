@@ -7,10 +7,10 @@
   </div>
 
   <div class="profile-menu-identity">
-    <div class="profile-menu-avatar" aria-hidden="true">LS</div>
+    <div class="profile-menu-avatar" aria-hidden="true"><%= currentUser.initials %></div>
     <div>
-      <p class="profile-menu-name">Logan's kitchen</p>
-      <p class="profile-menu-subtitle">Cooking for 2 · Denver</p>
+      <p class="profile-menu-name"><%= currentUser.display_name %></p>
+      <p class="profile-menu-subtitle"><%= currentUser.email %><% if (currentUser.is_admin) { %> · Admin<% } %></p>
     </div>
   </div>
 
@@ -52,4 +52,8 @@
     <div class="profile-menu-chips"><span>Vegetarian meals</span><span>No peanuts</span></div>
     <button class="profile-menu-add" type="button">+ Add preference</button>
   </section>
+
+  <form class="profile-menu-logout" method="post" action="/logout">
+    <button type="submit">Log out</button>
+  </form>
 </aside>
