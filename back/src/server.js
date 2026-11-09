@@ -105,6 +105,24 @@ app.get(['/pantry', '/pantry.html', '/pantry.ejs'], async (req, res, next) => {
   }
 })
 
+// Shopping list page. Sample data for now; later this will come from the
+// calendar, recipe_ingredients and pantry tables.
+app.get(['/shopping', '/shopping.html'], (req, res) => {
+  const items = [
+    { name: 'Broccolini', forRecipe: 'Sesame miso salmon', amount: '250g' },
+    { name: 'Salmon fillets', forRecipe: 'Sesame miso salmon', amount: '2' },
+    { name: 'Zucchini', forRecipe: 'Creamy lemon orzo', amount: '2' },
+    { name: 'Fresh parsley', forRecipe: 'Shakshuka + orzo', amount: '1 bunch' },
+    { name: 'Lemons', forRecipe: 'Flatbread + orzo', amount: '3' },
+  ]
+
+  res.render('shopping', {
+    items,
+    active: 'shopping',
+    user: { initials: 'M' },
+  })
+})
+
 // The frontend lives in the sibling front/ folder. Serving it from the same
 // server means pages can call /api/... without any CORS setup.
 app.use(express.static(publicPath))
