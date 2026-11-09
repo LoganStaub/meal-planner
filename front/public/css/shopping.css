@@ -1,0 +1,197 @@
+.shopping {
+  --ink: #1f2328;
+  --muted: #6b6f80;
+  --line: #e2e0ea;
+  --accent: #d9531e;
+  --green-bg: #dcebd7;
+  --green-ink: #3e7b3d;
+
+  display: block;
+  box-sizing: border-box;
+  width: 100%;
+  max-width: 440px;
+  margin: 0 auto;
+  padding: 16px 16px 120px;
+  color: var(--ink);
+}
+
+.shopping .shop-top {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 16px;
+}
+
+.shopping .shop-top h1 {
+  margin: 0;
+  flex: 1;
+  text-align: center;
+  font-size: 18px;
+  font-weight: 600;
+}
+
+.shopping .shop-icon-btn {
+  width: 40px;
+  height: 40px;
+  padding: 0;
+  border: 0;
+  border-radius: 50%;
+  background: #fff;
+  display: grid;
+  place-items: center;
+  cursor: pointer;
+}
+
+.shopping .shop-icon-btn svg {
+  width: 20px;
+  height: 20px;
+  fill: none;
+  stroke: var(--ink);
+  stroke-width: 1.8;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+
+.shopping .shop-week {
+  background: var(--green-bg);
+  border-radius: 16px;
+  padding: 16px 18px;
+  margin: 0 0 14px;
+}
+
+.shopping .shop-week-label {
+  margin: 0 0 6px;
+  font-size: 12px;
+  font-weight: 700;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--green-ink);
+}
+
+.shopping .shop-week-count {
+  margin: 0;
+  font-size: 26px;
+  font-weight: 700;
+}
+
+.shopping .shop-add {
+  display: flex;
+  gap: 10px;
+  margin: 0 0 14px;
+}
+
+.shopping .shop-add input {
+  flex: 1;
+  min-width: 0;
+  height: 50px;
+  padding: 0 18px;
+  font: inherit;
+  color: var(--ink);
+  background: #fff;
+  border: 1px solid var(--line);
+  border-radius: 14px;
+}
+
+.shopping .shop-add input::placeholder {
+  color: #9a9cab;
+}
+
+.shopping .shop-add-btn {
+  width: 48px;
+  height: 50px;
+  padding: 0;
+  border: 0;
+  border-radius: 14px;
+  background: var(--accent);
+  display: grid;
+  place-items: center;
+  cursor: pointer;
+}
+
+.shopping .shop-add-btn svg {
+  width: 22px;
+  height: 22px;
+  fill: none;
+  stroke: #fff;
+  stroke-width: 2;
+  stroke-linecap: round;
+}
+
+.shopping .shop-list {
+  list-style: none;
+  margin: 0;
+  padding: 0 16px;
+  background: #fff;
+  border: 1px solid var(--line);
+  border-radius: 18px;
+}
+
+.shopping .shop-item {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  margin: 0;
+  padding: 14px 0;
+  border: 0;
+  border-bottom: 1px solid var(--line);
+  border-radius: 0;
+  background: none;
+  min-height: 0;
+}
+
+.shopping .shop-item:last-child {
+  border-bottom: 0;
+}
+
+.shopping .shop-check {
+  appearance: none;
+  -webkit-appearance: none;
+  flex: none;
+  width: 28px;
+  height: 28px;
+  margin: 0;
+  border: 1.5px solid #d5d3de;
+  border-radius: 50%;
+  background: #fff;
+  cursor: pointer;
+}
+
+.shopping .shop-check:checked {
+  border-color: var(--accent);
+  background: var(--accent) url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='white' stroke-width='3' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M5 12l5 5L20 7'/%3E%3C/svg%3E") center / 16px no-repeat;
+}
+
+.shopping .shop-text {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  gap: 2px;
+  min-width: 0;
+}
+
+.shopping .shop-name {
+  font-size: 15px;
+  font-weight: 700;
+}
+
+.shopping .shop-for {
+  font-size: 13px;
+  color: var(--muted);
+}
+
+.shopping .shop-amount {
+  font-size: 14px;
+  font-weight: 700;
+  color: var(--accent);
+  white-space: nowrap;
+}
+
+.shopping .shop-item.done .shop-name {
+  text-decoration: line-through;
+  color: var(--muted);
+}
+
+.shopping .shop-item.done .shop-amount {
+  opacity: 0.5;
+}
