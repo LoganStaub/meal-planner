@@ -15,8 +15,9 @@
 --                              (store a bcrypt hash, never the password)
 --   * users.phone is text      (bigint drops leading 0s and "+1")
 --   * ingredients.ingredient_name added (the ERD had no name column)
---   * calendar PK = (user_id, date, meal_slot) instead of date alone,
---     so more than one user/meal can exist on the same day
+--   * calendar has its own calendar_id key instead of date alone, so
+--     several users, meals and dishes can share a day (see
+--     002_calendar_multiple_dishes.sql)
 --
 -- Access control: this used to be Row Level Security in Supabase.
 -- The database is now only reachable through the Express server
@@ -92,11 +93,14 @@ create table recipe_ingredients (
 -- ---------- Calendar ----------
 
 create table calendar (
-  user_id    int  not null references users (user_id) on delete cascade,
-  date       date not null,
-  meal_slot  int  not null,            -- e.g. 1 = breakfast, 2 = lunch, 3 = dinner
-  recipe_id  int  not null references recipes (recipe_id),
-  primary key (user_id, date, meal_slot)
+  calendar_id  int  generated always as identity primary key,
+  user_id      int  not null references users (user_id) on delete cascade,
+  date         date not null,
+  -- 1 = breakfast, 2 = lunch, 3 = dinner, 4 = snack, 5 = dessert
+  meal_slot    int  not null constraint calendar_meal_slot_check check (meal_slot between 1 and 5),
+  recipe_id    int  not null references recipes (recipe_id),
+  -- A meal can have several dishes, but not the same recipe twice
+  constraint calendar_unique_dish unique (user_id, date, meal_slot, recipe_id)
 );
 
 

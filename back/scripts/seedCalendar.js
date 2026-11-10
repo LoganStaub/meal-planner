@@ -3,7 +3,7 @@
 // calendar page at http://localhost:3000/calendar has something to show.
 //
 // Safe to run more than once: it never deletes anything, and it skips any
-// calendar slot that already has a meal in it.
+// recipe that's already planned for that day and meal.
 import { pool } from '../src/db.js'
 
 const TEST_USER = { user_id: 1, first_name: 'Test', last_name: 'User', email: 'test.user@example.com' }
@@ -72,12 +72,13 @@ try {
   }
 
   // ---------- Calendar ----------
-  // [day of week (0 = Sunday), meal slot (1 = Breakfast, 2 = Lunch, 3 = Dinner)]
+  // [day of week (0 = Sunday), meal slot]
+  // Slots: 1 = Breakfast, 2 = Lunch, 3 = Dinner, 4 = Snack, 5 = Dessert
   const plan = [
-    [1, 1], [1, 3],          // Monday: breakfast, dinner
-    [2, 2],                  // Tuesday: lunch
-    [3, 1], [3, 2], [3, 3],  // Wednesday: all three
-    [5, 3],                  // Friday: dinner
+    [1, 1], [1, 3],                  // Monday: breakfast, dinner
+    [2, 2],                          // Tuesday: lunch
+    [3, 1], [3, 2], [3, 3], [3, 3],  // Wednesday: all three, with two dinner dishes
+    [5, 3], [5, 5],                  // Friday: dinner and dessert
   ]
 
   let added = 0
@@ -86,7 +87,7 @@ try {
     const { rowCount } = await client.query(
       `insert into calendar (user_id, date, meal_slot, recipe_id)
        values ($1, $2::date, $3, $4)
-       on conflict (user_id, date, meal_slot) do nothing`,
+       on conflict (user_id, date, meal_slot, recipe_id) do nothing`,
       [TEST_USER.user_id, dayOfThisWeek(day), slot, recipe.recipe_id]
     )
     if (rowCount > 0) {
@@ -97,7 +98,7 @@ try {
 
   await client.query('commit')
   console.log(`✅ Added ${added} planned meal(s) for user ${TEST_USER.user_id}` +
-    (added < plan.length ? ` (${plan.length - added} slot(s) were already filled).` : '.'))
+    (added < plan.length ? ` (${plan.length - added} were already planned).` : '.'))
 } catch (error) {
   await client.query('rollback')
   console.error('❌ Could not seed the calendar:', error.message)
