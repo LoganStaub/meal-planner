@@ -39,7 +39,7 @@ extra CORS configuration. The browser never connects directly to PostgreSQL.
 | `ingredients`        | `ingredient_id`                      | Ingredient name, pantry amount, default measurement       |
 | `measurements`       | `measure_amount_id`                  | Cup, Tablespoon, Gram…                                   |
 | `recipe_ingredients` | (`recipe_id`, `recipe_seq_number`) | Which ingredients go in each recipe, in order             |
-| `calendar`           | (`user_id`, `date`, `meal_slot`) | Each user's planned meals                                 |
+| `calendar`           | `calendar_id`                        | Each user's planned dishes. `meal_slot`: 1 Breakfast, 2 Lunch, 3 Dinner, 4 Snack, 5 Dessert. A meal can hold several dishes, but not the same recipe twice |
 
 Names are **snake_case** (`recipe_title`, not `RecipeTitle`).
 
@@ -94,8 +94,9 @@ Names are **snake_case** (`recipe_title`, not `RecipeTitle`).
 | Home    | `front/views/index.ejs` with `front/public/css/index.css` and `front/public/js/index.js` | <http://localhost:3000> | Design done: swipe through 5 meals, recipe popup opens. Meals and photos are placeholder data |
 | Pantry  | `front/views/pantry.ejs`, `front/public/css/pantry.css`, `front/public/js/pantry.js`, and `front/public/images/pantry-banner.jpeg` | <http://localhost:3000/pantry> or <http://localhost:3000/pantry.html> | Sorted by inventory level (Plenty left to None); search locally; add with a starting inventory amount, rename, update status, and delete through the database API |
 | Liked recipes | `front/views/liked.ejs`, `front/public/css/liked.css`, and `front/public/images/recipes-header.webp` | <http://localhost:3000/liked> or <http://localhost:3000/liked.html> | Lists recipes marked `liked` in the database and summarizes their pantry ingredients |
-| Calendar | `front/views/calendar.ejs`, `front/public/css/calendar.css`, and `front/public/js/calendar.js` | <http://localhost:3000/calendar> (add `?date=YYYY-MM-DD` to open a day) | Week view of the meal plan loaded from `/api/users/1/calendar`; remove a meal. Run `npm run db:seed` for test data |
-| Shopping, Search, Recipe, Profile | | `/shopping`, `/search?date=&slot=`, `/recipe?id=` | Not built yet. The calendar already links to these routes |
+| Calendar | `front/views/calendar.ejs`, `front/public/css/calendar.css`, and `front/public/js/calendar.js` | <http://localhost:3000/calendar> (add `?date=YYYY-MM-DD` to open a day) | Week view of the meal plan loaded from `/api/users/1/calendar`. Breakfast, Lunch and Dinner each list their dishes ("+ Add another" for more), with a Snacks & desserts group below; remove one dish at a time. Run `npm run db:seed` for test data |
+| Search | `front/views/search.ejs`, `front/public/css/search.css` (on top of `calendar.css`), `front/public/js/search.js`, and `back/src/routes/search.js` | <http://localhost:3000/search> (`?q=chicken&filter=dinner`) | Searches recipe names and ingredients; filters for meal type, Quick Meals (prep ≤ 30 min) and High Protein (≥ 25g, read from the `macros` text). Thresholds are constants at the top of `routes/search.js`. From a calendar + button (`?date=YYYY-MM-DD&slot=1-5`) it starts on that meal's filter and shows an "Adding to…" banner with an Add to calendar button (X keeps searching without adding) |
+| Shopping, Recipe, Profile | | `/shopping`, `/recipe?id=` | Not built yet. The calendar and search pages already link to these routes |
 
 The home page's recipe details popup is the `<dialog id="recipe-details">` in `front/views/index.ejs`. Its content goes in `#details-body`, and the open recipe's ID is in `dialog.dataset.recipeId`.
 
@@ -125,7 +126,8 @@ All routes return JSON. Errors look like `{ "error": "message" }`.
 | GET    | `/api/recipe-classes`                       | Breakfast, Lunch, …                                                      |
 | GET    | `/api/measurements`                         | Cup, Tablespoon, …                                                       |
 | GET    | `/api/users/:userId/calendar?start=…&end=…` | A user's meal plan between two `YYYY-MM-DD` dates                        |
-| DELETE | `/api/users/:userId/calendar/:date/:slot`   | Remove one planned meal (`204`, or `404` if that slot is empty)          |
+| POST   | `/api/users/:userId/calendar`               | Add a dish: `{ date, meal_slot (1-5), recipe_id, allow_duplicate? }` (`201`). If the recipe is already planned that day: `409` with `code: 'already_planned'` and `meal_slots`; resend with `allow_duplicate: true` to add it to a different meal anyway |
+| DELETE | `/api/users/:userId/calendar/:calendarId`   | Remove one planned dish (`204`, or `404` if it's already gone)           |
 
 ## For Teammates
 
@@ -161,4 +163,10 @@ There is **no login yet**, so every route is open to anyone who can reach the se
 Don't edit tables only in pgAdmin, because teammates won't know. Instead:
 
 1. Write the change as SQL and run it against your local database.
-2. Add the same SQL to a new file in `back/db/` (e.g. `002_add_user_likes.sql`), update `back/db/schema.sql` so new setups get it too, and commit both.
+2. Add the same SQL to a new file in `back/db/` (e.g. `003_add_user_likes.sql`), update `back/db/schema.sql` so new setups get it too, and commit both.
+
+Migrations so far (run each once on a database created before it):
+
+| File | What it changes |
+| ---- | --------------- |
+| `back/db/002_calendar_multiple_dishes.sql` | `calendar` gets a `calendar_id` key, so a meal can hold several dishes; adds Snack (4) and Dessert (5) slots |

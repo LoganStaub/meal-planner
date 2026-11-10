@@ -8,6 +8,7 @@ import ingredientsRouter from './routes/ingredients.js'
 import recipesRouter from './routes/recipes.js'
 import lookupsRouter from './routes/lookups.js'
 import calendarRouter from './routes/calendar.js'
+import searchRouter from './routes/search.js'
 
 const app = express()
 const PORT = process.env.PORT || 3000
@@ -40,6 +41,9 @@ app.get(['/', '/index.html'], (req, res) => {
 app.get(['/calendar', '/calendar.html'], (req, res) => {
   res.render('calendar', { active: 'calendar', user: { initials: 'M' } })
 })
+
+// Render the search page (/search?q=&filter=&date=&slot=). See routes/search.js.
+app.use(searchRouter)
 
 // Render the user's saved recipes from the recipes table.
 app.get(['/liked', '/liked.html'], async (req, res, next) => {

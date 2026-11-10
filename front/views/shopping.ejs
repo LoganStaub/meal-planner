@@ -9,9 +9,10 @@
   <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="/css/pantry.css">
   <link rel="stylesheet" href="/css/profile-menu.css">
+  <link rel="stylesheet" href="/css/mobile-nav.css">
   <link rel="stylesheet" href="/css/shopping.css">
 </head>
-<body>
+<body class="has-mobile-nav">
   <%- include('partials/header') %>
 
     <main class="shopping">
@@ -49,6 +50,8 @@
       <% }) %>
     </ul>
   </main>
+
+  <%- include('partials/mobile-nav') %>
 
   <script src="/js/shopping.js"></script>
 </body>

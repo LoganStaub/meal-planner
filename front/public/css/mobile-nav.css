@@ -1,0 +1,119 @@
+/* Bottom navigation bar for phones (partials/mobile-nav.ejs).
+   Looks like the Calendar's bottom bar. Colors are written out here
+   because each page that uses it has its own variable names.
+   Hidden on wide screens, where the page's own top nav shows instead. */
+
+.mobile-nav {
+    display: none;
+}
+
+@media (max-width: 960px) {
+    .mobile-nav {
+        position: fixed;
+        right: 0;
+        bottom: 0;
+        left: 0;
+        z-index: 50;
+        display: block;
+        padding: 12px 12px calc(12px + env(safe-area-inset-bottom));
+        background-color: #F7F4F1;
+        /* pantry.css gives every <nav> a border and rounded corners */
+        border: 0;
+        border-radius: 0;
+        font-family: "DM Sans", system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+        -webkit-font-smoothing: antialiased;
+    }
+
+    .mobile-nav ul {
+        display: grid;
+        grid-template-columns: repeat(5, 1fr);
+        max-width: 620px;
+        margin: 0 auto;
+        padding: 10px 6px;
+        list-style: none;
+        border-radius: 26px;
+        background-color: #FFFFFF;
+        box-shadow: 0 4px 18px rgba(31, 35, 40, 0.06);
+    }
+
+    .mobile-nav-link {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        gap: 4px;
+        padding: 2px 0;
+        border-radius: 14px;
+        color: #5B6068;
+        font-size: 0.75rem;
+        font-weight: 400;
+        line-height: normal;
+        text-decoration: none;
+        transition: color 0.2s ease;
+    }
+
+    /* Undo the pill hover from pantry.css's plain `nav a` rules */
+    .mobile-nav-link:hover {
+        color: #1F2328;
+        background: none;
+        box-shadow: none;
+    }
+
+    .mobile-nav-link[aria-current="page"]:hover {
+        color: #D4552A;
+    }
+
+    .mobile-nav-link:focus-visible {
+        outline: 2px solid #D4552A;
+        outline-offset: 2px;
+    }
+
+    .mobile-nav-icon {
+        display: grid;
+        place-items: center;
+        width: 42px;
+        height: 42px;
+        border-radius: 50%;
+        transition: background-color 0.2s ease;
+    }
+
+    .mobile-nav-icon svg {
+        width: 22px;
+        height: 22px;
+        fill: none;
+        stroke: currentColor;
+        stroke-width: 1.8;
+        stroke-linecap: round;
+        stroke-linejoin: round;
+    }
+
+    .mobile-nav-link[aria-current="page"] {
+        color: #D4552A;
+    }
+
+    .mobile-nav-link[aria-current="page"] .mobile-nav-icon {
+        background-color: #FCDCCD;
+    }
+
+    /* Like the Calendar: the page scrolls in the space above the bar, so the
+       scrollbar stops where the bar starts instead of running behind it.
+       The body is the scroll area, sized to end at the top of the bar
+       (110px tall, plus the iPhone home-indicator gap). */
+    /* Without this the browser hands the body's overflow to the window,
+       and the whole window scrolls again */
+    html:has(> body.has-mobile-nav) {
+        overflow: hidden;
+    }
+
+    body.has-mobile-nav {
+        height: calc(100vh - 110px);
+        height: calc(100dvh - 110px - env(safe-area-inset-bottom));
+        min-height: 0;
+        overflow-y: auto;
+    }
+
+    /* pantry.css makes the body a flex column; without this its children
+       would shrink to fit the shorter body instead of scrolling */
+    body.has-mobile-nav > * {
+        flex-shrink: 0;
+    }
+}
