@@ -26,6 +26,7 @@
         <symbol id="icon-search" viewBox="0 0 24 24"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.3-4.3"/></symbol>
         <symbol id="icon-basket" viewBox="0 0 24 24"><path d="m15 11-1 9"/><path d="m19 11-4-7"/><path d="M2 11h20"/><path d="m3.5 11 1.6 7.4a2 2 0 0 0 2 1.6h9.8a2 2 0 0 0 2-1.6l1.7-7.4"/><path d="M4.5 15.5h15"/><path d="m5 11 4-7"/><path d="m9 11 1 9"/></symbol>
         <symbol id="icon-settings" viewBox="0 0 24 24"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"/></symbol>
+        <symbol id="icon-sparkles" viewBox="0 0 24 24"><path d="M9.937 15.5A2 2 0 0 0 8.5 14.063l-6.135-1.582a.5.5 0 0 1 0-.962L8.5 9.936A2 2 0 0 0 9.937 8.5l1.582-6.135a.5.5 0 0 1 .963 0L14.063 8.5A2 2 0 0 0 15.5 9.937l6.135 1.581a.5.5 0 0 1 0 .964L15.5 14.063a2 2 0 0 0-1.437 1.437l-1.582 6.135a.5.5 0 0 1-.963 0z"/><path d="M20 3v4"/><path d="M22 5h-4"/><path d="M4 17v2"/><path d="M5 18H3"/></symbol>
         <symbol id="icon-plus" viewBox="0 0 24 24"><path d="M12 5v14"/><path d="M5 12h14"/></symbol>
         <symbol id="icon-x" viewBox="0 0 24 24"><path d="M18 6 6 18"/><path d="m6 6 12 12"/></symbol>
         <symbol id="icon-heart" viewBox="0 0 24 24"><path d="M19 14c1.49-1.46 3-3.21 3-5.5A5.5 5.5 0 0 0 16.5 3c-1.76 0-3 .5-4.5 2-1.5-1.5-2.74-2-4.5-2A5.5 5.5 0 0 0 2 8.5c0 2.3 1.5 4.05 3 5.5l7 7Z"/></symbol>
@@ -49,8 +50,8 @@
                     <div class="search-heading-actions">
                         <%# Opens the "Add your own recipe" popup near the bottom of this file (js/recipe-add.js) %>
                         <button type="button" class="recipe-add-open" id="recipe-add-open" aria-haspopup="dialog">
-                            <svg class="icon"><use href="#icon-plus"/></svg>
-                            Add your own recipe
+                            <svg class="icon"><use href="#icon-sparkles"/></svg>
+                            Add a recipe with AI
                         </button>
                         <a class="liked-btn" href="/liked">
                             <svg class="icon"><use href="#icon-heart"/></svg>
@@ -195,7 +196,7 @@
         <div class="recipe-add-body">
             <div class="recipe-add-header">
                 <div>
-                    <h2 id="recipe-add-heading">Add your own recipe</h2>
+                    <h2 id="recipe-add-heading">Add a recipe with AI</h2>
                     <p class="recipe-add-remaining" id="recipe-add-remaining" role="status" hidden></p>
                 </div>
                 <button type="button" class="recipe-add-close" data-close aria-label="Close">
@@ -204,7 +205,7 @@
             </div>
 
             <form class="recipe-add-step" id="recipe-add-write">
-                <p><label for="recipe-add-text">Type or paste your recipe: its name, the ingredients and the steps. Our assistant checks it and fills in the details.</label></p>
+                <p><label for="recipe-add-text">Type or paste your recipe: its name, the ingredients and the steps. Our AI assistant checks it and fills in details such as cook time, cost and macros.</label></p>
                 <textarea id="recipe-add-text" required minlength="40" placeholder="Garlic butter pasta&#10;&#10;200g spaghetti, 3 cloves garlic, 2 tbsp butter, parmesan&#10;&#10;Boil the pasta. Melt the butter and fry the garlic for a minute. Toss the pasta in the butter and top with parmesan."></textarea>
                 <p class="recipe-add-counter" id="recipe-add-counter" aria-hidden="true"></p>
                 <p class="recipe-add-error" id="recipe-add-error" role="alert" hidden></p>
@@ -216,12 +217,12 @@
 
             <div class="recipe-add-step recipe-add-status" id="recipe-add-checking" role="status" hidden>
                 <div class="recipe-add-spinner" aria-hidden="true"></div>
-                <h3>Checking your recipe…</h3>
+                <h3>The AI assistant is checking your recipe…</h3>
                 <p>This usually takes 10 to 30 seconds.</p>
             </div>
 
             <div class="recipe-add-step" id="recipe-add-review" hidden>
-                <p>Here is how your recipe will be saved. Check it over, then save it.</p>
+                <p>Here is how the AI assistant prepared your recipe. Some details are estimates, so check it over before you save it.</p>
                 <div class="recipe-add-preview" id="recipe-add-preview"></div>
                 <p class="recipe-add-error" id="recipe-add-review-error" role="alert" hidden></p>
                 <div class="recipe-add-actions">
