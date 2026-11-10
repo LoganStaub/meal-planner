@@ -1,0 +1,335 @@
+/* "Add your own recipe" on the Search page (views/search.ejs, js/recipe-add.js).
+   Loaded after calendar.css and search.css, which provide the colors. */
+
+.search-heading-actions {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 10px;
+}
+
+.recipe-add-open {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    min-height: 44px;
+    padding: 0 18px;
+    border: 1px solid var(--accent);
+    border-radius: 999px;
+    background-color: var(--accent);
+    color: white;
+    font: inherit;
+    font-weight: 600;
+    cursor: pointer;
+    transition: background-color 0.2s ease, border-color 0.2s ease;
+}
+
+.recipe-add-open .icon {
+    width: 18px;
+    height: 18px;
+}
+
+.recipe-add-open:hover {
+    border-color: var(--accent-hover);
+    background-color: var(--accent-hover);
+}
+
+.recipe-add-open:focus-visible,
+.recipe-add button:focus-visible,
+.recipe-add a:focus-visible {
+    outline: 2px solid var(--accent);
+    outline-offset: 2px;
+}
+
+/* ---------- The popup ---------- */
+
+.recipe-add {
+    width: min(560px, calc(100% - 32px));
+    max-width: none;
+    max-height: min(760px, calc(100dvh - 32px));
+    padding: 0;
+    border: none;
+    border-radius: 28px;
+    color: var(--text);
+    background-color: #FAF8F5;
+    box-shadow: 0 24px 60px rgba(0, 0, 0, 0.25);
+}
+
+.recipe-add::backdrop {
+    background-color: rgba(20, 16, 14, 0.45);
+    backdrop-filter: blur(4px);
+    -webkit-backdrop-filter: blur(4px);
+}
+
+.recipe-add-body {
+    padding: 22px 22px calc(22px + env(safe-area-inset-bottom));
+}
+
+.recipe-add-header {
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    gap: 12px;
+}
+
+.recipe-add-header h2 {
+    margin: 0;
+    font-size: 1.3rem;
+    font-weight: 700;
+}
+
+.recipe-add-remaining {
+    display: inline-block;
+    margin: 6px 0 0;
+    padding: 3px 10px;
+    border-radius: 999px;
+    background-color: var(--accent-soft);
+    color: #8A2E12;
+    font-size: 0.85rem;
+    font-weight: 600;
+}
+
+.recipe-add-close {
+    display: grid;
+    place-items: center;
+    flex: none;
+    width: 40px;
+    height: 40px;
+    border: 0;
+    border-radius: 50%;
+    background-color: transparent;
+    color: var(--text-muted);
+    cursor: pointer;
+}
+
+.recipe-add-close:hover {
+    background-color: #F1EEEB;
+    color: var(--text);
+}
+
+.recipe-add-step {
+    margin-top: 16px;
+}
+
+.recipe-add-step > p {
+    margin: 0 0 12px;
+    color: var(--text-muted);
+    line-height: 1.45;
+}
+
+.recipe-add textarea {
+    display: block;
+    width: 100%;
+    min-height: 220px;
+    padding: 14px 16px;
+    border: 1px solid #D0D8E2;
+    border-radius: 18px;
+    background-color: var(--surface);
+    color: var(--text);
+    font: inherit;
+    line-height: 1.45;
+    resize: vertical;
+}
+
+.recipe-add textarea:focus-visible {
+    border-color: var(--accent);
+    outline: 2px solid var(--accent-soft);
+}
+
+.recipe-add-counter {
+    margin: 6px 4px 0;
+    color: var(--text-muted);
+    font-size: 0.85rem;
+    text-align: right;
+}
+
+.recipe-add-counter.over {
+    color: #B3261E;
+    font-weight: 600;
+}
+
+.recipe-add-error {
+    margin: 12px 0 0;
+    padding: 10px 14px;
+    border: 1px solid #F1B9A5;
+    border-radius: 14px;
+    background-color: #FDEEE8;
+    color: #8A2E12;
+    font-weight: 600;
+    line-height: 1.4;
+}
+
+.recipe-add-actions {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: flex-end;
+    gap: 10px;
+    margin-top: 18px;
+}
+
+.recipe-add-actions button,
+.recipe-add-actions a {
+    padding: 12px 20px;
+    border: 1px solid #D0D8E2;
+    border-radius: 16px;
+    background-color: var(--surface);
+    color: var(--text);
+    font: inherit;
+    font-weight: 600;
+    text-decoration: none;
+    cursor: pointer;
+    transition: background-color 0.2s ease, border-color 0.2s ease;
+}
+
+.recipe-add-actions button:hover,
+.recipe-add-actions a:hover {
+    background-color: #F1EEEB;
+}
+
+.recipe-add-actions .recipe-add-primary {
+    border-color: var(--accent);
+    background-color: var(--accent);
+    color: white;
+}
+
+.recipe-add-actions .recipe-add-primary:hover {
+    border-color: var(--accent-hover);
+    background-color: var(--accent-hover);
+}
+
+.recipe-add-actions button:disabled {
+    opacity: 0.6;
+    cursor: default;
+}
+
+/* ---------- Checking… ---------- */
+
+.recipe-add-status {
+    padding: 36px 8px;
+    text-align: center;
+}
+
+.recipe-add-status h3 {
+    margin: 0;
+    font-size: 1.15rem;
+    font-weight: 700;
+}
+
+.recipe-add-status p {
+    margin: 8px 0 0;
+    color: var(--text-muted);
+    line-height: 1.45;
+}
+
+.recipe-add-status strong {
+    color: var(--text);
+}
+
+.recipe-add-spinner {
+    width: 36px;
+    height: 36px;
+    margin: 0 auto 16px;
+    border: 4px solid var(--accent-soft);
+    border-top-color: var(--accent);
+    border-radius: 50%;
+    animation: recipe-add-spin 0.9s linear infinite;
+}
+
+@keyframes recipe-add-spin {
+    to { transform: rotate(360deg); }
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .recipe-add-spinner {
+        animation-duration: 3s;
+    }
+}
+
+/* ---------- The checked recipe ---------- */
+
+.recipe-add-preview {
+    padding: 16px 18px;
+    border: 1px solid #E3DED8;
+    border-radius: 20px;
+    background-color: var(--surface);
+}
+
+.recipe-add-title {
+    margin: 0;
+    font-size: 1.2rem;
+    font-weight: 700;
+    overflow-wrap: anywhere;
+}
+
+.recipe-add-facts {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px;
+    margin: 10px 0 0;
+    padding: 0;
+    list-style: none;
+}
+
+.recipe-add-facts li {
+    padding: 3px 10px;
+    border-radius: 999px;
+    background-color: #F1EEEB;
+    font-size: 0.85rem;
+    font-weight: 600;
+}
+
+.recipe-add-macros {
+    margin: 10px 0 0;
+    color: var(--text-muted);
+    font-size: 0.9rem;
+}
+
+.recipe-add-preview h4 {
+    margin: 16px 0 6px;
+    font-size: 0.95rem;
+    font-weight: 700;
+}
+
+.recipe-add-ingredients {
+    margin: 0;
+    padding: 0;
+    list-style: none;
+}
+
+.recipe-add-ingredients li {
+    display: flex;
+    gap: 10px;
+    padding: 4px 0;
+    line-height: 1.4;
+    overflow-wrap: anywhere;
+}
+
+.recipe-add-amount {
+    flex: none;
+    width: 7.5em;
+    color: var(--text-muted);
+}
+
+.recipe-add-steps {
+    margin: 0;
+    padding-left: 1.3em;
+}
+
+.recipe-add-steps li {
+    padding: 3px 0;
+    line-height: 1.45;
+    overflow-wrap: anywhere;
+}
+
+.recipe-add-notes {
+    margin: 14px 0 0;
+    padding-top: 12px;
+    border-top: 1px solid #E3DED8;
+    color: var(--text-muted);
+    font-size: 0.9rem;
+    line-height: 1.45;
+}
+
+/* Keep hidden parts hidden even where a class sets display */
+.recipe-add [hidden] {
+    display: none;
+}

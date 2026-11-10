@@ -9,6 +9,7 @@ import recipesRouter from './routes/recipes.js'
 import lookupsRouter from './routes/lookups.js'
 import calendarRouter from './routes/calendar.js'
 import searchRouter from './routes/search.js'
+import recipeAssistantRouter from './routes/recipeAssistant.js'
 
 const app = express()
 const PORT = process.env.PORT || 3000
@@ -31,6 +32,7 @@ app.use('/api/ingredients', ingredientsRouter)
 app.use('/api/recipes', recipesRouter)
 app.use('/api', lookupsRouter)
 app.use('/api/users', calendarRouter)
+app.use('/api', recipeAssistantRouter)
 
 // Render the home page from its EJS view.
 app.get(['/', '/index.html'], (req, res) => {

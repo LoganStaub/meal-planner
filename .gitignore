@@ -3,3 +3,6 @@ node_modules/
 .env.local
 .DS_Store
 .vscode/
+
+# Daily 'add your own recipe' counts (back/src/recipeAddLimit.js)
+back/data/
