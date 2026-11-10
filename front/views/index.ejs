@@ -75,7 +75,7 @@
             <section class="done" id="done" hidden>
                 <div class="done-card">
                     <h2>You're all caught up</h2>
-                    <p>That's all 5 of tonight's picks. Check back tomorrow for more.</p>
+                    <p>That's all 5 of <span id="done-picks-when">tonight's</span> picks. Check back tomorrow for more.</p>
                     <button type="button" class="action-btn like-btn" id="restart-btn">See them again</button>
                 </div>
             </section>
@@ -91,7 +91,8 @@
                 </div>
 
                 <div class="picks-row">
-                    <span class="picks-label">Tonight's picks</span>
+                    <%# index.js swaps this for the time of day (This morning's / This afternoon's / Tonight's) %>
+                    <span class="picks-label" id="picks-label">Tonight's picks</span>
                     <span class="picks-count" id="picks-count"></span>
                 </div>
                 <div class="progress" id="progress"></div>

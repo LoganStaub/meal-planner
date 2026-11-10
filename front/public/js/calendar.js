@@ -21,12 +21,37 @@ function recipeUrl(recipeId) {
     return `/recipe?id=${encodeURIComponent(recipeId)}`;
 }
 
+// Heading for a day with meals (and while loading)
+const DEFAULT_HEADING = "What's cooking";
+// A day with nothing planned gets one of these instead
+const EMPTY_DAY_HEADINGS = [
+    "What's cookin', good lookin'?",
+    "Nothing's cookin' yet",
+    "This plate's looking clean",
+    "Empty fridge energy",
+    "Let's get this bread",
+    "Hungry? Same.",
+    "Don't go bacon my heart",
+    "Lettuce plan something",
+    "Feeling snack-ish?",
+    "A blank plate, full of potential",
+];
+
+// The same day always gets the same phrase, so it doesn't change every
+// time the page redraws (e.g. after removing the day's last meal)
+function emptyDayHeading(dateKey) {
+    let hash = 0;
+    for (const char of dateKey) hash = (hash * 31 + char.charCodeAt(0)) % 1000003;
+    return EMPTY_DAY_HEADINGS[hash % EMPTY_DAY_HEADINGS.length];
+}
+
 const weekDays = document.getElementById("week-days");
 const weekRange = document.getElementById("week-range");
 const weekRelative = document.getElementById("week-relative");
 const selectedDateLabel = document.getElementById("selected-date");
 const selectedDaySection = document.getElementById("selected-day");
 const mealList = document.getElementById("meal-list");
+const selectedHeading = document.getElementById("selected-heading");
 const addMealLink = document.getElementById("add-meal");
 const findRecipeLink = document.getElementById("find-recipe");
 const pageError = document.getElementById("page-error");
@@ -313,6 +338,9 @@ function renderSelectedDay() {
     selectedDaySection.dataset.state = weekStatus === "ready"
         ? (meals.length > 0 ? "filled" : "empty")
         : weekStatus;
+    selectedHeading.textContent = selectedDaySection.dataset.state === "empty"
+        ? emptyDayHeading(dateKey)
+        : DEFAULT_HEADING;
 }
 
 function renderCalendar() {
