@@ -169,4 +169,4 @@ Migrations so far (run each once on a database created before it):
 
 | File | What it changes |
 | ---- | --------------- |
-| `back/db/002_calendar_multiple_dishes.sql` | `calendar` gets a `calendar_id` key, so a meal can hold several dishes; adds Snack (4) and Dessert (5) slots |
+| `back/db/002_calendar_multiple_dishes.sql` | `calendar` gets a `calendar_id` key, so a meal can hold several dishes; adds Snack (4) and Dessert (5) slots. Step-by-step guide: [`002_calendar_multiple_dishes.md`](back/db/002_calendar_multiple_dishes.md) |
