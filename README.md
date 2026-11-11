@@ -33,13 +33,15 @@ extra CORS configuration. The browser never connects directly to PostgreSQL.
 
 | Table                  | Key                                    | What it holds                                             |
 | ---------------------- | -------------------------------------- | --------------------------------------------------------- |
-| `users`              | `user_id`                            | Profile info; `password_hash` is reserved for login     |
+| `users`              | `user_id`                            | Account: name, email, phone, bcrypt `password_hash`, `role` (user or admin) |
 | `recipe_classes`     | `recipe_class_id`                    | Breakfast, Lunch, Dinner…                                |
 | `recipes`            | `recipe_id`                          | Title, cost, macros, prep time, instructions, liked       |
 | `ingredients`        | `ingredient_id`                      | Ingredient name, pantry amount, default measurement       |
 | `measurements`       | `measure_amount_id`                  | Cup, Tablespoon, Gram…                                   |
 | `recipe_ingredients` | (`recipe_id`, `recipe_seq_number`) | Which ingredients go in each recipe, in order             |
-| `calendar`           | (`user_id`, `date`, `meal_slot`) | Each user's planned meals                                 |
+| `calendar`           | `calendar_id`                        | Each user's planned dishes. `meal_slot`: 1 Breakfast, 2 Lunch, 3 Dinner, 4 Snack, 5 Dessert. A meal can hold several dishes, but not the same recipe twice |
+| `user_pantry`        | (`user_id`, `ingredient_id`)         | Each user's own pantry and how much is left               |
+| `user_liked_recipes` | (`user_id`, `recipe_id`)             | Which recipes each user liked                             |
 
 Names are **snake_case** (`recipe_title`, not `RecipeTitle`).
 
@@ -75,6 +77,7 @@ Names are **snake_case** (`recipe_title`, not `RecipeTitle`).
    - `DATABASE_URL`, e.g. `postgres://postgres:YOUR_PASSWORD@localhost:5432/meal_planner`
    - `SESSION_SECRET`, a long random string (the command to make one is in `.env.example`)
    - `REDIS_URL`, only if you're using a hosted Redis. Leave it empty for a local Redis (`redis://localhost:6379`).
+   - `ANTHROPIC_API_KEY`, only needed for the Search page's "Add your own recipe" assistant.
 6. **Create the tables.** This drops and recreates them, so only run it on a fresh or throwaway database:
    ```bash
    npm run db:init
@@ -99,10 +102,12 @@ Names are **snake_case** (`recipe_title`, not `RecipeTitle`).
 | Page    | File                             | URL                                  | Status                                                    |
 | ------- | -------------------------------- | ------------------------------------ | --------------------------------------------------------- |
 | Home    | `front/views/index.ejs` with `front/public/css/index.css` and `front/public/js/index.js` | <http://localhost:3000> | Design done: swipe through 5 meals, recipe popup opens. Meals and photos are placeholder data |
-| Pantry  | `front/views/pantry.ejs`, `front/public/css/pantry.css`, `front/public/js/pantry.js`, and `front/public/images/pantry-banner.jpeg` | <http://localhost:3000/pantry> or <http://localhost:3000/pantry.html> | Sorted by inventory level (Plenty left to None); search locally; add with a starting inventory amount, rename, update status, and delete through the database API |
-| Liked recipes | `front/views/liked.ejs`, `front/public/css/liked.css`, and `front/public/images/recipes-header.webp` | <http://localhost:3000/liked> or <http://localhost:3000/liked.html> | Lists recipes marked `liked` in the database and summarizes their pantry ingredients |
-| Calendar | `front/views/calendar.ejs`, `front/public/css/calendar.css`, and `front/public/js/calendar.js` | <http://localhost:3000/calendar> (add `?date=YYYY-MM-DD` to open a day) | Week view of the meal plan loaded from `/api/users/1/calendar`; remove a meal. Run `npm run db:seed` for test data |
-| Shopping, Search, Recipe, Profile | | `/shopping`, `/search?date=&slot=`, `/recipe?id=` | Not built yet. The calendar already links to these routes |
+| Pantry  | `front/views/pantry.ejs`, `front/public/css/pantry.css`, `front/public/js/pantry.js`, and `front/public/images/pantry-banner.jpeg` | <http://localhost:3000/pantry> or <http://localhost:3000/pantry.html> | The logged-in user's own pantry (`user_pantry`), sorted by inventory level (Plenty left to None); search locally; add with a starting inventory amount, rename, update status, and delete through `/api/me/pantry` |
+| Liked recipes | `front/views/liked.ejs`, `front/public/css/liked.css`, and `front/public/images/recipes-header.webp` | <http://localhost:3000/liked> or <http://localhost:3000/liked.html> | Lists the recipes the logged-in user liked (`user_liked_recipes`) and counts their ingredients against that user's pantry |
+| Calendar | `front/views/calendar.ejs`, `front/public/css/calendar.css`, and `front/public/js/calendar.js` | <http://localhost:3000/calendar> (add `?date=YYYY-MM-DD` to open a day) | Week view of the logged-in user's meal plan, loaded from `/api/me/calendar`. Breakfast, Lunch and Dinner each list their dishes ("+ Add another" for more), with a Snacks & desserts group below; remove one dish at a time. Run `npm run db:seed` for test data |
+| Search | `front/views/search.ejs`, `front/public/css/search.css` (on top of `calendar.css`), `front/public/js/search.js`, and `back/src/routes/search.js` | <http://localhost:3000/search> (`?q=chicken&filter=dinner`) | Searches recipe names and ingredients; filters for meal type, Quick Meals (prep ≤ 30 min) and High Protein (≥ 25g, read from the `macros` text). Thresholds are constants at the top of `routes/search.js`. From a calendar + button (`?date=YYYY-MM-DD&slot=1-5`) it starts on that meal's filter and shows an "Adding to…" banner with an Add to calendar button (X keeps searching without adding) |
+| Shopping | `front/views/shopping.ejs` | <http://localhost:3000/shopping> | Design done with sample items; not connected to the calendar or pantry yet |
+| Recipe | | `/recipe?id=` | Not built yet. The calendar and search pages already link to it |
 
 The home page's recipe details popup is the `<dialog id="recipe-details">` in `front/views/index.ejs`. Its content goes in `#details-body`, and the open recipe's ID is in `dialog.dataset.recipeId`.
 
@@ -118,21 +123,44 @@ The vertical slice is **adding an ingredient to the Virtual Pantry**.
 
 ## API Reference
 
-All routes return JSON. Errors look like `{ "error": "message" }`.
+All routes return JSON and need a logged-in user (they answer `401` otherwise). Errors look like `{ "error": "message" }`.
 
-| Method | Route                                         | What it does                                                             |
-| ------ | --------------------------------------------- | ------------------------------------------------------------------------ |
-| GET    | `/api/ingredients`                          | All pantry ingredients                                                   |
-| POST   | `/api/ingredients`                          | Add one: `{ ingredient_name, pantry_amount_id? }`                      |
-| PATCH  | `/api/ingredients/:id`                      | Change `ingredient_name`, `pantry_amount_id`, and/or `measure_amount_id` |
-| DELETE | `/api/ingredients/:id`                      | Delete one (fails with 400 if a recipe uses it)                          |
-| GET    | `/api/recipes`                              | All recipes with their class name                                        |
-| GET    | `/api/recipes/:id`                          | One recipe with its ordered ingredient list                              |
-| POST   | `/api/recipes`                              | Add one: `{ recipe_title, recipe_class_id?, cost?, prep_time?, macros?, instructions? }` |
-| GET    | `/api/recipe-classes`                       | Breakfast, Lunch, …                                                      |
-| GET    | `/api/measurements`                         | Cup, Tablespoon, …                                                       |
-| GET    | `/api/users/:userId/calendar?start=…&end=…` | A user's meal plan between two `YYYY-MM-DD` dates                        |
-| DELETE | `/api/users/:userId/calendar/:date/:slot`   | Remove one planned meal (`204`, or `404` if that slot is empty)          |
+**Shared data.** Everyone can read it; only admins can change it (`npm run user:role` makes someone an admin).
+
+| Method | Route | What it does |
+| ------ | ----- | ------------ |
+| GET    | `/api/ingredients` | All ingredients |
+| POST   | `/api/ingredients` | Admin: add one: `{ ingredient_name, pantry_amount_id? }` |
+| PATCH  | `/api/ingredients/:id` | Admin: change `ingredient_name`, `pantry_amount_id`, and/or `measure_amount_id` |
+| DELETE | `/api/ingredients/:id` | Admin: delete one (fails with 400 if a recipe uses it) |
+| GET    | `/api/recipes` | All recipes with their class name |
+| GET    | `/api/recipes/:id` | One recipe with its ordered ingredient list |
+| POST   | `/api/recipes` | Admin: add one: `{ recipe_title, recipe_class_id?, cost?, prep_time?, macros?, instructions? }` |
+| GET    | `/api/recipe-classes` | Breakfast, Lunch, … |
+| GET    | `/api/measurements` | Cup, Tablespoon, … |
+
+**The logged-in user's own data.** The user comes from the login session, never from the URL, so nobody can read or change someone else's data.
+
+| Method | Route | What it does |
+| ------ | ----- | ------------ |
+| GET    | `/api/me/calendar?start=…&end=…` | Planned dishes between two `YYYY-MM-DD` dates, each with its `calendar_id` |
+| POST   | `/api/me/calendar` | Add a dish: `{ date, meal_slot (1-5), recipe_id, allow_duplicate? }` (`201`). If the recipe is already planned that day: `409` with `code: 'already_planned'` and `meal_slots`; resend with `allow_duplicate: true` to add it to a different meal anyway |
+| DELETE | `/api/me/calendar/:calendarId` | Remove one planned dish (`204`, or `404` if it's not on your calendar) |
+| GET    | `/api/me/likes` | Ids of the recipes you liked |
+| PUT    | `/api/me/likes/:recipeId` | Like a recipe (`204`) |
+| DELETE | `/api/me/likes/:recipeId` | Unlike it (`204`) |
+| GET    | `/api/me/pantry` | Your pantry items |
+| POST   | `/api/me/pantry` | Add one: `{ ingredient_name, pantry_amount_id? }` (`201`) |
+| PATCH  | `/api/me/pantry/:ingredientId` | Change `ingredient_name` and/or `pantry_amount_id` |
+| DELETE | `/api/me/pantry/:ingredientId` | Remove one (`204`) |
+
+**"Add your own recipe" assistant** (Search page). Any logged-in user can add recipes this way, because Claude checks each one first; limits are per user per day (`back/src/recipeAddLimit.js`). Needs `ANTHROPIC_API_KEY` in `.env`.
+
+| Method | Route | What it does |
+| ------ | ----- | ------------ |
+| GET    | `/api/recipe-assistant/status` | How many recipes you can still add today |
+| POST   | `/api/recipe-assistant/check` | `{ text }`: Claude turns it into a recipe draft, or explains why not |
+| POST   | `/api/recipe-assistant/drafts/:draftId/save` | Save a checked draft to `recipes` (`201`) |
 
 ## For Teammates
 
@@ -204,5 +232,15 @@ Rate limits are per IP address and kept in memory, so they reset when the server
 
 Don't edit tables only in pgAdmin, because teammates won't know. Instead:
 
-1. Write the change as SQL and run it against your local database.
-2. Add the same SQL to a new file in `back/db/` (e.g. `002_add_user_likes.sql`), update `back/db/schema.sql` so new setups get it too, and commit both.
+1. Add a new numbered file to `back/db/migrations/` (next is `007_...sql`). Write it so it's safe to run more than once (`if not exists`, or check first like `006` does).
+2. Update `back/db/schema.sql` so brand-new setups get the change too.
+3. Run `npm run db:migrate` to apply it, and commit both files.
+
+Teammates then run `npm run db:migrate` after pulling. It only runs the files their database hasn't had yet (they're recorded in the `schema_migrations` table) and never drops data. **Never run `npm run db:init` against the shared Neon database:** it drops and recreates every table.
+
+| Migration | What it changes |
+| --------- | --------------- |
+| `001_user_data.sql` | Per-user `user_pantry` and `user_liked_recipes`, and `users.role` (user or admin) |
+| `002_email_verification.sql`, `003_pending_signups.sql`, `004_password_reset.sql` | Email verification and reset tables. No longer used; `005` removes them |
+| `005_drop_unused_auth_tables.sql` | Drops `pending_signups`, `session` and `password_reset_tokens` (that data lives in Redis now) |
+| `006_calendar_multiple_dishes.sql` | `calendar` gets a `calendar_id` key, so a meal can hold several dishes; adds Snack (4) and Dessert (5) slots. Guide: [`calendar_multiple_dishes.md`](back/db/calendar_multiple_dishes.md) |

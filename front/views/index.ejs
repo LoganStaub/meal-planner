@@ -61,12 +61,12 @@
                         <button type="button" class="action-btn" id="next-btn" aria-label="Next meal">
                             <svg class="icon"><use href="#icon-x"/></svg>
                         </button>
-                        <button type="button" class="action-btn like-btn" id="like-btn" aria-pressed="false">
-                            <svg class="icon"><use href="#icon-heart"/></svg>
-                            <span id="like-label">Like</span>
-                        </button>
-                        <button type="button" class="action-btn" id="calendar-btn" aria-label="Add to calendar">
+                        <button type="button" class="action-btn primary-btn" id="calendar-btn">
                             <svg class="icon"><use href="#icon-calendar-plus"/></svg>
+                            <span>Add to calendar</span>
+                        </button>
+                        <button type="button" class="action-btn like-btn" id="like-btn" aria-label="Like" aria-pressed="false">
+                            <svg class="icon"><use href="#icon-heart"/></svg>
                         </button>
                     </div>
                 </div>
@@ -76,8 +76,8 @@
             <section class="done" id="done" hidden>
                 <div class="done-card">
                     <h2>You're all caught up</h2>
-                    <p>That's all 5 of tonight's picks. Check back tomorrow for more.</p>
-                    <button type="button" class="action-btn like-btn" id="restart-btn">See them again</button>
+                    <p>That's all 5 of <span id="done-picks-when">tonight's</span> picks. Check back tomorrow for more.</p>
+                    <button type="button" class="action-btn primary-btn" id="restart-btn">See them again</button>
                 </div>
             </section>
 
@@ -92,7 +92,8 @@
                 </div>
 
                 <div class="picks-row">
-                    <span class="picks-label">Tonight's picks</span>
+                    <%# index.js swaps this for the time of day (This morning's / This afternoon's / Tonight's) %>
+                    <span class="picks-label" id="picks-label">Tonight's picks</span>
                     <span class="picks-count" id="picks-count"></span>
                 </div>
                 <div class="progress" id="progress"></div>

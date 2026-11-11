@@ -123,6 +123,12 @@ body {
 .empty-state h2 { margin: 0 0 8px; color: var(--liked-ink); font-size: 20px; }
 .empty-state p { margin: 0; font-size: 14px; }
 
+/* Phones and tablets use the bottom bar (mobile-nav.css) instead */
+@media (max-width: 960px) {
+  .nav-links { display: none; }
+  .nav-user { margin-left: auto; }
+}
+
 @media (max-width: 760px) {
   .nav { flex-wrap: wrap; gap: 8px; }
   .nav-links { order: 3; width: 100%; margin: 0; justify-content: flex-start; }

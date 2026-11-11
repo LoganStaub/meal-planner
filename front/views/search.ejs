@@ -1,0 +1,271 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+    <title>Search | Meal Planner</title>
+
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=DM+Sans:opsz,wght@9..40,400;9..40,500;9..40,600;9..40,700&display=swap" rel="stylesheet">
+
+    <%# calendar.css has the shared colors, page layout and nav; search.css adds this page's parts %>
+    <link rel="stylesheet" href="/css/calendar.css">
+    <link rel="stylesheet" href="/css/search.css">
+    <link rel="stylesheet" href="/css/recipe-add.css">
+    <link rel="stylesheet" href="/css/profile-menu.css">
+    <script src="/js/no-back-cache.js"></script>
+</head>
+
+<body>
+    <svg width="0" height="0" style="position: absolute" aria-hidden="true">
+        <symbol id="icon-chevron-left" viewBox="0 0 24 24"><path d="m15 18-6-6 6-6"/></symbol>
+        <symbol id="icon-chevron-down" viewBox="0 0 24 24"><path d="m6 9 6 6 6-6"/></symbol>
+        <symbol id="icon-calendar" viewBox="0 0 24 24"><path d="M8 2v4"/><path d="M16 2v4"/><rect width="18" height="18" x="3" y="4" rx="2"/><path d="M3 10h18"/><path d="M8 14h.01"/><path d="M12 14h.01"/><path d="M16 14h.01"/><path d="M8 18h.01"/><path d="M12 18h.01"/><path d="M16 18h.01"/></symbol>
+        <symbol id="icon-list" viewBox="0 0 24 24"><path d="m3 17 2 2 4-4"/><path d="m3 7 2 2 4-4"/><path d="M13 6h8"/><path d="M13 12h8"/><path d="M13 18h8"/></symbol>
+        <symbol id="icon-home" viewBox="0 0 24 24"><path d="M15 21v-8a1 1 0 0 0-1-1h-4a1 1 0 0 0-1 1v8"/><path d="M3 10a2 2 0 0 1 .709-1.528l7-5.999a2 2 0 0 1 2.582 0l7 5.999A2 2 0 0 1 21 10v9a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/></symbol>
+        <symbol id="icon-search" viewBox="0 0 24 24"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.3-4.3"/></symbol>
+        <symbol id="icon-basket" viewBox="0 0 24 24"><path d="m15 11-1 9"/><path d="m19 11-4-7"/><path d="M2 11h20"/><path d="m3.5 11 1.6 7.4a2 2 0 0 0 2 1.6h9.8a2 2 0 0 0 2-1.6l1.7-7.4"/><path d="M4.5 15.5h15"/><path d="m5 11 4-7"/><path d="m9 11 1 9"/></symbol>
+        <symbol id="icon-settings" viewBox="0 0 24 24"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"/></symbol>
+        <symbol id="icon-sparkles" viewBox="0 0 24 24"><path d="M9.937 15.5A2 2 0 0 0 8.5 14.063l-6.135-1.582a.5.5 0 0 1 0-.962L8.5 9.936A2 2 0 0 0 9.937 8.5l1.582-6.135a.5.5 0 0 1 .963 0L14.063 8.5A2 2 0 0 0 15.5 9.937l6.135 1.581a.5.5 0 0 1 0 .964L15.5 14.063a2 2 0 0 0-1.437 1.437l-1.582 6.135a.5.5 0 0 1-.963 0z"/><path d="M20 3v4"/><path d="M22 5h-4"/><path d="M4 17v2"/><path d="M5 18H3"/></symbol>
+        <symbol id="icon-plus" viewBox="0 0 24 24"><path d="M12 5v14"/><path d="M5 12h14"/></symbol>
+        <symbol id="icon-x" viewBox="0 0 24 24"><path d="M18 6 6 18"/><path d="m6 6 12 12"/></symbol>
+        <symbol id="icon-heart" viewBox="0 0 24 24"><path d="M19 14c1.49-1.46 3-3.21 3-5.5A5.5 5.5 0 0 0 16.5 3c-1.76 0-3 .5-4.5 2-1.5-1.5-2.74-2-4.5-2A5.5 5.5 0 0 0 2 8.5c0 2.3 1.5 4.05 3 5.5l7 7Z"/></symbol>
+        <symbol id="icon-clock" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><path d="M12 6v6l4 2"/></symbol>
+        <symbol id="icon-image" viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="16" rx="2"/><circle cx="9" cy="10" r="1.8"/><path d="M21 16l-5-5-8 9"/></symbol>
+    </svg>
+
+    <div class="app">
+        <header class="page-header">
+            <h1>Search</h1>
+            <%# Opens the shared profile/settings menu (partials/profile-menu, js/profile-menu.js) %>
+            <button type="button" class="gear-btn profile-trigger" id="profile-trigger" aria-label="Settings" aria-controls="profile-menu" aria-expanded="false">
+                <svg class="icon"><use href="#icon-settings"/></svg>
+            </button>
+        </header>
+
+        <main class="content">
+            <div class="search-content">
+                <div class="search-heading-row">
+                    <h2>Find a recipe</h2>
+                    <div class="search-heading-actions">
+                        <%# Opens the "Add your own recipe" popup near the bottom of this file (js/recipe-add.js) %>
+                        <button type="button" class="recipe-add-open" id="recipe-add-open" aria-haspopup="dialog">
+                            <svg class="icon"><use href="#icon-sparkles"/></svg>
+                            Add a recipe with AI
+                        </button>
+                        <a class="liked-btn" href="/liked">
+                            <svg class="icon"><use href="#icon-heart"/></svg>
+                            Liked recipes
+                        </a>
+                    </div>
+                </div>
+
+                <% if (plan) { %>
+                <%# Came from a calendar + button. search.js reads data-date / data-slot. %>
+                <section class="plan-banner" id="plan-banner" data-date="<%= plan.date %>" data-slot="<%= plan.slot || '' %>" data-day-label="<%= plan.dayLabel %>" aria-label="Adding to your meal plan">
+                    <div class="plan-banner-text">
+                        <svg class="icon"><use href="#icon-calendar"/></svg>
+                        <p>Adding to <strong><%= plan.dayLabel %><% if (plan.slotLabel) { %> – <%= plan.slotLabel %><% } %></strong></p>
+                        <%# Keeps searching, but stops adding to this day %>
+                        <a class="plan-dismiss" href="<%= plan.dismissHref %>" aria-label="Browse recipes without adding to the calendar" title="Browse without adding to the calendar">
+                            <svg class="icon"><use href="#icon-x"/></svg>
+                        </a>
+                    </div>
+                    <%# A dropdown, not chips, so it can't be mistaken for the filter
+                        buttons below. Changing it loads that meal (search.js). %>
+                    <div class="plan-slots">
+                        <label class="plan-slots-label" for="plan-slot-select"><%= plan.slot ? 'Meal' : 'Choose a meal' %></label>
+                        <span class="plan-slot-picker">
+                            <select id="plan-slot-select">
+                                <% if (!plan.slot) { %><option value="" selected disabled>Choose…</option><% } %>
+                                <% plan.slotChoices.forEach(function (choice) { %>
+                                <option value="<%= choice.href %>"<% if (choice.active) { %> selected<% } %>><%= choice.label %></option>
+                                <% }); %>
+                            </select>
+                            <svg class="icon"><use href="#icon-chevron-down"/></svg>
+                        </span>
+                        <a class="plan-back" href="<%= plan.calendarHref %>">
+                            <svg class="icon"><use href="#icon-chevron-left"/></svg>
+                            Back to calendar
+                        </a>
+                    </div>
+                </section>
+                <% } %>
+
+                <div class="page-error" id="page-error" role="alert" hidden>
+                    <p id="page-error-message"></p>
+                </div>
+
+                <form class="search-form" action="/search" method="get" role="search">
+                    <label class="visually-hidden" for="search-input">Search recipes by name or ingredient</label>
+                    <svg class="icon search-form-icon"><use href="#icon-search"/></svg>
+                    <input class="search-input" id="search-input" type="search" name="q" value="<%= q %>" placeholder="Search by recipe or ingredient" maxlength="100" autocomplete="off">
+                    <%# Keep the current filter and calendar day when searching %>
+                    <%# An empty filter keeps a cleared filter cleared (see routes/search.js) %>
+                    <% if (activeFilter || filterCleared) { %><input type="hidden" name="filter" value="<%= activeFilter ? activeFilter.key : '' %>"><% } %>
+                    <% if (plan) { %><input type="hidden" name="date" value="<%= plan.date %>"><% } %>
+                    <% if (plan && plan.slot) { %><input type="hidden" name="slot" value="<%= plan.slot %>"><% } %>
+                    <% if (q) { %>
+                    <a class="search-clear" href="<%= clearSearchHref %>" aria-label="Clear search">
+                        <svg class="icon"><use href="#icon-x"/></svg>
+                    </a>
+                    <% } %>
+                    <button class="search-submit" type="submit">Search</button>
+                </form>
+
+                <nav class="filter-row" aria-label="Filter recipes">
+                    <% filters.forEach(function (f) { %>
+                    <a class="filter-chip" href="<%= f.href %>"<% if (f.active) { %> aria-current="true" title="Click again to clear this filter"<% } %>><%= f.label %></a>
+                    <% }); %>
+                </nav>
+
+                <p class="results-count" role="status">
+                    <%= recipes.length %> <%= recipes.length === 1 ? 'recipe' : 'recipes' %><% if (q) { %> for “<%= q %>”<% } %><% if (activeFilter) { %> · <%= activeFilter.label %><% } %>
+                </p>
+
+                <% if (recipes.length === 0) { %>
+                <div class="empty-state search-empty">
+                    <p>No recipes found</p>
+                    <span>Try another ingredient or recipe name<% if (activeFilter) { %>, or clear the filter<% } %>.</span>
+                    <% if (q || activeFilter) { %>
+                    <a class="find-recipe" href="<%= showAllHref %>">Show all recipes</a>
+                    <% } %>
+                </div>
+                <% } else { %>
+                <ul class="recipe-grid">
+                    <% recipes.forEach(function (r) { %>
+                    <li class="recipe-card">
+                        <div class="recipe-thumb">
+                            <svg class="placeholder"><use href="#icon-image"/></svg>
+                        </div>
+                        <div class="recipe-body">
+                            <div class="recipe-tags">
+                                <% if (r.time) { %><span class="recipe-time"><svg class="icon"><use href="#icon-clock"/></svg><%= r.time %></span><% } %>
+                                <span class="recipe-class"><%= r.tag %></span>
+                            </div>
+                            <%# Same detail route the calendar links to (not built yet) %>
+                            <h3><a class="recipe-link" href="/recipe?id=<%= r.recipe_id %>"><%= r.title %></a></h3>
+                            <% if (r.protein !== null) { %><p class="recipe-protein"><%= r.protein %>g protein</p><% } %>
+                        </div>
+                        <% if (plan) { %>
+                        <%# Names the meal it adds to, so the destination is never a surprise %>
+                        <button type="button" class="add-to-calendar" data-recipe-id="<%= r.recipe_id %>" data-recipe-title="<%= r.title %>"<% if (!plan.slot) { %> disabled title="Choose a meal above first"<% } %>>
+                            <svg class="icon"><use href="#icon-plus"/></svg>
+                            <%= plan.slotLabel ? `Add to ${plan.slotLabel.toLowerCase()}` : 'Add to calendar' %><span class="visually-hidden">: <%= r.title %></span>
+                        </button>
+                        <% } %>
+                    </li>
+                    <% }); %>
+                </ul>
+                <% } %>
+            </div>
+        </main>
+
+        <nav class="nav" aria-label="Main">
+            <p class="nav-brand">Meal Planner<span>.</span></p>
+            <ul>
+                <li><a class="nav-link" href="/calendar"><span class="nav-icon"><svg class="icon"><use href="#icon-calendar"/></svg></span>Calendar</a></li>
+                <li><a class="nav-link" href="/shopping"><span class="nav-icon"><svg class="icon"><use href="#icon-list"/></svg></span>Shopping</a></li>
+                <li class="nav-home"><a class="nav-link" href="/"><span class="nav-icon"><svg class="icon"><use href="#icon-home"/></svg></span>Home</a></li>
+                <li><a class="nav-link" href="/search" aria-current="page"><span class="nav-icon"><svg class="icon"><use href="#icon-search"/></svg></span>Search</a></li>
+                <li><a class="nav-link" href="/pantry"><span class="nav-icon"><svg class="icon"><use href="#icon-basket"/></svg></span>Pantry</a></li>
+            </ul>
+        </nav>
+    </div>
+
+    <% if (plan) { %>
+    <%# Same popup style as the calendar's "Remove this meal?" (calendar.css) %>
+    <dialog class="confirm-dialog" id="confirm-duplicate" aria-labelledby="confirm-duplicate-title" aria-describedby="confirm-duplicate-text">
+        <form method="dialog">
+            <div class="confirm-icon" aria-hidden="true">
+                <svg class="icon"><use href="#icon-calendar"/></svg>
+            </div>
+            <h2 id="confirm-duplicate-title"></h2>
+            <p id="confirm-duplicate-text"></p>
+            <div class="confirm-actions">
+                <button type="submit" value="cancel" id="confirm-duplicate-cancel" autofocus>Cancel</button>
+                <button type="submit" value="add" class="confirm-danger" id="confirm-duplicate-add">Add anyway</button>
+            </div>
+        </form>
+    </dialog>
+    <% } %>
+
+    <%# "Add your own recipe": write it, the AI checks it, review, save.
+        js/recipe-add.js shows one .recipe-add-step at a time. %>
+    <dialog class="recipe-add" id="recipe-add" aria-labelledby="recipe-add-heading">
+        <div class="recipe-add-body">
+            <div class="recipe-add-header">
+                <div>
+                    <h2 id="recipe-add-heading">Add a recipe with AI</h2>
+                    <p class="recipe-add-remaining" id="recipe-add-remaining" role="status" hidden></p>
+                </div>
+                <button type="button" class="recipe-add-close" data-close aria-label="Close">
+                    <svg class="icon"><use href="#icon-x"/></svg>
+                </button>
+            </div>
+
+            <form class="recipe-add-step" id="recipe-add-write">
+                <p><label for="recipe-add-text">Type or paste your recipe: its name, the ingredients and the steps. Our AI assistant checks it and fills in details such as cook time, cost and macros.</label></p>
+                <textarea id="recipe-add-text" required minlength="40" placeholder="Garlic butter pasta&#10;&#10;200g spaghetti, 3 cloves garlic, 2 tbsp butter, parmesan&#10;&#10;Boil the pasta. Melt the butter and fry the garlic for a minute. Toss the pasta in the butter and top with parmesan."></textarea>
+                <p class="recipe-add-counter" id="recipe-add-counter" aria-hidden="true"></p>
+                <p class="recipe-add-error" id="recipe-add-error" role="alert" hidden></p>
+                <div class="recipe-add-actions">
+                    <button type="button" data-close>Cancel</button>
+                    <button type="submit" class="recipe-add-primary" id="recipe-add-check">Check recipe</button>
+                </div>
+            </form>
+
+            <div class="recipe-add-step recipe-add-status" id="recipe-add-checking" role="status" hidden>
+                <div class="recipe-add-spinner" aria-hidden="true"></div>
+                <h3>The AI assistant is checking your recipe…</h3>
+                <p>This usually takes 10 to 30 seconds.</p>
+            </div>
+
+            <div class="recipe-add-step" id="recipe-add-review" hidden>
+                <p>Here is how the AI assistant prepared your recipe. Some details are estimates, so check it over before you save it.</p>
+                <div class="recipe-add-preview" id="recipe-add-preview"></div>
+                <p class="recipe-add-error" id="recipe-add-review-error" role="alert" hidden></p>
+                <div class="recipe-add-actions">
+                    <button type="button" id="recipe-add-edit">Edit my text</button>
+                    <button type="button" class="recipe-add-primary" id="recipe-add-save">Save recipe</button>
+                </div>
+            </div>
+
+            <div class="recipe-add-step recipe-add-status" id="recipe-add-done" hidden>
+                <h3>Recipe added</h3>
+                <p id="recipe-add-done-text"></p>
+                <div class="recipe-add-actions">
+                    <button type="button" data-close>Close</button>
+                    <a class="recipe-add-primary" id="recipe-add-done-link" href="/search">Find it in search</a>
+                </div>
+            </div>
+
+            <%# The login expired while the popup was open. The link's address
+                comes from the server's 401 response. %>
+            <div class="recipe-add-step recipe-add-status" id="recipe-add-login" hidden>
+                <h3>Log in to add a recipe</h3>
+                <p>You need an account so we can keep track of the recipes you add.</p>
+                <div class="recipe-add-actions">
+                    <button type="button" data-close>Cancel</button>
+                    <a class="recipe-add-primary" id="recipe-add-login-link" href="/login">Log in</a>
+                </div>
+            </div>
+
+            <%# The wall: 3 recipes a day (back/src/recipeAddLimit.js) %>
+            <div class="recipe-add-step recipe-add-status" id="recipe-add-wall" role="alert" hidden>
+                <h3>That's all for today</h3>
+                <p id="recipe-add-wall-text"></p>
+                <div class="recipe-add-actions">
+                    <button type="button" class="recipe-add-primary" data-close>OK</button>
+                </div>
+            </div>
+        </div>
+    </dialog>
+
+    <%- include('partials/profile-menu') %>
+    <script src="/js/profile-menu.js" defer></script>
+    <script src="/js/recipe-add.js" defer></script>
+    <% if (plan) { %><script src="/js/search.js" defer></script><% } %>
+</body>
+</html>

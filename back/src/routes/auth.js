@@ -111,7 +111,9 @@ export async function loadUser(req, res, next) {
 
 function deny(req, res, status, message) {
   if (req.originalUrl.startsWith('/api')) {
-    return res.status(status).json({ error: message })
+    // login_url lets a page send the user to log in (e.g. js/recipe-add.js)
+    const extra = status === 401 ? { code: 'login_required', login_url: '/login' } : {}
+    return res.status(status).json({ error: message, ...extra })
   }
   if (status === 401) {
     // Come back to this page after logging in

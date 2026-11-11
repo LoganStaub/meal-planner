@@ -1,0 +1,59 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Mealio - Shopping list</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="/css/pantry.css">
+  <link rel="stylesheet" href="/css/profile-menu.css">
+  <link rel="stylesheet" href="/css/mobile-nav.css">
+  <link rel="stylesheet" href="/css/shopping.css">
+  <script src="/js/no-back-cache.js"></script>
+</head>
+<body class="has-mobile-nav">
+  <%- include('partials/header') %>
+
+    <main class="shopping">
+    <div class="shop-top">
+      <h1>Shopping list</h1>
+      <button class="shop-icon-btn" type="button" aria-label="Shopping list settings">
+        <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.7 1.7 0 0 0 .3 1.8l.1.1a2 2 0 1 1-2.8 2.8l-.1-.1a1.7 1.7 0 0 0-1.8-.3 1.7 1.7 0 0 0-1 1.5V21a2 2 0 1 1-4 0v-.1a1.7 1.7 0 0 0-1.1-1.5 1.7 1.7 0 0 0-1.8.3l-.1.1a2 2 0 1 1-2.8-2.8l.1-.1a1.7 1.7 0 0 0 .3-1.8 1.7 1.7 0 0 0-1.5-1H3a2 2 0 1 1 0-4h.1a1.7 1.7 0 0 0 1.5-1.1 1.7 1.7 0 0 0-.3-1.8l-.1-.1a2 2 0 1 1 2.8-2.8l.1.1a1.7 1.7 0 0 0 1.8.3H9a1.7 1.7 0 0 0 1-1.5V3a2 2 0 1 1 4 0v.1a1.7 1.7 0 0 0 1 1.5 1.7 1.7 0 0 0 1.8-.3l.1-.1a2 2 0 1 1 2.8 2.8l-.1.1a1.7 1.7 0 0 0-.3 1.8V9a1.7 1.7 0 0 0 1.5 1H21a2 2 0 1 1 0 4h-.1a1.7 1.7 0 0 0-1.5 1z"/></svg>
+      </button>
+    </div>
+
+    <section class="shop-week">
+      <p class="shop-week-label">This week</p>
+      <p class="shop-week-count" id="items-left-text"><%= items.length %> <%= items.length === 1 ? 'item' : 'items' %> left</p>
+    </section>
+
+    <form class="shop-add" id="add-form" autocomplete="off">
+      <input type="text" id="add-input" placeholder="Add something else" aria-label="Add an item">
+      <button class="shop-add-btn" type="submit" aria-label="Add item">
+        <svg viewBox="0 0 24 24"><path d="M12 5v14M5 12h14"/></svg>
+      </button>
+    </form>
+
+    <ul class="shop-list" id="item-list">
+      <% items.forEach(item => { %>
+        <li class="shop-item">
+          <input type="checkbox" class="shop-check" aria-label="Got <%= item.name %>">
+          <div class="shop-text">
+            <span class="shop-name"><%= item.name %></span>
+            <% if (item.forRecipe) { %>
+              <span class="shop-for">For <%= item.forRecipe %></span>
+            <% } %>
+          </div>
+          <span class="shop-amount"><%= item.amount %></span>
+        </li>
+      <% }) %>
+    </ul>
+  </main>
+
+  <%- include('partials/mobile-nav') %>
+
+  <script src="/js/shopping.js"></script>
+</body>
+</html>

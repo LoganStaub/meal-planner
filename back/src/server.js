@@ -14,6 +14,8 @@ import calendarRouter from './routes/calendar.js'
 import likesRouter from './routes/likes.js'
 import pantryRouter from './routes/pantry.js'
 import authRouter, { loadUser, requireLogin } from './routes/auth.js'
+import searchRouter from './routes/search.js'
+import recipeAssistantRouter from './routes/recipeAssistant.js'
 
 if (!process.env.SESSION_SECRET) {
   throw new Error('Missing SESSION_SECRET. Add it to .env (see .env.example).')
@@ -108,6 +110,9 @@ app.use('/api/me/calendar', calendarRouter)
 app.use('/api/me/likes', likesRouter)
 app.use('/api/me/pantry', pantryRouter)
 
+// Search page's "Add your own recipe" assistant: /api/recipe-assistant/...
+app.use('/api', recipeAssistantRouter)
+
 // Render the home page from its EJS view.
 app.get(['/home', '/index.html'], (req, res) => {
   res.render('index', { active: 'home' })
@@ -117,6 +122,9 @@ app.get(['/home', '/index.html'], (req, res) => {
 app.get(['/calendar', '/calendar.html'], (req, res) => {
   res.render('calendar', { active: 'calendar' })
 })
+
+// Render the search page (/search?q=&filter=&date=&slot=). See routes/search.js.
+app.use(searchRouter)
 
 // Render the recipes this user has liked. inPantry / toBuy count each
 // recipe's ingredients against this user's pantry.
@@ -173,6 +181,20 @@ app.get(['/pantry', '/pantry.html', '/pantry.ejs'], async (req, res) => {
     statuses,
     active: 'pantry',
   })
+})
+
+// Shopping list page. Sample data for now; later this will come from the
+// calendar, recipe_ingredients and pantry tables.
+app.get(['/shopping', '/shopping.html'], (req, res) => {
+  const items = [
+    { name: 'Broccolini', forRecipe: 'Sesame miso salmon', amount: '250g' },
+    { name: 'Salmon fillets', forRecipe: 'Sesame miso salmon', amount: '2' },
+    { name: 'Zucchini', forRecipe: 'Creamy lemon orzo', amount: '2' },
+    { name: 'Fresh parsley', forRecipe: 'Shakshuka + orzo', amount: '1 bunch' },
+    { name: 'Lemons', forRecipe: 'Flatbread + orzo', amount: '3' },
+  ]
+
+  res.render('shopping', { items, active: 'shopping' })
 })
 
 app.use('/api', (req, res) => {

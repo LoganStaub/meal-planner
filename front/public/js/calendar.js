@@ -1,17 +1,48 @@
 // Meals load from /api/me/calendar: the server knows who is logged in from
 // the session cookie, so the page never sends a user id.
-const MEAL_SLOTS = { 1: "Breakfast", 2: "Lunch", 3: "Dinner" };
+// Same numbers as calendar.meal_slot (see back/db/schema.sql)
+const MEAL_SLOTS = { 1: "Breakfast", 2: "Lunch", 3: "Dinner", 4: "Snack", 5: "Dessert" };
+// The three main meals get their own column; the rest share "Snacks & desserts"
+const PRIMARY_SLOTS = [1, 2, 3];
+const EXTRA_SLOTS = [4, 5];
 
 // Links out to teammates' pages. Change the URLs here if theirs change.
 // Search adds the recipe, then redirects back to /calendar?date=YYYY-MM-DD
-function searchUrl(date, slot) {
+// Search starts on that meal's filter (e.g. Breakfast) unless filter is
+// sent empty; the general + button does that so it shows every recipe.
+function searchUrl(date, slot, { unfiltered = false } = {}) {
     const params = new URLSearchParams({ date });
     if (slot) params.set("slot", slot);
+    if (unfiltered) params.set("filter", "");
     return `/search?${params}`;
 }
 
 function recipeUrl(recipeId) {
     return `/recipe?id=${encodeURIComponent(recipeId)}`;
+}
+
+// Heading for a day with meals (and while loading)
+const DEFAULT_HEADING = "What's cooking";
+// A day with nothing planned gets one of these instead
+const EMPTY_DAY_HEADINGS = [
+    "What's cookin', good lookin'?",
+    "Nothing's cookin' yet",
+    "This plate's looking clean",
+    "Empty fridge energy",
+    "Let's get this bread",
+    "Hungry? Same.",
+    "Don't go bacon my heart",
+    "Lettuce plan something",
+    "Feeling snack-ish?",
+    "A blank plate, full of potential",
+];
+
+// The same day always gets the same phrase, so it doesn't change every
+// time the page redraws (e.g. after removing the day's last meal)
+function emptyDayHeading(dateKey) {
+    let hash = 0;
+    for (const char of dateKey) hash = (hash * 31 + char.charCodeAt(0)) % 1000003;
+    return EMPTY_DAY_HEADINGS[hash % EMPTY_DAY_HEADINGS.length];
 }
 
 const weekDays = document.getElementById("week-days");
@@ -20,6 +51,7 @@ const weekRelative = document.getElementById("week-relative");
 const selectedDateLabel = document.getElementById("selected-date");
 const selectedDaySection = document.getElementById("selected-day");
 const mealList = document.getElementById("meal-list");
+const selectedHeading = document.getElementById("selected-heading");
 const addMealLink = document.getElementById("add-meal");
 const findRecipeLink = document.getElementById("find-recipe");
 const pageError = document.getElementById("page-error");
@@ -139,7 +171,7 @@ async function removeMeal(meal, button) {
 
     button.disabled = true;
     try {
-        const response = await fetch(`/api/me/calendar/${meal.date}/${meal.meal_slot}`, {
+        const response = await fetch(`/api/me/calendar/${meal.calendar_id}`, {
             method: "DELETE"
         });
         // 404 means it's already gone, which is what we wanted anyway
@@ -151,7 +183,7 @@ async function removeMeal(meal, button) {
         return;
     }
 
-    const remaining = (weekMeals.get(meal.date) || []).filter((m) => m.meal_slot !== meal.meal_slot);
+    const remaining = (weekMeals.get(meal.date) || []).filter((m) => m.calendar_id !== meal.calendar_id);
     if (remaining.length > 0) {
         weekMeals.set(meal.date, remaining);
     } else {
@@ -163,25 +195,31 @@ async function removeMeal(meal, button) {
     addMealLink.focus();
 }
 
-function createMealCard(meal) {
+// One dish. The slot label ("Snack") only shows where the group heading
+// doesn't already say it.
+function createMealCard(meal, { showSlot = false } = {}) {
+    const slotName = MEAL_SLOTS[meal.meal_slot] || `Meal ${meal.meal_slot}`;
     const item = document.createElement("li");
     item.className = "meal-card";
     const link = document.createElement("a");
     link.className = "meal-link";
     link.href = recipeUrl(meal.recipe_id);
-    const slot = document.createElement("span");
-    slot.className = "meal-slot";
-    slot.textContent = MEAL_SLOTS[meal.meal_slot] || `Meal ${meal.meal_slot}`;
+    if (showSlot) {
+        const slot = document.createElement("span");
+        slot.className = "meal-slot";
+        slot.textContent = slotName;
+        link.append(slot);
+    }
     const title = document.createElement("span");
     title.className = "meal-title";
     title.textContent = meal.recipe_title;
-    link.append(slot, title);
+    link.append(title);
 
     // A sibling of the link (not inside it), so clicking it never opens the recipe
     const remove = document.createElement("button");
     remove.type = "button";
     remove.className = "meal-remove";
-    remove.setAttribute("aria-label", `Remove ${meal.recipe_title} from ${slot.textContent.toLowerCase()}`);
+    remove.setAttribute("aria-label", `Remove ${meal.recipe_title} from ${slotName.toLowerCase()}`);
     remove.innerHTML = '<svg class="icon"><use href="#icon-x"/></svg>';
     remove.addEventListener("click", () => removeMeal(meal, remove));
 
@@ -189,7 +227,7 @@ function createMealCard(meal) {
     return item;
 }
 
-// "+ Add lunch" etc. for an empty slot
+// "+ Add lunch" etc. for a main meal with no dishes yet
 function createMealPlaceholder(dateKey, slotNumber, slotName) {
     const item = document.createElement("li");
     const link = document.createElement("a");
@@ -201,32 +239,108 @@ function createMealPlaceholder(dateKey, slotNumber, slotName) {
     return item;
 }
 
+// Heading row for a group: "DINNER" plus an optional link on the right
+function createGroupHeader(id, text, action) {
+    const header = document.createElement("div");
+    header.className = "meal-group-header";
+    const heading = document.createElement("h3");
+    heading.className = "meal-group-title";
+    heading.id = id;
+    heading.textContent = text;
+    header.append(heading);
+    if (action) header.append(action);
+    return header;
+}
+
+function createAddLink(className, href, text, label) {
+    const link = document.createElement("a");
+    link.className = className;
+    link.href = href;
+    link.innerHTML = '<svg class="icon"><use href="#icon-plus"/></svg>';
+    link.append(text);
+    if (label) link.setAttribute("aria-label", label);
+    return link;
+}
+
+// Breakfast, Lunch or Dinner: every dish in it, or a placeholder if it's empty
+function createMealGroup(dateKey, slotNumber, meals) {
+    const slotName = MEAL_SLOTS[slotNumber];
+    const group = document.createElement("section");
+    group.className = "meal-group";
+    group.setAttribute("aria-labelledby", `meal-group-${slotNumber}`);
+
+    const addAnother = meals.length > 0
+        ? createAddLink("meal-group-add", searchUrl(dateKey, slotNumber), "Add another",
+            `Add another ${slotName.toLowerCase()} dish`)
+        : null;
+
+    const list = document.createElement("ul");
+    list.className = "meal-group-list";
+    if (meals.length > 0) {
+        for (const meal of meals) list.append(createMealCard(meal));
+    } else {
+        list.append(createMealPlaceholder(dateKey, slotNumber, slotName));
+    }
+
+    group.append(createGroupHeader(`meal-group-${slotNumber}`, slotName, addAnother), list);
+    return group;
+}
+
+// Snacks, desserts (and any slot number we don't have a name for)
+function createExtrasGroup(dateKey, meals) {
+    const group = document.createElement("section");
+    group.className = "meal-group meal-extras";
+    group.setAttribute("aria-labelledby", "meal-group-extras");
+    group.append(createGroupHeader("meal-group-extras", "Snacks & desserts"));
+
+    if (meals.length > 0) {
+        const list = document.createElement("ul");
+        list.className = "meal-group-list";
+        for (const meal of meals) list.append(createMealCard(meal, { showSlot: true }));
+        group.append(list);
+    }
+
+    const addRow = document.createElement("div");
+    addRow.className = "extra-add-row";
+    for (const slotNumber of EXTRA_SLOTS) {
+        const slotName = MEAL_SLOTS[slotNumber];
+        addRow.append(createAddLink("extra-add", searchUrl(dateKey, slotNumber), slotName,
+            `Add a ${slotName.toLowerCase()}`));
+    }
+    group.append(addRow);
+    return group;
+}
+
 function renderSelectedDay() {
     const dateKey = getLocalDateKey(selectedDate);
     const meals = weekMeals.get(dateKey) || [];
-    mealList.replaceChildren();
 
-    // One entry per slot in meal order, then any slot numbers we don't have a name for
+    const primary = document.createElement("div");
+    primary.className = "meal-primary";
     let firstEmptySlot = null;
-    for (const [slotNumber, slotName] of Object.entries(MEAL_SLOTS)) {
-        const meal = meals.find((m) => m.meal_slot === Number(slotNumber));
-        if (!meal && firstEmptySlot === null) firstEmptySlot = Number(slotNumber);
-        mealList.append(meal ? createMealCard(meal) : createMealPlaceholder(dateKey, slotNumber, slotName));
+    for (const slotNumber of PRIMARY_SLOTS) {
+        const slotMeals = meals.filter((m) => m.meal_slot === slotNumber);
+        if (slotMeals.length === 0 && firstEmptySlot === null) firstEmptySlot = slotNumber;
+        primary.append(createMealGroup(dateKey, slotNumber, slotMeals));
     }
-    for (const meal of meals.filter((m) => !MEAL_SLOTS[m.meal_slot])) {
-        mealList.append(createMealCard(meal));
-    }
+    const extras = meals.filter((m) => !PRIMARY_SLOTS.includes(m.meal_slot));
+    mealList.replaceChildren(primary, createExtrasGroup(dateKey, extras));
 
-    // + goes to the first empty slot, or just the day if every slot is full
-    addMealLink.href = searchUrl(dateKey, firstEmptySlot);
+    // + goes to the first empty main meal, or just the day (search then
+    // asks which meal) once breakfast, lunch and dinner all have something
+    // Both are general "add something" links, so search opens unfiltered
+    addMealLink.href = searchUrl(dateKey, firstEmptySlot, { unfiltered: true });
     addMealLink.setAttribute("aria-label", firstEmptySlot
         ? `Add ${MEAL_SLOTS[firstEmptySlot].toLowerCase()}`
         : "Add a meal");
-    findRecipeLink.href = searchUrl(dateKey, firstEmptySlot);
+    findRecipeLink.href = searchUrl(dateKey, firstEmptySlot, { unfiltered: true });
 
     selectedDaySection.dataset.state = weekStatus === "ready"
         ? (meals.length > 0 ? "filled" : "empty")
         : weekStatus;
+    selectedHeading.textContent = selectedDaySection.dataset.state === "empty"
+        ? emptyDayHeading(dateKey)
+        : DEFAULT_HEADING;
 }
 
 function renderCalendar() {

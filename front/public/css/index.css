@@ -300,7 +300,8 @@ button {
 
 .card-actions {
     display: grid;
-    grid-template-columns: 1fr 2fr 1fr;
+    /* Icon-only side buttons stay square-ish; the middle button gets the rest */
+    grid-template-columns: 64px 1fr 64px;
     gap: 12px;
     margin-top: 14px;
 }
@@ -334,7 +335,8 @@ button {
     outline-offset: 2px;
 }
 
-.like-btn {
+/* The main green button (Add to calendar, See them again) */
+.primary-btn {
     font-size: 1.15rem;
     font-weight: 700;
     color: white;
@@ -342,8 +344,24 @@ button {
     border-color: transparent;
 }
 
-.like-btn:hover {
+.primary-btn:hover {
     background-color: var(--accent-hover);
+}
+
+.card-actions .primary-btn {
+    white-space: nowrap;
+}
+
+/* Narrow phones: shrink the label so "Add to calendar" fits on one line */
+@media (max-width: 380px) {
+    .card-actions .primary-btn {
+        font-size: 1rem;
+    }
+}
+
+/* Liked: the heart fills in with the accent color */
+.like-btn[aria-pressed="true"] {
+    color: var(--accent);
 }
 
 .like-btn[aria-pressed="true"] .icon {
@@ -453,7 +471,7 @@ button {
     line-height: 1.45;
 }
 
-.done-card .like-btn {
+.done-card .primary-btn {
     width: 100%;
     font-size: 1rem;
 }
@@ -883,11 +901,13 @@ a.settings-row {
         padding-right: 28px;
     }
 
+    /* Centered at the bottom of the photo */
     .card {
-        left: 24px;
-        right: auto;
+        left: 0;
+        right: 0;
         bottom: 24px;
         width: min(560px, calc(100% - 48px));
+        margin: 0 auto;
     }
 
     .recipe-title {
@@ -902,7 +922,7 @@ a.settings-row {
 
 /* ---------- Computers (1024px+) ----------
    Sidebar nav on the left, photo fills the rest of the screen,
-   recipe card sits in the bottom-left with arrows in the bottom-right. */
+   recipe card is centered at the bottom with arrows on either side. */
 @media (min-width: 1024px) {
     .app {
         grid-template-columns: 240px 1fr;
@@ -946,8 +966,8 @@ a.settings-row {
         height: 140px;
     }
 
+    /* The 240px leaves room for the arrows on each side */
     .card {
-        left: 40px;
         bottom: 40px;
         width: min(560px, calc(100% - 240px));
         padding: 26px;
@@ -961,13 +981,22 @@ a.settings-row {
         font-size: 1.02rem;
     }
 
+    /* Arrows on the left and right edges of the photo, halfway up.
+       The row spans the photo, so it lets clicks and drags through except on the buttons. */
     .stage-arrows {
         position: absolute;
+        left: 40px;
         right: 40px;
-        bottom: 40px;
+        top: 50%;
         z-index: 2;
         display: flex;
-        gap: 12px;
+        justify-content: space-between;
+        transform: translateY(-50%);
+        pointer-events: none;
+    }
+
+    .arrow-btn {
+        pointer-events: auto;
     }
 
     /* Sidebar navigation */
@@ -1032,10 +1061,6 @@ a.settings-row {
     .card {
         bottom: 24px;
         padding: 20px;
-    }
-
-    .stage-arrows {
-        bottom: 24px;
     }
 
     .recipe-title {

@@ -2,6 +2,23 @@
         // The home page only ever shows this many meals at a time
         const MAX_MEALS = 5;
 
+        // "Tonight's picks" changes with the time of day, using the visitor's
+        // own clock (the server might be in another time zone)
+        function picksTimeOfDay(date = new Date()) {
+            const hour = date.getHours();
+            if (hour >= 4 && hour < 11) return "this morning's";
+            if (hour >= 11 && hour < 17) return "this afternoon's";
+            return "tonight's";
+        }
+
+        function showPicksTimeOfDay() {
+            const when = picksTimeOfDay();
+            document.getElementById("picks-label").textContent =
+                `${when.charAt(0).toUpperCase()}${when.slice(1)} picks`;
+            document.getElementById("done-picks-when").textContent = when;
+        }
+        showPicksTimeOfDay();
+
         // Placeholder meals until this page loads from GET /api/recipes.
         // recipe_id, recipe_title, prep_time and recipe_class_desc match the database.
         // description, servings, image_url and the pantry fields don't exist in the schema yet.
@@ -129,7 +146,6 @@
         function RenderLike() {
             const bLiked = Boolean(meals[nCurrent].liked);
             obj_like.setAttribute("aria-pressed", String(bLiked));
-            document.getElementById("like-label").textContent = bLiked ? "Liked" : "Like";
         }
 
 
