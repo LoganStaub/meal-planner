@@ -595,6 +595,188 @@ button {
     color: var(--text-muted);
 }
 
+/* ---------- Add to calendar popup ----------
+   Uses the .details popup above for its size, corners and backdrop. */
+.plan {
+    max-width: 460px;
+}
+
+@media (max-width: 639px) {
+    .plan {
+        max-width: 100%;
+    }
+}
+
+.plan-form {
+    margin: 0;
+}
+
+.plan-recipe {
+    margin: 4px 0 0;
+    color: var(--text-muted);
+    line-height: 1.35;
+}
+
+.plan-body {
+    padding: 18px 22px 24px;
+}
+
+.plan-label {
+    display: block;
+    margin: 0 0 8px;
+    padding: 0;
+    font-weight: 600;
+}
+
+.plan-date {
+    width: 100%;
+    min-height: 46px;
+    padding: 0 14px;
+    border: 1px solid #D0D8E2;
+    border-radius: 14px;
+    background-color: var(--surface);
+    color: var(--text);
+    font: inherit;
+}
+
+/* One row of chips; wraps on narrow phones */
+.plan-meals {
+    margin: 18px 0 0;
+    padding: 0;
+    border: none;
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+}
+
+.plan-meals legend {
+    width: 100%;
+}
+
+.plan-meal {
+    position: relative;
+    cursor: pointer;
+}
+
+.plan-meal input {
+    position: absolute;
+    opacity: 0;
+    pointer-events: none;
+}
+
+.plan-meal span {
+    display: inline-flex;
+    align-items: center;
+    min-height: 40px;
+    padding: 0 16px;
+    border: 1px solid #D0D8E2;
+    border-radius: 999px;
+    background-color: var(--surface);
+    font-weight: 600;
+    transition: background-color 0.2s ease, border-color 0.2s ease, color 0.2s ease;
+}
+
+.plan-meal:hover span {
+    border-color: var(--accent);
+}
+
+.plan-meal input:checked + span {
+    border-color: var(--accent);
+    background-color: var(--accent);
+    color: white;
+}
+
+.plan-meal input:focus-visible + span,
+.plan-date:focus-visible,
+.plan-btn:focus-visible {
+    outline: 2px solid var(--accent);
+    outline-offset: 2px;
+}
+
+.plan-message {
+    margin: 16px 0 0;
+    padding: 10px 14px;
+    border: 1px solid #F1B9A5;
+    border-radius: 14px;
+    background-color: #FDEEE8;
+    color: #8A2E12;
+    font-weight: 600;
+    line-height: 1.4;
+}
+
+.plan-actions {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 10px;
+    margin-top: 22px;
+}
+
+.plan-btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    min-height: 46px;
+    padding: 0 16px;
+    border: 1px solid #D0D8E2;
+    border-radius: 16px;
+    background-color: var(--surface);
+    color: var(--text);
+    font: inherit;
+    font-weight: 600;
+    text-decoration: none;
+    cursor: pointer;
+    transition: background-color 0.2s ease, border-color 0.2s ease;
+}
+
+.plan-btn:hover {
+    background-color: #F1EEEB;
+}
+
+.plan-btn.plan-primary {
+    border-color: var(--accent);
+    background-color: var(--accent);
+    color: white;
+}
+
+.plan-btn.plan-primary:hover {
+    border-color: var(--accent-hover);
+    background-color: var(--accent-hover);
+}
+
+.plan-btn:disabled {
+    opacity: 0.6;
+    cursor: default;
+}
+
+.plan-done {
+    text-align: center;
+}
+
+.plan-done p {
+    margin: 0;
+    color: var(--text-muted);
+    line-height: 1.45;
+}
+
+.plan-done strong {
+    color: var(--text);
+}
+
+.plan-done-icon {
+    display: grid;
+    place-items: center;
+    width: 52px;
+    height: 52px;
+    margin: 0 auto 14px;
+    border-radius: 50%;
+    background-color: var(--accent-soft);
+    color: var(--accent);
+}
+
+.plan [hidden] {
+    display: none;
+}
+
 /* ---------- Profile and settings popup ----------
    Takes up most of the screen. Phones: a tall sheet from the bottom.
    Wider screens: centered, with the content split into two columns. */
