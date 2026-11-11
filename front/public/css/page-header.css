@@ -45,6 +45,45 @@
     white-space: nowrap;
 }
 
+/* The Preply logo in the top-left corner, mirroring the account circle.
+   Hidden on computers, where the sidebar shows the logo and name. */
+.page-header-logo {
+    position: absolute;
+    top: calc(36px + env(safe-area-inset-top));
+    left: 24px;
+    display: block;
+    width: 36px;
+    height: 36px;
+    transform: translateY(-50%);
+    border-radius: 10px;
+}
+
+.page-header-logo img {
+    display: block;
+    width: 36px;
+    height: 36px;
+}
+
+.page-header-logo:focus-visible {
+    outline: 2px solid #D4552A;
+    outline-offset: 3px;
+}
+
+@media (min-width: 1024px) {
+    .page-header-logo {
+        display: none;
+    }
+}
+
+/* The logo in front of the name "Preply." in the sidebar (.nav-brand and
+   .site-nav-brand). It lives here because every page loads this file. */
+.brand-logo {
+    width: 1.3em;
+    height: 1.3em;
+    margin-right: 0.4em;
+    vertical-align: -0.28em;
+}
+
 /* The account circle: always 44px, 24px from the right edge of the page,
    centered in the 72px bar */
 .account-button {

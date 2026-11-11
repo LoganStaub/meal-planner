@@ -216,5 +216,5 @@ app.use((err, req, res, next) => {
 })
 
 app.listen(PORT, () => {
-  console.log(`✅ Meal Planner running at http://localhost:${PORT}`)
+  console.log(`✅ Preply running at http://localhost:${PORT}`)
 })

@@ -3,13 +3,15 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
-    <title>Home | Meal Planner</title>
+    <title>Home | Preply</title>
+    <link rel="icon" type="image/svg+xml" href="/images/logo.svg">
 
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=DM+Sans:opsz,wght@9..40,400;9..40,500;9..40,600;9..40,700&display=swap" rel="stylesheet">
 
     <link rel="stylesheet" href="/css/index.css">
+    <link rel="stylesheet" href="/css/recipe-details.css">
     <link rel="stylesheet" href="/css/page-card.css">
     <link rel="stylesheet" href="/css/page-header.css">
     <link rel="stylesheet" href="/css/profile-menu.css">
@@ -105,7 +107,7 @@
         </main>
 
         <nav class="nav" aria-label="Main">
-            <p class="nav-brand">Meal Planner<span>.</span></p>
+            <p class="nav-brand"><img class="brand-logo" src="/images/logo.svg" alt="" width="28" height="28">Preply<span>.</span></p>
             <ul>
                 <li><a class="nav-link" href="/calendar"><span class="nav-icon"><svg class="icon"><use href="#icon-calendar"/></svg></span>Calendar</a></li>
                 <li><a class="nav-link" href="/shopping.html"><span class="nav-icon"><svg class="icon"><use href="#icon-list"/></svg></span>Shopping</a></li>
@@ -116,69 +118,12 @@
         </nav>
     </div>
 
-    <!-- Recipe details popup. Left blank on purpose: the full details page is being built separately. -->
-    <dialog class="details" id="recipe-details" aria-labelledby="details-title">
-        <div class="details-header">
-            <h2 id="details-title"></h2>
-            <button type="button" class="details-close" id="close-details" aria-label="Close">
-                <svg class="icon"><use href="#icon-x"/></svg>
-            </button>
-        </div>
-        <div class="details-body" id="details-body">
-            <!-- Recipe details go here -->
-        </div>
-    </dialog>
-
-    <!-- "Add to calendar" popup: pick a day and a meal, then save to /api/me/calendar (js/index.js) -->
-    <dialog class="details plan" id="plan-dialog" aria-labelledby="plan-heading">
-        <form class="plan-form" id="plan-form" novalidate>
-            <div class="details-header">
-                <div>
-                    <h2 id="plan-heading">Add to calendar</h2>
-                    <p class="plan-recipe" id="plan-recipe"></p>
-                </div>
-                <button type="button" class="details-close" data-plan-close aria-label="Close">
-                    <svg class="icon"><use href="#icon-x"/></svg>
-                </button>
-            </div>
-
-            <div class="plan-body" id="plan-choose">
-                <label class="plan-label" for="plan-date">Day</label>
-                <input class="plan-date" type="date" id="plan-date" required>
-
-                <fieldset class="plan-meals">
-                    <legend class="plan-label">Meal</legend>
-                    <% [['1', 'Breakfast'], ['2', 'Lunch'], ['3', 'Dinner'], ['4', 'Snack'], ['5', 'Dessert']].forEach(function (slot) { %>
-                    <label class="plan-meal">
-                        <input type="radio" name="meal_slot" value="<%= slot[0] %>">
-                        <span><%= slot[1] %></span>
-                    </label>
-                    <% }); %>
-                </fieldset>
-
-                <p class="plan-message" id="plan-message" role="alert" hidden></p>
-
-                <div class="plan-actions">
-                    <button type="button" class="plan-btn" data-plan-close>Cancel</button>
-                    <button type="submit" class="plan-btn plan-primary" id="plan-submit">Add to calendar</button>
-                </div>
-            </div>
-
-            <div class="plan-body plan-done" id="plan-done" hidden>
-                <div class="plan-done-icon" aria-hidden="true">
-                    <svg class="icon"><use href="#icon-calendar"/></svg>
-                </div>
-                <p id="plan-done-text" role="status"></p>
-                <div class="plan-actions">
-                    <button type="button" class="plan-btn" data-plan-close>Keep browsing</button>
-                    <a class="plan-btn plan-primary" id="plan-done-link" href="/calendar">See calendar</a>
-                </div>
-            </div>
-        </form>
-    </dialog>
+    <%# The recipe window and the "Add to calendar" popup (js/recipe-details.js) %>
+    <%- include('partials/recipe-details') %>
 
     <%- include('partials/profile-menu') %>
     <script src="/js/profile-menu.js" defer></script>
+    <script src="/js/recipe-details.js" defer></script>
     <script src="/js/index.js" defer></script>
 </body>
 </html>

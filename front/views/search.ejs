@@ -3,7 +3,8 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
-    <title>Recipes | Meal Planner</title>
+    <title>Recipes | Preply</title>
+    <link rel="icon" type="image/svg+xml" href="/images/logo.svg">
 
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -15,6 +16,7 @@
     <link rel="stylesheet" href="/css/search.css">
     <link rel="stylesheet" href="/css/page-header.css">
     <link rel="stylesheet" href="/css/recipe-add.css">
+    <link rel="stylesheet" href="/css/recipe-details.css">
     <link rel="stylesheet" href="/css/profile-menu.css">
     <script src="/js/no-back-cache.js"></script>
 </head>
@@ -140,8 +142,9 @@
                                 <% if (r.time) { %><span class="recipe-time"><svg class="icon"><use href="#icon-clock"/></svg><%= r.time %></span><% } %>
                                 <span class="recipe-class"><%= r.tag %></span>
                             </div>
-                            <%# Same detail route the calendar links to (not built yet) %>
-                            <h3><a class="recipe-link" href="/recipe?id=<%= r.recipe_id %>"><%= r.title %></a></h3>
+                            <%# Clicking the card opens the recipe window (js/recipe-details.js).
+                                The address is the same recipe for opening in a new tab. %>
+                            <h3><a class="recipe-link" href="/recipe?id=<%= r.recipe_id %>" data-recipe-details="<%= r.recipe_id %>" aria-haspopup="dialog"><%= r.title %></a></h3>
                             <% if (r.protein !== null) { %><p class="recipe-protein"><%= r.protein %>g protein</p><% } %>
                         </div>
                         <% if (plan) { %>
@@ -159,7 +162,7 @@
         </main>
 
         <nav class="nav" aria-label="Main">
-            <p class="nav-brand">Meal Planner<span>.</span></p>
+            <p class="nav-brand"><img class="brand-logo" src="/images/logo.svg" alt="" width="28" height="28">Preply<span>.</span></p>
             <ul>
                 <li><a class="nav-link" href="/calendar"><span class="nav-icon"><svg class="icon"><use href="#icon-calendar"/></svg></span>Calendar</a></li>
                 <li><a class="nav-link" href="/shopping"><span class="nav-icon"><svg class="icon"><use href="#icon-list"/></svg></span>Shopping</a></li>
@@ -219,7 +222,7 @@
             </div>
 
             <div class="recipe-add-step" id="recipe-add-review" hidden>
-                <p>Here is how the AI assistant prepared your recipe. Some details are estimates, so check it over before you save it.</p>
+                <p>Here is how the AI assistant prepared your recipe. Some details are estimates, so check it over and fix anything that's off before you save it. To change the steps, go back to your text, which uses another check.</p>
                 <div class="recipe-add-preview" id="recipe-add-preview"></div>
                 <p class="recipe-add-error" id="recipe-add-review-error" role="alert" hidden></p>
                 <div class="recipe-add-actions">
@@ -259,8 +262,12 @@
         </div>
     </dialog>
 
+    <%# The recipe window and its "Add to calendar" popup (js/recipe-details.js) %>
+    <%- include('partials/recipe-details') %>
+
     <%- include('partials/profile-menu') %>
     <script src="/js/profile-menu.js" defer></script>
+    <script src="/js/recipe-details.js" defer></script>
     <script src="/js/recipe-add.js" defer></script>
     <% if (plan) { %><script src="/js/search.js" defer></script><% } %>
 </body>

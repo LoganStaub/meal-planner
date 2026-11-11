@@ -1,12 +1,12 @@
-# Meal Planner
+# Preply
 
 ## App Summary
 
-Deciding what to eat every day, and making sure the right groceries are in the house, takes more time and mental energy than most people have to spare. Young adults and busy professionals feel this the most: they end up eating out, repeating the same few meals, or buying food that goes to waste. Meal Planner is a meal planning and recipe discovery app built for them. Users browse a short swipe feed of recipes, like the ones they want to keep, and place them on a calendar to build a meal plan. A virtual pantry tracks which ingredients they have at home and how much is left. A shopping list and recipe search round out the app, so planning, shopping, and cooking happen in one place. This repository holds the whole app: the Express server, the PostgreSQL schema, and the pages. Users sign up and log in, and their calendar, pantry and liked recipes are their own.
+Deciding what to eat every day, and making sure the right groceries are in the house, takes more time and mental energy than most people have to spare. Young adults and busy professionals feel this the most: they end up eating out, repeating the same few meals, or buying food that goes to waste. Preply is a meal planning and recipe discovery app built for them. Users browse a short swipe feed of recipes, like the ones they want to keep, and place them on a calendar to build a meal plan. A virtual pantry tracks which ingredients they have at home and how much is left. A shopping list and recipe search round out the app, so planning, shopping, and cooking happen in one place. This repository holds the whole app: the Express server, the PostgreSQL schema, and the pages. Users sign up and log in, and their calendar, pantry and liked recipes are their own.
 
 ## ERD
 
-![Entity relationship diagram for Meal Planner](docs/erd.png)
+![Entity relationship diagram for Preply](docs/erd.png)
 
 The full schema is `back/db/schema.sql` plus the files in `back/db/migrations/` (`npm run db:init` runs both).
 
@@ -126,9 +126,9 @@ Names are **snake_case** (`recipe_title`, not `RecipeTitle`).
 | Recipes (was Search) | `front/views/search.ejs`, `front/public/css/search.css` (on top of `calendar.css`), `front/public/js/search.js`, and `back/src/routes/search.js` | <http://localhost:3000/recipes> (`?q=chicken&filter=dinner`). Old `/search` links redirect here, keeping their query | The place to find, add and save recipes. The file names still say `search`. Searches recipe names and ingredients; filters for meal type, Quick Meals (prep ≤ 30 min) and High Protein (≥ 25g, read from the `macros` text). Thresholds are constants at the top of `routes/search.js`. From a calendar + button (`?date=YYYY-MM-DD&slot=1-5`) it shows an "Adding to…" banner with an Add to calendar button (X keeps searching without adding). A meal's own button (e.g. "+ Add breakfast") starts on that meal's filter; the general + starts unfiltered (`filter=` empty). The **Add a recipe with AI** button (`front/public/js/recipe-add.js`, `front/public/css/recipe-add.css`) needs `ANTHROPIC_API_KEY` |
 | Shopping | `front/views/shopping.ejs`, `front/public/css/shopping.css` (on top of `pantry.css`), and `front/public/js/shopping.js` | <http://localhost:3000/shopping> | One column on phones; on computers the weekly summary and add box sit on the left with the list on the right. Sample items hard-coded in `back/src/server.js`; not connected to the calendar or pantry yet |
 | Login and account | `front/views/login.ejs`, `signup.ejs`, `forgot-password.ejs`, `reset-password.ejs`, `change-password.ejs`, with `front/public/css/auth.css` | `/login`, `/signup`, … | See [Accounts and passwords](#accounts-and-passwords) |
-| Recipe | | `/recipe?id=` | Not built yet. The Calendar and Recipes pages already link to it |
+| Recipe window | `front/views/partials/recipe-details.ejs`, `front/public/js/recipe-details.js`, and `front/public/css/recipe-details.css` | Opens over the Home and Recipes pages. `/recipe?id=3` (used by the Calendar) redirects to `/recipes?recipe=3`, which opens it straight away | A popup with everything about one recipe, loaded from `/api/recipes/:id`: time, meal type, servings, cost, macros, ingredients (each marked In pantry, Running low or To buy from the user's own pantry), steps, and who added it. **Add to calendar** and **Like** buttons at the bottom |
 
-The home page's recipe details popup is the `<dialog id="recipe-details">` in `front/views/index.ejs`. Its content goes in `#details-body`, and the open recipe's ID is in `dialog.dataset.recipeId`.
+The recipe window is shared: a page includes `partials/recipe-details` plus the CSS and JS files above. To open it, give a link `data-recipe-details="<recipe id>"` or call `RecipeDetails.open(recipeId, { title })`. The same partial holds the "Add to calendar" popup (`PlanDialog.open(recipe)`), which the home page card's button also uses. Servings and the four macro numbers are read out of the `recipes.macros` text, and the home page passes its sample photo and description because those aren't in the database yet.
 
 ### Shared layout
 
@@ -141,7 +141,7 @@ Every page is built from the same pieces, so they look and behave the same. Each
 | Profile menu | `front/views/partials/profile-menu.ejs` + `front/public/js/profile-menu.js` + `front/public/css/profile-menu.css` | Opened by the account circle, on every page including Home. A page with the top bar needs all three |
 | Page card | `front/public/css/page-card.css` | The big rounded card around Home's photo, the Pantry and Liked recipes (`class="page-card"`). Edge to edge on phones; on computers 16px from the top bar and edges with rounded corners. Load it after the page's own stylesheet |
 
-**Name and colors:** the app is called **Meal Planner** everywhere, and tab titles follow `Page | Meal Planner`. The accent color is `#D4552A`, with `#BC4720` for hover and `#FCDCCD` as its light tint. Use those three for anything orange.
+**Name and colors:** the app is called **Preply** everywhere, and tab titles follow `Page | Preply`. The accent color is `#D4552A`, with `#BC4720` for hover and `#FCDCCD` as its light tint. Use those three for anything orange.
 
 ## Verifying the Vertical Slice
 
@@ -166,7 +166,7 @@ All routes return JSON and need a logged-in user (they answer `401` otherwise). 
 | PATCH  | `/api/ingredients/:id` | Admin: change `ingredient_name`, `pantry_amount_id`, and/or `measure_amount_id` |
 | DELETE | `/api/ingredients/:id` | Admin: delete one (fails with 400 if a recipe uses it) |
 | GET    | `/api/recipes` | All recipes with their class name |
-| GET    | `/api/recipes/:id` | One recipe with its ordered ingredient list |
+| GET    | `/api/recipes/:id` | One recipe with its ordered ingredient list, meal type, your like, who added it, and your pantry status for each ingredient |
 | POST   | `/api/recipes` | Admin: add one: `{ recipe_title, recipe_class_id?, cost?, prep_time?, macros?, instructions? }` |
 | GET    | `/api/recipe-classes` | Breakfast, Lunch, … |
 | GET    | `/api/measurements` | Cup, Tablespoon, … |
@@ -186,13 +186,13 @@ All routes return JSON and need a logged-in user (they answer `401` otherwise). 
 | PATCH  | `/api/me/pantry/:ingredientId` | Change `ingredient_name` and/or `pantry_amount_id` |
 | DELETE | `/api/me/pantry/:ingredientId` | Remove one (`204`) |
 
-**"Add a recipe with AI" assistant** (Recipes page). Any logged-in user can add recipes to the shared list this way, because Claude checks each one first. Each user can save 3 recipes and run 5 AI checks per day, resetting at midnight in `APP_TIME_ZONE` (`back/src/recipeAddLimit.js`). Saved recipes record who added them in `recipes.created_by` and `created_at` (migration 007). Checked drafts wait in Redis for 30 minutes. Needs `ANTHROPIC_API_KEY` in `.env`.
+**"Add a recipe with AI" assistant** (Recipes page). Any logged-in user can add recipes to the shared list this way, because Claude checks each one first. Each user can save 3 recipes and run 5 AI checks per day, resetting at midnight in `APP_TIME_ZONE` (`back/src/recipeAddLimit.js`). Saved recipes record who added them in `recipes.created_by` and `created_at` (migration 007). Checked drafts wait in Redis for 30 minutes. Claude is given the names in `ingredients` and reuses them, so a recipe that says "parmesan cheese" links to the existing "Parmesan" instead of adding a near-duplicate. In the preview the user can correct the name, meal type, time, cost and ingredients without another AI check; the server re-checks those fields in code (`applyRecipeEdits`), and the steps always stay as Claude checked them. Needs `ANTHROPIC_API_KEY` in `.env`.
 
 | Method | Route | What it does |
 | ------ | ----- | ------------ |
 | GET    | `/api/recipe-assistant/status` | How many recipes and checks you have left today |
 | POST   | `/api/recipe-assistant/check` | `{ text }`: Claude turns it into a recipe draft, or explains why not |
-| POST   | `/api/recipe-assistant/drafts/:draftId/save` | Save a checked draft to `recipes` (`201`) |
+| POST   | `/api/recipe-assistant/drafts/:draftId/save` | Save a checked draft to `recipes` (`201`). Optional `{ recipe: { title, meal_class, prep_time, cost, ingredients } }` with the user's corrections |
 
 ## For Teammates
 

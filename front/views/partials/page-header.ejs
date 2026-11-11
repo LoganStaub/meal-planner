@@ -9,6 +9,8 @@
   partials/profile-menu.ejs, js/profile-menu.js and css/profile-menu.css.
 %>
 <header class="page-header">
+  <%# The logo, on phones and tablets only: computers show it in the sidebar %>
+  <a class="page-header-logo" href="/home" aria-label="Preply home"><img src="/images/logo.svg" alt="" width="36" height="36"></a>
   <h1 class="page-header-title"><%= pageTitle %></h1>
   <button type="button" class="account-button profile-trigger" id="profile-trigger"
     aria-controls="profile-menu" aria-expanded="false"

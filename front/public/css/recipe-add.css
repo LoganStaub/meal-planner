@@ -253,28 +253,44 @@
     background-color: var(--surface);
 }
 
-.recipe-add-title {
-    margin: 0;
-    font-size: 1.2rem;
-    font-weight: 700;
-    overflow-wrap: anywhere;
+/* The fields a user can correct before saving */
+.recipe-add-preview input,
+.recipe-add-preview select {
+    width: 100%;
+    min-width: 0;
+    min-height: 40px;
+    padding: 6px 10px;
+    border: 1px solid #D0D8E2;
+    border-radius: 12px;
+    background-color: var(--surface);
+    color: var(--text);
+    font: inherit;
 }
 
-.recipe-add-facts {
-    display: flex;
-    flex-wrap: wrap;
-    gap: 6px;
-    margin: 10px 0 0;
-    padding: 0;
-    list-style: none;
+.recipe-add-preview input:focus-visible,
+.recipe-add-preview select:focus-visible {
+    border-color: var(--accent);
+    outline: 2px solid var(--accent-soft);
 }
 
-.recipe-add-facts li {
-    padding: 3px 10px;
-    border-radius: 999px;
-    background-color: #F1EEEB;
-    font-size: 0.85rem;
+.recipe-add-field {
+    display: block;
+}
+
+.recipe-add-field-label {
+    display: block;
+    margin-bottom: 4px;
+    color: var(--text-muted);
+    font-size: 0.8rem;
     font-weight: 600;
+}
+
+/* Meal type, minutes and cost side by side */
+.recipe-add-fields {
+    display: grid;
+    grid-template-columns: 1.4fr 1fr 1fr;
+    gap: 10px;
+    margin-top: 10px;
 }
 
 .recipe-add-macros {
@@ -295,18 +311,71 @@
     list-style: none;
 }
 
+/* Amount, unit, name, "New" tag, remove button */
 .recipe-add-ingredients li {
     display: flex;
-    gap: 10px;
-    padding: 4px 0;
-    line-height: 1.4;
-    overflow-wrap: anywhere;
+    align-items: center;
+    gap: 6px;
+    padding: 3px 0;
 }
 
-.recipe-add-amount {
+.recipe-add-ingredients .recipe-add-amount {
     flex: none;
-    width: 7.5em;
+    width: 4.2em;
+}
+
+.recipe-add-ingredients select {
+    flex: none;
+    width: 7.6em;
+}
+
+.recipe-add-ingredients .recipe-add-name {
+    flex: 1;
+}
+
+.recipe-add-new {
+    flex: none;
+    padding: 2px 8px;
+    border-radius: 999px;
+    background-color: var(--accent-soft);
+    color: #8A2E12;
+    font-size: 0.75rem;
+    font-weight: 600;
+}
+
+.recipe-add-remove {
+    flex: none;
+    width: 40px;
+    height: 40px;
+    border: 0;
+    border-radius: 50%;
+    background-color: transparent;
     color: var(--text-muted);
+    font-size: 1.3rem;
+    line-height: 1;
+    cursor: pointer;
+}
+
+.recipe-add-remove:hover {
+    background-color: #F1EEEB;
+    color: var(--text);
+}
+
+/* Narrow phones: the name gets its own line under amount and unit */
+@media (max-width: 480px) {
+    .recipe-add-ingredients li {
+        flex-wrap: wrap;
+        padding: 6px 0;
+    }
+
+    .recipe-add-ingredients .recipe-add-name {
+        order: 1;
+        flex-basis: 100%;
+    }
+
+    .recipe-add-new {
+        margin-left: auto;
+    }
 }
 
 .recipe-add-steps {

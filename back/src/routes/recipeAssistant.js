@@ -3,10 +3,14 @@
 //   GET  …/status              how many recipes the user can still add today
 //   POST …/check   { text }    the AI checks the recipe and fits it to our tables.
 //                              Returns a draft to preview; nothing is saved yet.
-//   POST …/drafts/:id/save     saves a checked draft to the database
+//   POST …/drafts/:id/save  { recipe? }
+//                              saves a checked draft to the database, with any
+//                              corrections the user made in the preview
 //
-// The browser only ever sends back a draft id, never the recipe itself, so
-// what gets saved is exactly what the AI checked (see src/recipeAssistant.js).
+// The draft stays on the server. The browser sends back its id plus the few
+// fields a user may correct (name, meal type, time, cost, ingredients), and
+// those are re-checked in code. The steps are never sent back, so they are
+// saved exactly as the AI checked them (see src/recipeAssistant.js).
 // Daily limits are in src/recipeAddLimit.js.
 //
 // Every route needs a logged-in user (requireLogin in server.js). Their id
@@ -20,7 +24,7 @@ import { randomUUID } from 'node:crypto'
 import { pool } from '../db.js'
 import { redis } from '../redis.js'
 import {
-  checkRecipe, AssistantUnavailableError, MIN_RECIPE_TEXT, MAX_RECIPE_TEXT,
+  checkRecipe, applyRecipeEdits, AssistantUnavailableError, MIN_RECIPE_TEXT, MAX_RECIPE_TEXT,
 } from '../recipeAssistant.js'
 import {
   getUsage, claimCheck, refundCheck, lockAndCheckDailyLimit, MAX_RECIPES_PER_DAY, MAX_CHECKS_PER_DAY,
@@ -84,6 +88,18 @@ async function loadLookups() {
   }
 }
 
+// Every ingredient we already have. The AI reuses these names, and the
+// preview suggests them, so "Parmesan cheese" isn't added next to "Parmesan".
+// The cap only keeps the AI prompt a sensible size if the list grows huge.
+const MAX_INGREDIENT_NAMES = 2000
+async function loadIngredientNames() {
+  const { rows } = await pool.query(
+    'select ingredient_name from ingredients order by lower(ingredient_name), ingredient_id limit $1',
+    [MAX_INGREDIENT_NAMES]
+  )
+  return rows.map((row) => row.ingredient_name)
+}
+
 // GET /api/recipe-assistant/status
 router.get('/recipe-assistant/status', async (req, res) => {
   res.json({
@@ -118,7 +134,7 @@ router.post('/recipe-assistant/check', async (req, res) => {
     })
   }
 
-  const { classIds, measureIds } = await loadLookups()
+  const [{ classIds, measureIds }, ingredientNames] = await Promise.all([loadLookups(), loadIngredientNames()])
 
   // Counted before the call so a slow or failed check can't be retried for free
   if (!(await claimCheck(userId))) {
@@ -130,6 +146,7 @@ router.post('/recipe-assistant/check', async (req, res) => {
     result = await checkRecipe(text, {
       classNames: Object.keys(classIds),
       measurementNames: Object.keys(measureIds),
+      ingredientNames,
     })
   } catch (error) {
     if (error instanceof AssistantUnavailableError) {
@@ -152,10 +169,20 @@ router.post('/recipe-assistant/check', async (req, res) => {
 
   const draftId = randomUUID()
   await storeDraft(draftId, { userId, recipe: result.recipe })
-  res.json({ draft_id: draftId, recipe: result.recipe, ...(await limitBody(userId)) })
+  res.json({
+    draft_id: draftId,
+    recipe: result.recipe,
+    // For the preview's dropdowns and ingredient suggestions
+    meal_classes: Object.keys(classIds),
+    measurements: Object.keys(measureIds),
+    ingredient_names: ingredientNames,
+    ...(await limitBody(userId)),
+  })
 })
 
-// POST /api/recipe-assistant/drafts/:draftId/save
+// POST /api/recipe-assistant/drafts/:draftId/save  { recipe? }
+// recipe = { title, meal_class, prep_time, cost, ingredients } as corrected in
+// the preview. Leave it out to save the draft exactly as it was checked.
 router.post('/recipe-assistant/drafts/:draftId/save', async (req, res) => {
   const { userId } = req
   const { draftId } = req.params
@@ -170,8 +197,19 @@ router.post('/recipe-assistant/drafts/:draftId/save', async (req, res) => {
     })
   }
 
-  const { recipe } = draft
   const { classIds, measureIds } = await loadLookups()
+
+  let { recipe } = draft
+  if (req.body?.recipe !== undefined) {
+    const edited = applyRecipeEdits(recipe, req.body.recipe, Object.keys(classIds), Object.keys(measureIds))
+    if (edited.error) {
+      // Keep the draft so they can fix the field and press Save again
+      await storeDraft(draftId, draft)
+      return res.status(400).json({ error: edited.error, code: 'invalid_edit' })
+    }
+    recipe = edited.recipe
+  }
+
   const db = await pool.connect()
   let saved = false
   try {
@@ -185,7 +223,7 @@ router.post('/recipe-assistant/drafts/:draftId/save', async (req, res) => {
     if (await recipeTitleExists(db, recipe.title)) {
       await db.query('rollback')
       return res.status(409).json({
-        error: `There is already a recipe called "${recipe.title}".`,
+        error: `There is already a recipe called "${recipe.title}". Change the name and save again.`,
         code: 'duplicate',
         ...(await limitBody(userId)),
       })

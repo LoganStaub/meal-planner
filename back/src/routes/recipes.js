@@ -22,29 +22,39 @@ router.get('/', async (req, res) => {
   res.json(rows)
 })
 
-// GET /api/recipes/:id  -> one recipe with its ingredient list (in order)
+// GET /api/recipes/:id  -> one recipe with its ingredient list (in order).
+// This is what the recipe window shows (front/public/js/recipe-details.js).
 router.get('/:id', async (req, res) => {
-  // recipes.liked is the old shared column; liked here is this user's own like
+  // recipes.liked is the old shared column; liked here is this user's own like.
+  // added_by is the first name of the user who added it with the AI assistant.
   const recipe = await pool.query(
-    `select r.*, exists (
+    `select r.*, rc.recipe_class_desc, u.first_name as added_by,
+            exists (
               select 1 from user_liked_recipes ul
               where ul.recipe_id = r.recipe_id and ul.user_id = $2
             ) as liked
-     from recipes r where r.recipe_id = $1`,
+     from recipes r
+     left join recipe_classes rc on rc.recipe_class_id = r.recipe_class_id
+     left join users u on u.user_id = r.created_by
+     where r.recipe_id = $1`,
     [req.params.id, req.user.user_id]
   )
   if (recipe.rows.length === 0) {
     return res.status(404).json({ error: 'Recipe not found' })
   }
 
+  // pantry_amount_id is this user's own pantry: 0 plenty, 1 running low,
+  // 2 none, and null when the ingredient isn't in their pantry at all
   const ingredients = await pool.query(
-    `select ri.recipe_seq_number, ri.amount, i.ingredient_name, m.measurement_desc
+    `select ri.recipe_seq_number, ri.amount, i.ingredient_id, i.ingredient_name,
+            m.measurement_desc, up.pantry_amount_id
      from recipe_ingredients ri
      join ingredients i on i.ingredient_id = ri.ingredient_id
      left join measurements m on m.measure_amount_id = ri.measure_amount_id
+     left join user_pantry up on up.ingredient_id = ri.ingredient_id and up.user_id = $2
      where ri.recipe_id = $1
      order by ri.recipe_seq_number`,
-    [req.params.id]
+    [req.params.id, req.user.user_id]
   )
   res.json({ ...recipe.rows[0], recipe_ingredients: ingredients.rows })
 })

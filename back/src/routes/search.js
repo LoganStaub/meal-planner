@@ -127,6 +127,14 @@ router.get(['/search', '/search.html'], (req, res) => {
   res.redirect(301, '/recipes' + (queryStart === -1 ? '' : req.originalUrl.slice(queryStart)))
 })
 
+// A link straight to one recipe (the calendar's meals use it): /recipe?id=3
+// opens the Recipes page with that recipe's window showing. recipe-details.js
+// reads the ?recipe= number.
+router.get('/recipe', (req, res) => {
+  const id = typeof req.query.id === 'string' && /^\d{1,9}$/.test(req.query.id) ? req.query.id : null
+  res.redirect(id ? `/recipes?recipe=${id}` : '/recipes')
+})
+
 // GET /recipes?q=&filter=&date=&slot=
 router.get(['/recipes', '/recipes.html'], async (req, res) => {
   const q = typeof req.query.q === 'string' ? req.query.q.trim().slice(0, 100) : ''

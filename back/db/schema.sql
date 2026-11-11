@@ -1,5 +1,5 @@
 -- =====================================================================
--- Meal Planner - database schema (PostgreSQL)
+-- Preply - database schema (PostgreSQL)
 -- Built from Meal_Planning_ERD.pdf
 --
 -- HOW TO RUN:  npm run db:init   (runs this file, then db/migrations/*.sql)

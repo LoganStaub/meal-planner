@@ -327,158 +327,11 @@
         LoadLikes();
 
         // ---------- Add to calendar popup ----------
-        // Pick a day and a meal, then POST /api/me/calendar. The server knows
-        // who is logged in, so no user id is sent.
-
-        // Same numbers as calendar.meal_slot (back/db/schema.sql)
-        const MEAL_SLOTS = { 1: "Breakfast", 2: "Lunch", 3: "Dinner", 4: "Snack", 5: "Dessert" };
-
+        // The popup itself is shared with the Recipes page: js/recipe-details.js
         const obj_plan = document.getElementById("plan-dialog");
-        const obj_planForm = document.getElementById("plan-form");
-        const obj_planDate = document.getElementById("plan-date");
-        const obj_planMessage = document.getElementById("plan-message");
-        const obj_planSubmit = document.getElementById("plan-submit");
-        const obj_planChoose = document.getElementById("plan-choose");
-        const obj_planDone = document.getElementById("plan-done");
-        let nPlanRecipeId = null;
-        // Set when the recipe is already planned in another meal that day and
-        // the user is being asked whether to add it again
-        let bConfirmDuplicate = false;
 
-        // "2026-11-10" in the visitor's own time zone
-        function DateKey(date = new Date()) {
-            const pad = (n) => String(n).padStart(2, "0");
-            return `${date.getFullYear()}-${pad(date.getMonth() + 1)}-${pad(date.getDate())}`;
-        }
-
-        // "2026-11-10" -> "Tuesday, Nov 10"
-        function FormatDay(sDateKey) {
-            return new Date(`${sDateKey}T00:00:00`).toLocaleDateString("en-US", {
-                weekday: "long", month: "short", day: "numeric"
-            });
-        }
-
-        // Start on the recipe's own meal type, or else the next meal of the day
-        function DefaultMealSlot(meal) {
-            const fromClass = Object.keys(MEAL_SLOTS).find(function(slot) {
-                return MEAL_SLOTS[slot] === meal.recipe_class_desc;
-            });
-            if (fromClass) return fromClass;
-            const hour = new Date().getHours();
-            return hour < 10 ? "1" : hour < 15 ? "2" : "3";
-        }
-
-        function SelectedSlot() {
-            const obj_checked = obj_planForm.querySelector('input[name="meal_slot"]:checked');
-            return obj_checked ? Number(obj_checked.value) : null;
-        }
-
-        function ShowPlanMessage(sText) {
-            obj_planMessage.textContent = sText;
-            obj_planMessage.hidden = !sText;
-        }
-
-        function ResetDuplicateQuestion() {
-            bConfirmDuplicate = false;
-            obj_planSubmit.textContent = "Add to calendar";
-            ShowPlanMessage("");
-        }
-
-        function OpenPlan() {
-            const meal = meals[nCurrent];
-            nPlanRecipeId = meal.recipe_id;
-            document.getElementById("plan-recipe").textContent = meal.recipe_title;
-
-            const sToday = DateKey();
-            obj_planDate.min = sToday;
-            obj_planDate.value = sToday;
-            obj_planForm.querySelector(`input[name="meal_slot"][value="${DefaultMealSlot(meal)}"]`).checked = true;
-
-            ResetDuplicateQuestion();
-            obj_planSubmit.disabled = false;
-            obj_planChoose.hidden = false;
-            obj_planDone.hidden = true;
-            obj_plan.showModal();
-        }
-
-        async function SavePlan() {
-            const sDate = obj_planDate.value;
-            const nSlot = SelectedSlot();
-            if (!sDate) { ShowPlanMessage("Choose a day."); obj_planDate.focus(); return; }
-            if (sDate < obj_planDate.min) { ShowPlanMessage("Choose today or a later day."); obj_planDate.focus(); return; }
-            if (!nSlot) { ShowPlanMessage("Choose a meal."); return; }
-
-            obj_planSubmit.disabled = true;
-            ShowPlanMessage("");
-            try {
-                const response = await fetch("/api/me/calendar", {
-                    method: "POST",
-                    headers: { "Content-Type": "application/json" },
-                    body: JSON.stringify({
-                        date: sDate,
-                        meal_slot: nSlot,
-                        recipe_id: nPlanRecipeId,
-                        allow_duplicate: bConfirmDuplicate
-                    })
-                });
-                const body = await response.json().catch(() => ({}));
-
-                if (response.status === 401) {
-                    // Logged out in another tab: log in again, then come back here
-                    location.href = `/login?next=${encodeURIComponent(location.pathname)}`;
-                    return;
-                }
-                if (response.status === 409 && body.code === "already_planned") {
-                    const slots = body.meal_slots || [];
-                    const where = slots.map((slot) => (MEAL_SLOTS[slot] || "another meal").toLowerCase()).join(" and ");
-                    if (slots.includes(nSlot)) {
-                        // The same recipe can't be in the same meal twice
-                        ShowPlanMessage(`It's already planned for ${where} on ${FormatDay(sDate)}. Pick another day or meal.`);
-                    } else {
-                        bConfirmDuplicate = true;
-                        obj_planSubmit.textContent = "Add anyway";
-                        ShowPlanMessage(`It's already planned for ${where} on ${FormatDay(sDate)}. Add it to ${MEAL_SLOTS[nSlot].toLowerCase()} too?`);
-                    }
-                    return;
-                }
-                if (!response.ok) throw new Error(body.error || "Couldn't add it to your calendar. Please try again.");
-
-                const obj_doneText = document.getElementById("plan-done-text");
-                const obj_title = document.createElement("strong");
-                obj_title.textContent = meals.find((meal) => meal.recipe_id === nPlanRecipeId)?.recipe_title || "The recipe";
-                obj_doneText.replaceChildren(obj_title,
-                    ` is on your calendar for ${MEAL_SLOTS[nSlot].toLowerCase()} on ${FormatDay(sDate)}.`);
-                document.getElementById("plan-done-link").href = `/calendar?date=${encodeURIComponent(sDate)}`;
-                obj_planChoose.hidden = true;
-                obj_planDone.hidden = false;
-                document.getElementById("plan-done-link").focus();
-            } catch (error) {
-                ShowPlanMessage(error instanceof TypeError ? "Couldn't reach the server. Please try again." : error.message);
-            } finally {
-                obj_planSubmit.disabled = false;
-            }
-        }
-
-        document.getElementById("calendar-btn").addEventListener("click", OpenPlan);
-
-        obj_planForm.addEventListener("submit", function(event) {
-            event.preventDefault();
-            SavePlan();
-        });
-
-        // Changing the day or meal means a new question, so drop the old one
-        obj_planDate.addEventListener("change", ResetDuplicateQuestion);
-        obj_planForm.addEventListener("change", function(event) {
-            if (event.target.name === "meal_slot") ResetDuplicateQuestion();
-        });
-
-        obj_plan.querySelectorAll("[data-plan-close]").forEach(function(obj_button) {
-            obj_button.addEventListener("click", function() { obj_plan.close(); });
-        });
-
-        // clicking the dimmed background closes the popup
-        obj_plan.addEventListener("click", function(event) {
-            if (event.target === obj_plan) obj_plan.close();
+        document.getElementById("calendar-btn").addEventListener("click", function() {
+            PlanDialog.open(meals[nCurrent]);
         });
 
         document.getElementById("restart-btn").addEventListener("click", function() {
@@ -489,24 +342,29 @@
         });
 
 
-        // ---------- Recipe details popup ----------
+        // ---------- Recipe window ----------
+        // Clicking the recipe's name opens the shared recipe window
+        // (js/recipe-details.js), which loads the recipe from the database.
 
         document.getElementById("open-details").addEventListener("click", function() {
-            // a swipe that started on the title shouldn't also open the popup
+            // a swipe that started on the title shouldn't also open the window
             if (bSuppressClick) return;
 
-            document.getElementById("details-title").textContent = meals[nCurrent].recipe_title;
-            obj_dialog.dataset.recipeId = meals[nCurrent].recipe_id;
-            obj_dialog.showModal();
+            const meal = meals[nCurrent];
+            // the photo and description aren't in the database yet, so pass them along
+            RecipeDetails.open(meal.recipe_id, {
+                title: meal.recipe_title,
+                description: meal.description,
+                image_url: meal.image_url
+            });
         });
 
-        document.getElementById("close-details").addEventListener("click", function() {
-            obj_dialog.close();
-        });
-
-        // clicking the dimmed background closes the popup
-        obj_dialog.addEventListener("click", function(event) {
-            if (event.target === obj_dialog) obj_dialog.close();
+        // liking or unliking inside the window updates this page's heart too
+        document.addEventListener("recipe-like-change", function(event) {
+            const meal = meals.find(function(m) { return m.recipe_id === event.detail.recipe_id; });
+            if (!meal) return;
+            meal.liked = event.detail.liked;
+            RenderLike();
         });
 
 
