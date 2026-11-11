@@ -1,4 +1,4 @@
-// "Add a recipe with AI" on the Search page: /api/recipe-assistant
+// "Add a recipe with AI" on the Recipes page: /api/recipe-assistant
 //
 //   GET  …/status              how many recipes the user can still add today
 //   POST …/check   { text }    the AI checks the recipe and fits it to our tables.
@@ -144,7 +144,7 @@ router.post('/recipe-assistant/check', async (req, res) => {
   }
   if (await recipeTitleExists(pool, result.recipe.title)) {
     return res.status(409).json({
-      error: `There is already a recipe called "${result.recipe.title}". Search for it instead, or give yours a different name.`,
+      error: `There is already a recipe called "${result.recipe.title}". Find it on the Recipes page instead, or give yours a different name.`,
       code: 'duplicate',
       ...(await limitBody(userId)),
     })

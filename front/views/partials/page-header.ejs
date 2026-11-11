@@ -1,0 +1,19 @@
+<%#
+  The top bar on every page: the page title in the middle and the account
+  circle in the top-right corner. Styles: /css/page-header.css (the only
+  place the bar and the circle are styled, so every page matches).
+
+    include('partials/page-header', { pageTitle: 'Pantry' })
+
+  The circle opens the shared profile menu (partials/profile-menu.ejs +
+  js/profile-menu.js). The home page has its own profile popup, so it
+  passes profileButtonId: 'open-profile' and profileOpensDialog: true.
+%>
+<header class="page-header">
+  <h1 class="page-header-title"><%= pageTitle %></h1>
+  <button type="button" class="account-button<%= locals.profileButtonId ? '' : ' profile-trigger' %>"
+    id="<%= locals.profileButtonId || 'profile-trigger' %>"
+    <% if (locals.profileOpensDialog) { %>aria-haspopup="dialog"<% } else { %>aria-controls="profile-menu" aria-expanded="false"<% } %>
+    aria-label="<%= currentUser.display_name %>: profile and settings"
+    title="<%= currentUser.display_name %>"><%= currentUser.initials %></button>
+</header>

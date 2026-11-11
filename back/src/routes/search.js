@@ -1,4 +1,5 @@
-// Search page: /search?q=chicken&filter=dinner
+// Recipes page: /recipes?q=chicken&filter=dinner
+// (It used to be called Search; /search and /search.html redirect here.)
 //
 // From the calendar's + buttons it also gets ?date=YYYY-MM-DD&slot=N. Then the
 // page shows an "Adding to …" banner and each result gets an Add to calendar
@@ -57,7 +58,7 @@ function formatPlanDate(dateKey) {
   })
 }
 
-// Builds a /search link, leaving out null/undefined params. An empty string is
+// Builds a /recipes link, leaving out null/undefined params. An empty string is
 // kept on purpose: filter= means "no filter", so the slot default isn't applied.
 function searchHref(params) {
   const query = new URLSearchParams()
@@ -65,7 +66,7 @@ function searchHref(params) {
     if (value !== null && value !== undefined) query.set(key, value)
   }
   const text = query.toString()
-  return text ? `/search?${text}` : '/search'
+  return text ? `/recipes?${text}` : '/recipes'
 }
 
 // Every value from the user goes in `params` as $1, $2…; only fixed SQL
@@ -120,8 +121,14 @@ async function searchRecipes({ q, filter }) {
   }))
 }
 
-// GET /search?q=&filter=&date=&slot=
-router.get(['/search', '/search.html'], async (req, res) => {
+// Old links and bookmarks: /search?... -> /recipes?... (keeps the query string)
+router.get(['/search', '/search.html'], (req, res) => {
+  const queryStart = req.originalUrl.indexOf('?')
+  res.redirect(301, '/recipes' + (queryStart === -1 ? '' : req.originalUrl.slice(queryStart)))
+})
+
+// GET /recipes?q=&filter=&date=&slot=
+router.get(['/recipes', '/recipes.html'], async (req, res) => {
   const q = typeof req.query.q === 'string' ? req.query.q.trim().slice(0, 100) : ''
 
   // Planning mode only turns on for a real date; a bad slot just means "pick one"
@@ -172,7 +179,7 @@ router.get(['/search', '/search.html'], async (req, res) => {
     filterCleared,
     clearSearchHref: searchHref({ ...keep, q: null }),
     showAllHref: searchHref({ date, slot, filter: noFilter }),
-    active: 'search',
+    active: 'recipes',
   })
 })
 

@@ -7,14 +7,14 @@ const PRIMARY_SLOTS = [1, 2, 3];
 const EXTRA_SLOTS = [4, 5];
 
 // Links out to teammates' pages. Change the URLs here if theirs change.
-// Search adds the recipe, then redirects back to /calendar?date=YYYY-MM-DD
-// Search starts on that meal's filter (e.g. Breakfast) unless filter is
+// The Recipes page adds the recipe, then redirects back to /calendar?date=YYYY-MM-DD
+// It starts on that meal's filter (e.g. Breakfast) unless filter is
 // sent empty; the general + button does that so it shows every recipe.
 function searchUrl(date, slot, { unfiltered = false } = {}) {
     const params = new URLSearchParams({ date });
     if (slot) params.set("slot", slot);
     if (unfiltered) params.set("filter", "");
-    return `/search?${params}`;
+    return `/recipes?${params}`;
 }
 
 function recipeUrl(recipeId) {
@@ -69,7 +69,7 @@ function parseDateKey(value) {
     return isRealDay ? date : null;
 }
 
-// /calendar?date=YYYY-MM-DD opens on that day (search redirects here after saving)
+// /calendar?date=YYYY-MM-DD opens on that day (the Recipes page redirects here after saving)
 const selectedDate = parseDateKey(new URLSearchParams(location.search).get("date")) || new Date();
 
 // Meals for the visible week, keyed by "YYYY-MM-DD"
@@ -326,9 +326,9 @@ function renderSelectedDay() {
     const extras = meals.filter((m) => !PRIMARY_SLOTS.includes(m.meal_slot));
     mealList.replaceChildren(primary, createExtrasGroup(dateKey, extras));
 
-    // + goes to the first empty main meal, or just the day (search then
+    // + goes to the first empty main meal, or just the day (the Recipes page then
     // asks which meal) once breakfast, lunch and dinner all have something
-    // Both are general "add something" links, so search opens unfiltered
+    // Both are general "add something" links, so the Recipes page opens unfiltered
     addMealLink.href = searchUrl(dateKey, firstEmptySlot, { unfiltered: true });
     addMealLink.setAttribute("aria-label", firstEmptySlot
         ? `Add ${MEAL_SLOTS[firstEmptySlot].toLowerCase()}`
@@ -516,7 +516,7 @@ function renderMonth({ focus = false } = {}) {
 
 function openMonthPicker() {
     monthFocus = new Date(selectedDate);
-    // Meals may have changed since last time (removed here, added on search)
+    // Meals may have changed since last time (removed here, added on the Recipes page)
     loadedMonthStart = null;
     monthPicker.showModal();
     renderMonth({ focus: true });

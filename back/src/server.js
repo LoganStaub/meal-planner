@@ -110,7 +110,7 @@ app.use('/api/me/calendar', calendarRouter)
 app.use('/api/me/likes', likesRouter)
 app.use('/api/me/pantry', pantryRouter)
 
-// Search page's "Add your own recipe" assistant: /api/recipe-assistant/...
+// Recipes page's "Add your own recipe" assistant: /api/recipe-assistant/...
 app.use('/api', recipeAssistantRouter)
 
 // Render the home page from its EJS view.
@@ -123,7 +123,7 @@ app.get(['/calendar', '/calendar.html'], (req, res) => {
   res.render('calendar', { active: 'calendar' })
 })
 
-// Render the search page (/search?q=&filter=&date=&slot=). See routes/search.js.
+// Render the Recipes page (/recipes?q=&filter=&date=&slot=; old /search links redirect). See routes/search.js.
 app.use(searchRouter)
 
 // Render the recipes this user has liked. inPantry / toBuy count each

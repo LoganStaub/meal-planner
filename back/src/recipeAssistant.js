@@ -176,7 +176,7 @@ export function cleanRecipe(raw, classNames, measurementNames) {
     prep_time: prepTime,
     servings,
     cost: Math.round(cost * 100) / 100,
-    // Same format as scripts/seedRecipes.js, which the Search page's
+    // Same format as scripts/seedRecipes.js, which the Recipes page's
     // High Protein filter knows how to read
     macros: `Per serving (serves ${servings}): ${calories} kcal | Protein ${protein}g | Carbs ${carbs}g | Fat ${fat}g`,
     ingredients,

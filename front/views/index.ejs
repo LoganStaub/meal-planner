@@ -3,13 +3,14 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
-    <title>Meal Planner</title>
+    <title>Home | Meal Planner</title>
 
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=DM+Sans:opsz,wght@9..40,400;9..40,500;9..40,600;9..40,700&display=swap" rel="stylesheet">
 
     <link rel="stylesheet" href="/css/index.css">
+    <link rel="stylesheet" href="/css/page-header.css">
     <script src="/js/no-back-cache.js"></script>
 </head>
 
@@ -26,7 +27,7 @@
         <symbol id="icon-calendar" viewBox="0 0 24 24"><path d="M8 2v4"/><path d="M16 2v4"/><rect width="18" height="18" x="3" y="4" rx="2"/><path d="M3 10h18"/><path d="M8 14h.01"/><path d="M12 14h.01"/><path d="M16 14h.01"/><path d="M8 18h.01"/><path d="M12 18h.01"/><path d="M16 18h.01"/></symbol>
         <symbol id="icon-list" viewBox="0 0 24 24"><path d="m3 17 2 2 4-4"/><path d="m3 7 2 2 4-4"/><path d="M13 6h8"/><path d="M13 12h8"/><path d="M13 18h8"/></symbol>
         <symbol id="icon-home" viewBox="0 0 24 24"><path d="M15 21v-8a1 1 0 0 0-1-1h-4a1 1 0 0 0-1 1v8"/><path d="M3 10a2 2 0 0 1 .709-1.528l7-5.999a2 2 0 0 1 2.582 0l7 5.999A2 2 0 0 1 21 10v9a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/></symbol>
-        <symbol id="icon-search" viewBox="0 0 24 24"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.3-4.3"/></symbol>
+        <symbol id="icon-recipes" viewBox="0 0 24 24"><path d="M12 7v14"/><path d="M3 18a1 1 0 0 1-1-1V4a1 1 0 0 1 1-1h5a4 4 0 0 1 4 4 4 4 0 0 1 4-4h5a1 1 0 0 1 1 1v13a1 1 0 0 1-1 1h-6a3 3 0 0 0-3 3 3 3 0 0 0-3-3z"/></symbol>
         <symbol id="icon-leaf" viewBox="0 0 24 24"><path d="M11 20A7 7 0 0 1 9.8 6.1C15.5 5 17 4.48 19 2c1 2 2 4.18 2 8 0 5.5-4.78 10-10 10Z"/><path d="M2 21c0-3 1.85-5.36 5.08-6C9.5 14.52 12 13 13 12"/></symbol>
         <symbol id="icon-sliders" viewBox="0 0 24 24"><path d="M21 4h-7"/><path d="M10 4H3"/><path d="M21 12h-9"/><path d="M8 12H3"/><path d="M21 20h-5"/><path d="M12 20H3"/><path d="M14 2v4"/><path d="M8 10v4"/><path d="M16 18v4"/></symbol>
         <symbol id="icon-bell" viewBox="0 0 24 24"><path d="M10.268 21a2 2 0 0 0 3.464 0"/><path d="M3.262 15.326A1 1 0 0 0 4 17h16a1 1 0 0 0 .74-1.673C19.41 13.956 18 12.499 18 8A6 6 0 0 0 6 8c0 4.499-1.411 5.956-2.738 7.326"/></symbol>
@@ -34,6 +35,8 @@
     </svg>
 
     <div class="app">
+        <%# Same top bar as every page. The circle opens this page's own profile popup (#profile). %>
+        <%- include('partials/page-header', { pageTitle: 'Home', profileButtonId: 'open-profile', profileOpensDialog: true }) %>
 
         <main class="stage" id="stage">
 
@@ -84,12 +87,6 @@
             <div class="top-scrim"></div>
 
             <header class="app-header">
-                <div class="header-row">
-                    <h1 class="brand">Meal Planner<span>.</span></h1>
-                    <button type="button" class="profile-btn" id="open-profile" aria-label="<%= currentUser.display_name %>: profile and settings" aria-haspopup="dialog" title="<%= currentUser.display_name %>">
-                        <%= currentUser.initials %>
-                    </button>
-                </div>
 
                 <div class="picks-row">
                     <%# index.js swaps this for the time of day (This morning's / This afternoon's / Tonight's) %>
@@ -116,7 +113,7 @@
                 <li><a class="nav-link" href="/calendar"><span class="nav-icon"><svg class="icon"><use href="#icon-calendar"/></svg></span>Calendar</a></li>
                 <li><a class="nav-link" href="/shopping.html"><span class="nav-icon"><svg class="icon"><use href="#icon-list"/></svg></span>Shopping</a></li>
                 <li class="nav-home"><a class="nav-link" href="/home" aria-current="page"><span class="nav-icon"><svg class="icon"><use href="#icon-home"/></svg></span>Home</a></li>
-                <li><a class="nav-link" href="/search.html"><span class="nav-icon"><svg class="icon"><use href="#icon-search"/></svg></span>Search</a></li>
+                <li><a class="nav-link" href="/recipes"><span class="nav-icon"><svg class="icon"><use href="#icon-recipes"/></svg></span>Recipes</a></li>
                 <li><a class="nav-link" href="/pantry"><span class="nav-icon"><svg class="icon"><use href="#icon-basket"/></svg></span>Pantry</a></li>
             </ul>
         </nav>
