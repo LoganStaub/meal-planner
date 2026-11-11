@@ -146,7 +146,6 @@
         function RenderLike() {
             const bLiked = Boolean(meals[nCurrent].liked);
             obj_like.setAttribute("aria-pressed", String(bLiked));
-            document.getElementById("like-label").textContent = bLiked ? "Liked" : "Like";
         }
 
 
