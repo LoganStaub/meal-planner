@@ -1,4 +1,4 @@
-// "Add your own recipe" on the Search page: /api/recipe-assistant
+// "Add a recipe with AI" on the Search page: /api/recipe-assistant
 //
 //   GET  …/status              how many recipes the user can still add today
 //   POST …/check   { text }    the AI checks the recipe and fits it to our tables.
@@ -12,55 +12,59 @@
 // Every route needs a logged-in user (requireLogin in server.js). Their id
 // comes from the login session (req.user), not from the URL, so the daily
 // limit can't be dodged by sending someone else's id.
+//
+// Recipes added here go into the shared list that every user searches, and
+// recipes.created_by records who added them (db/migrations/007).
 import { Router } from 'express'
 import { randomUUID } from 'node:crypto'
 import { pool } from '../db.js'
+import { redis } from '../redis.js'
 import {
   checkRecipe, AssistantUnavailableError, MIN_RECIPE_TEXT, MAX_RECIPE_TEXT,
 } from '../recipeAssistant.js'
 import {
-  getUsage, recordCheck, refundCheck, reserveSlot, releaseSlot, MAX_RECIPES_PER_DAY, MAX_CHECKS_PER_DAY,
+  getUsage, claimCheck, refundCheck, lockAndCheckDailyLimit, MAX_RECIPES_PER_DAY, MAX_CHECKS_PER_DAY,
 } from '../recipeAddLimit.js'
 
 const router = Router()
-// req.userId: the logged-in user's id as a string, the key recipeAddLimit.js uses
+
 router.use('/recipe-assistant', (req, res, next) => {
-  req.userId = String(req.user.user_id)
+  req.userId = req.user.user_id
   next()
 })
 
-// Checked recipes waiting for the user to press Save. Kept in memory: they
-// are short-lived, and a server restart just means checking again.
-const DRAFT_MINUTES = 30
-const MAX_DRAFTS_PER_USER = 5
-const drafts = new Map() // draftId -> { userId, recipe, expires }
+// Checked recipes waiting for the user to press Save. Kept in Redis so they
+// survive a server restart, and Redis deletes them by itself after 30 minutes.
+const DRAFT_TTL_SECONDS = 30 * 60
+const draftKey = (draftId) => `recipe_draft:${draftId}`
 
-function dropExpiredDrafts() {
-  const now = Date.now()
-  for (const [id, draft] of drafts) {
-    if (draft.expires < now) drafts.delete(id)
-  }
+async function storeDraft(draftId, draft) {
+  await redis.set(draftKey(draftId), JSON.stringify(draft), {
+    expiration: { type: 'EX', value: DRAFT_TTL_SECONDS },
+  })
 }
 
-function saveDraft(userId, recipe) {
-  dropExpiredDrafts()
-  // Oldest first, so a user who keeps re-checking doesn't pile drafts up
-  const mine = [...drafts].filter(([, draft]) => draft.userId === userId)
-  for (const [id] of mine.slice(0, Math.max(0, mine.length - MAX_DRAFTS_PER_USER + 1))) {
-    drafts.delete(id)
-  }
-  const id = randomUUID()
-  drafts.set(id, { userId, recipe, expires: Date.now() + DRAFT_MINUTES * 60_000 })
-  return id
+// Takes the draft out of Redis in one step (GETDEL), so a double-click on
+// Save can't save the same draft twice. Returns null if it's gone.
+async function takeDraft(draftId) {
+  const stored = await redis.getDel(draftKey(draftId))
+  return stored ? JSON.parse(stored) : null
 }
 
-function limitBody(userId) {
-  const usage = getUsage(userId)
-  return { limit: MAX_RECIPES_PER_DAY, added: usage.added, remaining: usage.remaining }
+async function limitBody(userId) {
+  const usage = await getUsage(pool, userId)
+  return {
+    limit: MAX_RECIPES_PER_DAY,
+    added: usage.added,
+    remaining: usage.remaining,
+    checks_remaining: usage.checksRemaining,
+  }
 }
 
 const WALL_MESSAGE =
   `You've added ${MAX_RECIPES_PER_DAY} recipes today, which is the daily limit. You can add more tomorrow.`
+const CHECK_WALL_MESSAGE =
+  `You've used all ${MAX_CHECKS_PER_DAY} recipe checks for today. Please try again tomorrow.`
 
 async function recipeTitleExists(db, title) {
   const { rows } = await db.query(
@@ -81,10 +85,9 @@ async function loadLookups() {
 }
 
 // GET /api/recipe-assistant/status
-router.get('/recipe-assistant/status', (req, res) => {
-  const { userId } = req
+router.get('/recipe-assistant/status', async (req, res) => {
   res.json({
-    ...limitBody(userId),
+    ...(await limitBody(req.userId)),
     min_length: MIN_RECIPE_TEXT,
     max_length: MAX_RECIPE_TEXT,
   })
@@ -95,16 +98,12 @@ router.post('/recipe-assistant/check', async (req, res) => {
   const { userId } = req
 
   // The wall: no point checking a recipe that can't be saved today
-  const usage = getUsage(userId)
+  const usage = await getUsage(pool, userId)
   if (usage.remaining === 0) {
-    return res.status(429).json({ error: WALL_MESSAGE, code: 'daily_limit', ...limitBody(userId) })
+    return res.status(429).json({ error: WALL_MESSAGE, code: 'daily_limit', ...(await limitBody(userId)) })
   }
   if (usage.checksRemaining === 0) {
-    return res.status(429).json({
-      error: `You've used all ${MAX_CHECKS_PER_DAY} recipe checks for today. Please try again tomorrow.`,
-      code: 'check_limit',
-      ...limitBody(userId),
-    })
+    return res.status(429).json({ error: CHECK_WALL_MESSAGE, code: 'check_limit', ...(await limitBody(userId)) })
   }
 
   const text = typeof req.body?.text === 'string' ? req.body.text.trim() : ''
@@ -122,7 +121,9 @@ router.post('/recipe-assistant/check', async (req, res) => {
   const { classIds, measureIds } = await loadLookups()
 
   // Counted before the call so a slow or failed check can't be retried for free
-  recordCheck(userId)
+  if (!(await claimCheck(userId))) {
+    return res.status(429).json({ error: CHECK_WALL_MESSAGE, code: 'check_limit', ...(await limitBody(userId)) })
+  }
 
   let result
   try {
@@ -132,25 +133,26 @@ router.post('/recipe-assistant/check', async (req, res) => {
     })
   } catch (error) {
     if (error instanceof AssistantUnavailableError) {
-      refundCheck(userId)
+      await refundCheck(userId)
       return res.status(503).json({ error: error.message, code: 'assistant_unavailable' })
     }
     throw error
   }
 
   if (!result.accepted) {
-    return res.status(422).json({ error: result.reason, code: 'rejected', ...limitBody(userId) })
+    return res.status(422).json({ error: result.reason, code: 'rejected', ...(await limitBody(userId)) })
   }
   if (await recipeTitleExists(pool, result.recipe.title)) {
     return res.status(409).json({
       error: `There is already a recipe called "${result.recipe.title}". Search for it instead, or give yours a different name.`,
       code: 'duplicate',
-      ...limitBody(userId),
+      ...(await limitBody(userId)),
     })
   }
 
-  const draftId = saveDraft(userId, result.recipe)
-  res.json({ draft_id: draftId, recipe: result.recipe, ...limitBody(userId) })
+  const draftId = randomUUID()
+  await storeDraft(draftId, { userId, recipe: result.recipe })
+  res.json({ draft_id: draftId, recipe: result.recipe, ...(await limitBody(userId)) })
 })
 
 // POST /api/recipe-assistant/drafts/:draftId/save
@@ -158,42 +160,42 @@ router.post('/recipe-assistant/drafts/:draftId/save', async (req, res) => {
   const { userId } = req
   const { draftId } = req.params
 
-  dropExpiredDrafts()
-  const draft = drafts.get(draftId)
+  const draft = await takeDraft(draftId)
   if (!draft || draft.userId !== userId) {
+    // Someone else's draft goes back untouched
+    if (draft) await storeDraft(draftId, draft)
     return res.status(404).json({
       error: 'That recipe check has expired. Please check the recipe again.',
       code: 'draft_expired',
     })
   }
 
-  if (!reserveSlot(userId)) {
-    return res.status(429).json({ error: WALL_MESSAGE, code: 'daily_limit', ...limitBody(userId) })
-  }
-  // Removed now so a double-click can't save the same draft twice
-  drafts.delete(draftId)
-
   const { recipe } = draft
+  const { classIds, measureIds } = await loadLookups()
   const db = await pool.connect()
+  let saved = false
   try {
     await db.query('begin')
 
+    if (!(await lockAndCheckDailyLimit(db, userId))) {
+      await db.query('rollback')
+      return res.status(429).json({ error: WALL_MESSAGE, code: 'daily_limit', ...(await limitBody(userId)) })
+    }
+
     if (await recipeTitleExists(db, recipe.title)) {
       await db.query('rollback')
-      releaseSlot(userId)
       return res.status(409).json({
         error: `There is already a recipe called "${recipe.title}".`,
         code: 'duplicate',
-        ...limitBody(userId),
+        ...(await limitBody(userId)),
       })
     }
 
-    const { classIds, measureIds } = await loadLookups()
     const inserted = await db.query(
-      `insert into recipes (recipe_title, recipe_class_id, cost, macros, prep_time, instructions)
-       values ($1, $2, $3, $4, $5, $6) returning recipe_id`,
+      `insert into recipes (recipe_title, recipe_class_id, cost, macros, prep_time, instructions, created_by)
+       values ($1, $2, $3, $4, $5, $6, $7) returning recipe_id`,
       [recipe.title, classIds[recipe.meal_class] ?? null, recipe.cost, recipe.macros, recipe.prep_time,
-        recipe.steps.map((step, i) => `${i + 1}. ${step}`).join('\n')]
+        recipe.steps.map((step, i) => `${i + 1}. ${step}`).join('\n'), userId]
     )
     const recipeId = inserted.rows[0].recipe_id
 
@@ -201,15 +203,15 @@ router.post('/recipe-assistant/drafts/:draftId/save', async (req, res) => {
       const measureId = measureIds[ingredient.measurement] ?? null
 
       // Reuse an ingredient with the same name (ignoring case), as
-      // scripts/seedRecipes.js does. A new one starts as "none" in the pantry
-      // (pantry_amount_id 2), so it shows up as something to buy.
+      // scripts/seedRecipes.js does. Nobody's pantry changes: each user's
+      // pantry is their own rows in user_pantry.
       const existing = await db.query(
         'select ingredient_id from ingredients where lower(ingredient_name) = lower($1) limit 1',
         [ingredient.name]
       )
       const ingredientId = existing.rows[0]?.ingredient_id ?? (await db.query(
-        `insert into ingredients (ingredient_name, pantry_amount_id, measure_amount_id)
-         values ($1, 2, $2) returning ingredient_id`,
+        `insert into ingredients (ingredient_name, measure_amount_id)
+         values ($1, $2) returning ingredient_id`,
         [ingredient.name, measureId]
       )).rows[0].ingredient_id
 
@@ -221,15 +223,16 @@ router.post('/recipe-assistant/drafts/:draftId/save', async (req, res) => {
     }
 
     await db.query('commit')
-    res.status(201).json({ recipe_id: recipeId, recipe_title: recipe.title, ...limitBody(userId) })
+    saved = true
+    res.status(201).json({ recipe_id: recipeId, recipe_title: recipe.title, ...(await limitBody(userId)) })
   } catch (error) {
-    await db.query('rollback').catch(() => {})
-    releaseSlot(userId)
-    // Keep the draft so the user can press Save again
-    drafts.set(draftId, draft)
+    if (!saved) await db.query('rollback').catch(() => {})
     throw error
   } finally {
     db.release()
+    // Not saved (limit, duplicate or an error): keep the draft so the user
+    // can press Save again or go back and edit
+    if (!saved) await storeDraft(draftId, draft).catch(() => {})
   }
 })
 

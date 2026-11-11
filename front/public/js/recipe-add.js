@@ -54,10 +54,13 @@
         box.hidden = !message;
     }
 
-    // "2 of 3 left today"
+    // "2 of 3 left today · 4 checks left"
     function showRemaining(body) {
         if (typeof body?.remaining !== "number") return;
-        remainingText.textContent = `${body.remaining} of ${body.limit} left today`;
+        const checks = typeof body.checks_remaining === "number"
+            ? ` · ${body.checks_remaining} ${body.checks_remaining === 1 ? "check" : "checks"} left`
+            : "";
+        remainingText.textContent = `${body.remaining} of ${body.limit} left today${checks}`;
         remainingText.hidden = false;
     }
 
@@ -68,7 +71,9 @@
 
     // Not logged in, or the login expired while the popup was open
     function showLogin(body) {
-        if (body?.login_url) loginLink.href = body.login_url;
+        // Come back to this page (with its search) after logging in
+        const here = location.pathname + location.search;
+        if (body?.login_url) loginLink.href = `${body.login_url}?next=${encodeURIComponent(here)}`;
         remainingText.hidden = true;
         show("login");
     }
@@ -158,6 +163,8 @@
         showRemaining(body);
         if (body.remaining === 0) {
             showWall(`You've added ${body.limit} recipes today, which is the daily limit. You can add more tomorrow.`);
+        } else if (body.checks_remaining === 0) {
+            showWall("You've used all of today's recipe checks. Please try again tomorrow.");
         }
     }
 
@@ -182,7 +189,8 @@
             saveButton.focus();
             return;
         }
-        if (status === 429 && body.code === "daily_limit") {
+        // Out of recipes or out of checks for today
+        if (status === 429) {
             showWall(body.error);
             return;
         }
