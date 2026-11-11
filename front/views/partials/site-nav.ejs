@@ -1,0 +1,34 @@
+<%#
+  Site navigation: a bottom bar on phones and a left sidebar on computers,
+  the same as on the Home, Calendar and Recipes pages (which have their own
+  copy in index.css / calendar.css). Used by Shopping, Pantry and Liked.
+  Needs /css/site-nav.css and class="has-site-nav" on <body>.
+  Pass active: 'calendar' | 'shopping' | 'home' | 'recipes' | 'pantry'.
+%>
+<%
+  const siteNavLinks = [
+    { key: 'calendar', label: 'Calendar', href: '/calendar',
+      icon: '<path d="M8 2v4"/><path d="M16 2v4"/><rect width="18" height="18" x="3" y="4" rx="2"/><path d="M3 10h18"/><path d="M8 14h.01"/><path d="M12 14h.01"/><path d="M16 14h.01"/><path d="M8 18h.01"/><path d="M12 18h.01"/><path d="M16 18h.01"/>' },
+    { key: 'shopping', label: 'Shopping', href: '/shopping',
+      icon: '<path d="m3 17 2 2 4-4"/><path d="m3 7 2 2 4-4"/><path d="M13 6h8"/><path d="M13 12h8"/><path d="M13 18h8"/>' },
+    { key: 'home', label: 'Home', href: '/home',
+      icon: '<path d="M15 21v-8a1 1 0 0 0-1-1h-4a1 1 0 0 0-1 1v8"/><path d="M3 10a2 2 0 0 1 .709-1.528l7-5.999a2 2 0 0 1 2.582 0l7 5.999A2 2 0 0 1 21 10v9a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/>' },
+    { key: 'recipes', label: 'Recipes', href: '/recipes',
+      icon: '<path d="M12 7v14"/><path d="M3 18a1 1 0 0 1-1-1V4a1 1 0 0 1 1-1h5a4 4 0 0 1 4 4 4 4 0 0 1 4-4h5a1 1 0 0 1 1 1v13a1 1 0 0 1-1 1h-6a3 3 0 0 0-3 3 3 3 0 0 0-3-3z"/>' },
+    { key: 'pantry', label: 'Pantry', href: '/pantry',
+      icon: '<path d="m15 11-1 9"/><path d="m19 11-4-7"/><path d="M2 11h20"/><path d="m3.5 11 1.6 7.4a2 2 0 0 0 2 1.6h9.8a2 2 0 0 0 2-1.6l1.7-7.4"/><path d="M4.5 15.5h15"/><path d="m5 11 4-7"/><path d="m9 11 1 9"/>' },
+  ];
+%>
+<nav class="site-nav" aria-label="Main">
+  <p class="site-nav-brand">Meal Planner<span>.</span></p>
+  <ul>
+    <% siteNavLinks.forEach(link => { %>
+      <%# Home sits in the middle of the phone bar and first in the sidebar %>
+      <li<%- link.key === 'home' ? ' class="site-nav-home"' : '' %>>
+        <a class="site-nav-link" href="<%= link.href %>"<%- locals.active === link.key ? ' aria-current="page"' : '' %>>
+          <span class="site-nav-icon"><svg viewBox="0 0 24 24" aria-hidden="true"><%- link.icon %></svg></span><%= link.label %>
+        </a>
+      </li>
+    <% }) %>
+  </ul>
+</nav>

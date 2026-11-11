@@ -1,0 +1,208 @@
+/* Site navigation (partials/site-nav.ejs): a bottom bar on phones and a
+   left sidebar from 1024px up, matching the nav in calendar.css and
+   index.css exactly (same sizes, colors and breakpoint).
+   Colors are written out because each page that uses this has its own
+   variable names. Several rules undo pantry.css's plain `nav` / `nav a`
+   styles, which would otherwise apply to this <nav> too. */
+
+.site-nav {
+    position: fixed;
+    right: 0;
+    bottom: 0;
+    left: 0;
+    z-index: 50;
+    display: block;
+    margin: 0;
+    padding: 12px 12px calc(12px + env(safe-area-inset-bottom));
+    background-color: #F7F4F1;
+    border: 0;
+    border-radius: 0;
+    color: #1F2328;
+    font-family: "DM Sans", system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+    -webkit-font-smoothing: antialiased;
+}
+
+.site-nav-brand {
+    display: none;
+}
+
+.site-nav ul {
+    display: grid;
+    grid-template-columns: repeat(5, 1fr);
+    max-width: 620px;
+    margin: 0 auto;
+    padding: 10px 6px;
+    list-style: none;
+    border-radius: 26px;
+    background-color: #FFFFFF;
+    box-shadow: 0 4px 18px rgba(31, 35, 40, 0.06);
+}
+
+.site-nav-link {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 4px;
+    padding: 2px 0;
+    border-radius: 14px;
+    color: #5B6068;
+    font-size: 0.75rem;
+    font-weight: 400;
+    line-height: normal;
+    text-decoration: none;
+    transition: color 0.2s ease;
+}
+
+.site-nav-link:hover {
+    color: #1F2328;
+    background: none;
+    box-shadow: none;
+}
+
+.site-nav-link:focus-visible {
+    outline: 2px solid #D4552A;
+    outline-offset: 2px;
+}
+
+.site-nav-icon {
+    display: grid;
+    place-items: center;
+    width: 42px;
+    height: 42px;
+    flex-shrink: 0;
+    border-radius: 50%;
+    transition: background-color 0.2s ease;
+}
+
+.site-nav-icon svg {
+    width: 22px;
+    height: 22px;
+    fill: none;
+    stroke: currentColor;
+    stroke-width: 1.8;
+    stroke-linecap: round;
+    stroke-linejoin: round;
+}
+
+.site-nav-link[aria-current="page"],
+.site-nav-link[aria-current="page"]:hover {
+    color: #D4552A;
+}
+
+.site-nav-link[aria-current="page"] .site-nav-icon {
+    background-color: #FCDCCD;
+}
+
+/* ---------- Page shell for pages that use this nav ----------
+   Same background as the Calendar, and the shared top bar
+   (page-header.css) runs edge to edge and stays put while the page
+   scrolls, like the Calendar's. */
+html:has(> body.has-site-nav),
+body.has-site-nav {
+    background-color: #F7F4F1;
+}
+
+body.has-site-nav {
+    padding: 0;
+}
+
+.has-site-nav > .page-header {
+    position: sticky;
+    top: 0;
+    z-index: 40;
+    /* pantry.css centers the body's children; the bar spans the full width */
+    align-self: stretch;
+}
+
+/* ---------- Phones and tablets: bottom bar ----------
+   Like the Calendar, the page scrolls in the space above the bar, so the
+   scrollbar stops where the bar starts. The body is the scroll area, sized
+   to end at the top of the 110px bar (plus the iPhone home-indicator gap). */
+@media (max-width: 1023px) {
+    /* Without this the browser hands the body's overflow to the window,
+       and the whole window scrolls again */
+    html:has(> body.has-site-nav) {
+        overflow: hidden;
+    }
+
+    body.has-site-nav {
+        height: calc(100vh - 110px);
+        height: calc(100dvh - 110px - env(safe-area-inset-bottom));
+        min-height: 0;
+        overflow-y: auto;
+    }
+
+    /* pantry.css makes the body a flex column; without this its children
+       would shrink to fit the shorter body instead of scrolling */
+    body.has-site-nav > * {
+        flex-shrink: 0;
+    }
+}
+
+/* ---------- Computers: left sidebar ---------- */
+@media (min-width: 1024px) {
+    .site-nav {
+        top: 0;
+        right: auto;
+        width: 240px;
+        display: flex;
+        flex-direction: column;
+        gap: 28px;
+        padding: 30px 16px;
+        overflow-y: auto;
+    }
+
+    .site-nav-brand {
+        display: block;
+        margin: 0;
+        padding: 0 12px;
+        font-size: 1.4rem;
+        font-weight: 700;
+        line-height: normal;
+        letter-spacing: -0.01em;
+    }
+
+    .site-nav-brand span {
+        color: #D4552A;
+    }
+
+    .site-nav ul {
+        display: flex;
+        flex-direction: column;
+        gap: 4px;
+        max-width: none;
+        margin: 0;
+        padding: 0;
+        background: none;
+        border-radius: 0;
+        box-shadow: none;
+    }
+
+    .site-nav .site-nav-home {
+        order: -1;
+    }
+
+    .site-nav-link {
+        flex-direction: row;
+        gap: 12px;
+        padding: 4px 8px;
+        font-size: 0.97rem;
+        font-weight: 500;
+        transition: color 0.2s ease, background-color 0.2s ease;
+    }
+
+    .site-nav-link:hover {
+        background-color: rgba(31, 35, 40, 0.05);
+    }
+
+    .site-nav-link[aria-current="page"],
+    .site-nav-link[aria-current="page"]:hover {
+        background-color: #FFFFFF;
+        box-shadow: 0 4px 14px rgba(31, 35, 40, 0.06);
+    }
+
+    /* Make room for the sidebar */
+    body.has-site-nav {
+        margin-left: 240px;
+    }
+}

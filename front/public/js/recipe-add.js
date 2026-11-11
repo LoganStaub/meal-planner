@@ -1,4 +1,4 @@
-// "Add your own recipe" on the Search page.
+// "Add your own recipe" on the Recipes page.
 //
 // 1. The user types or pastes a recipe.
 // 2. POST …/recipe-assistant/check: the AI checks it is a real recipe and
@@ -216,7 +216,7 @@
             textarea.value = "";
             updateCounter();
             doneText.replaceChildren(el("strong", "", body.recipe_title), " is now in the recipe list.");
-            doneLink.href = `/search?q=${encodeURIComponent(body.recipe_title)}`;
+            doneLink.href = `/recipes?q=${encodeURIComponent(body.recipe_title)}`;
             show("done");
             doneLink.focus();
             return;

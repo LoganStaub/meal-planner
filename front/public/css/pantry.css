@@ -26,7 +26,8 @@ body {
   padding: clamp(8px, 1.3vw, 18px) clamp(10px, 1.4vw, 20px) 10px;
 }
 .laptop {
-  width: min(100%, 1600px);
+  width: min(100% - 2 * clamp(10px, 1.4vw, 20px), 1600px);
+  margin-block: clamp(8px, 1.3vw, 18px);
   min-height: 0;
   margin-inline: auto;
   background: var(--canvas);
@@ -35,58 +36,14 @@ body {
   overflow: hidden;
   box-shadow: 0 30px 60px -20px rgba(40, 60, 100, .25);
 }
-/* Header */
-header {
-  background: var(--surface);
-  border-bottom: 1px solid var(--border);
-  min-height: 68px;
-  padding: 10px clamp(16px, 2vw, 28px);
-  display: grid;
-  grid-template-columns: minmax(140px, 1fr) auto minmax(36px, 1fr);
-  align-items: center;
-  gap: 12px;
-}
-.brand { display: flex; align-items: center; gap: 12px; font-weight: 700; font-size: 17px; }
-.brand-logo {
-  width: 36px; height: 36px; border-radius: 50%;
-  background: var(--accent); display: grid; place-items: center;
-}
-.brand-logo svg { width: 18px; height: 18px; stroke: #fff; }
-nav {
-  display: flex; gap: 4px; padding: 4px;
-  border: 1px solid var(--border); border-radius: 999px; background: var(--surface);
-}
-nav a {
-  display: flex; align-items: center; gap: 8px;
-  padding: 8px 14px; border-radius: 999px;
-  font-size: 14px; font-weight: 500; color: var(--muted);
-  text-decoration: none;
-  transition: color .2s ease, background-color .2s ease, box-shadow .2s ease;
-}
-nav a svg { width: 16px; height: 16px; }
-nav a.active { background: var(--accent-soft); color: var(--accent); }
-nav a:hover {
-  color: var(--text);
-  background-color: rgba(31, 35, 40, .06);
-  box-shadow: 0 4px 14px rgba(31, 35, 40, .10);
-}
-nav a.active:hover {
-  color: var(--accent);
-  background-color: var(--accent-soft);
-}
-.avatar {
-  justify-self: end; width: 36px; height: 36px; border-radius: 50%;
-  border: 1px solid var(--accent); background: var(--accent);
-  display: grid; place-items: center; color: #fff; cursor: pointer; padding: 0;
-  font: inherit; font-size: 12px; font-weight: 700;
-}
+
 svg { fill: none; stroke: currentColor; stroke-width: 1.8; stroke-linecap: round; stroke-linejoin: round; }
 
 /* Pantry banner */
 .pantry-hero {
   position: relative;
   isolation: isolate;
-  height: clamp(150px, 17vw, 220px);
+  height: clamp(110px, 12vw, 160px);
   overflow: hidden;
   background: #cbb394;
 }
@@ -247,18 +204,13 @@ button.chip:active { transform: scale(.96); }
 .caption { margin-top: 12px; font-size: 13px; color: var(--muted); text-align: center; }
 
 @media (max-width: 960px) {
-  header { grid-template-columns: 1fr auto; }
-  nav { display: none; }
   main { grid-template-columns: minmax(0, 1fr); padding: clamp(14px, 2vw, 22px); }
 }
 
 @media (max-width: 620px) {
-  body { padding: 8px; }
-  .laptop { border-radius: 18px; }
-  header { min-height: 64px; padding: 10px 16px; }
-  .brand { gap: 8px; font-size: 15px; }
-  .brand-logo { width: 32px; height: 32px; }
-  .pantry-hero { height: 150px; }
+
+  .laptop { width: calc(100% - 16px); margin-block: 8px; border-radius: 18px; }
+  .pantry-hero { height: 110px; }
   .pantry-hero-title { left: 16px; bottom: 16px; }
   .pantry-hero h1 { font-size: 28px; }
   main { gap: 20px; padding: 18px 12px 22px; }

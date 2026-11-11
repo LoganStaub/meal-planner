@@ -1,4 +1,4 @@
-// Only loaded when the page came from a calendar + button (/search?date=…&slot=…).
+// Recipes page. Only loaded when the page came from a calendar + button (/recipes?date=…&slot=…).
 // "Add to dinner" etc. saves the recipe to that day and meal, then goes back
 // to the calendar on that day.
 
@@ -16,7 +16,7 @@ const duplicateText = document.getElementById("confirm-duplicate-text");
 const duplicateCancel = document.getElementById("confirm-duplicate-cancel");
 const duplicateAdd = document.getElementById("confirm-duplicate-add");
 
-// Each option's value is the /search link for that meal
+// Each option's value is the /recipes link for that meal
 slotSelect.addEventListener("change", () => {
     if (slotSelect.value) location.href = slotSelect.value;
 });
