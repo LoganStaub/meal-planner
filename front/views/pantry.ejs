@@ -51,17 +51,17 @@
         <input id="search" type="search" placeholder="Search your pantry" aria-label="Search your pantry" autocomplete="off">
       </label>
 
+      <%# Narrows the list to one amount; works together with the search (js/pantry.js) %>
+      <div class="amount-filter" id="amount-filter" role="group" aria-label="Filter your pantry by amount">
+        <button class="amount-filter-btn" type="button" data-amount="" aria-pressed="true">All</button>
+        <button class="amount-filter-btn" type="button" data-amount="0" aria-pressed="false">Plenty left</button>
+        <button class="amount-filter-btn" type="button" data-amount="1" aria-pressed="false">Running low</button>
+        <button class="amount-filter-btn" type="button" data-amount="2" aria-pressed="false">None</button>
+      </div>
+
       <form class="add-row" id="add-form">
         <label class="field add-name-field">
           <input id="add-input" type="text" placeholder="Add an item" aria-label="Ingredient name" autocomplete="off" required>
-        </label>
-        <label class="inventory-field">
-          <span>Starting inventory</span>
-          <select id="add-status" aria-label="Starting inventory">
-            <option value="0">Plenty left</option>
-            <option value="1">Running low</option>
-            <option value="2">None</option>
-          </select>
         </label>
         <button class="btn" type="submit">
           <svg viewBox="0 0 24 24"><path d="M12 5v14M5 12h14"/></svg>Add
@@ -71,8 +71,35 @@
     </section>
 
     <section>
-      <div class="list-head">
-        <h2>Your ingredients</h2>
+      <%# One Edit button for the whole list. In edit mode (js/pantry.js) every
+          amount can be changed and ingredients can be ticked to change or
+          delete several at once; nothing is saved until Save changes. %>
+      <div class="edit-tools" id="edit-tools">
+        <div class="list-head">
+          <h2>Your ingredients</h2>
+          <div class="list-actions">
+            <button class="item-action" type="button" id="edit-start">Edit</button>
+            <button class="item-action" type="button" id="edit-cancel" hidden>Cancel</button>
+            <button class="item-action save-action" type="button" id="edit-save" hidden>Save changes</button>
+          </div>
+        </div>
+
+        <div class="edit-bar" id="edit-bar" hidden>
+          <label class="select-all">
+            <input type="checkbox" id="select-all">
+            <span id="selected-count">Select all</span>
+          </label>
+          <div class="edit-bar-actions" role="group" aria-label="Change the selected ingredients">
+            <span class="edit-bar-label">Set to</span>
+            <button class="chip plenty" type="button" data-set-status="0">Plenty left</button>
+            <button class="chip low" type="button" data-set-status="1">Running low</button>
+            <button class="chip none" type="button" data-set-status="2">None</button>
+            <button class="item-action delete-action" type="button" id="delete-selected">
+              <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 7h16M10 11v6M14 11v6M6 7l1 13h10l1-13M9 7V4h6v3"/></svg>Delete
+            </button>
+          </div>
+        </div>
+        <p class="edit-status" id="edit-status" role="status" aria-live="polite" hidden></p>
       </div>
 
       <div class="grid" id="grid">
@@ -89,6 +116,22 @@
     </section>
   </main>
 </div>
+
+<%# "Are you sure?" before Save changes deletes anything (js/pantry.js fills it in) %>
+<dialog class="confirm-remove" id="confirm-remove" aria-labelledby="confirm-remove-title" aria-describedby="confirm-remove-text">
+  <form method="dialog">
+    <div class="confirm-remove-icon" aria-hidden="true">
+      <svg viewBox="0 0 24 24"><path d="M4 7h16M10 11v6M14 11v6M6 7l1 13h10l1-13M9 7V4h6v3"/></svg>
+    </div>
+    <h2 id="confirm-remove-title"></h2>
+    <p id="confirm-remove-text"></p>
+    <ul class="confirm-remove-list" id="confirm-remove-list"></ul>
+    <div class="confirm-remove-actions">
+      <button class="item-action" type="submit" value="cancel" autofocus>Keep them</button>
+      <button class="item-action save-action" type="submit" value="delete" id="confirm-remove-yes"></button>
+    </div>
+  </form>
+</dialog>
 
 <%- include('partials/site-nav') %>
 <%- include('partials/profile-menu') %>

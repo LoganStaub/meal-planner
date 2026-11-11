@@ -1,13 +1,32 @@
+// The Pantry page.
+//
+// Adding an ingredient saves straight away. Changing and deleting go through
+// edit mode: one Edit button for the whole list, then
+//   - click an ingredient's amount to change it, or
+//   - tick ingredients and use "Set to" or Delete to change several at once,
+// and nothing is saved until "Save changes". Cancel puts everything back.
+
 const pantryGrid = document.getElementById('grid')
 const pantrySearch = document.getElementById('search')
+const amountFilterBar = document.getElementById('amount-filter')
+const amountFilterButtons = [...amountFilterBar.querySelectorAll('.amount-filter-btn')]
 const addForm = document.getElementById('add-form')
 const addInput = document.getElementById('add-input')
-const addStatus = document.getElementById('add-status')
 const addButton = addForm.querySelector('button[type="submit"]')
 const itemTemplate = document.getElementById('item-template')
 const pantryTotal = document.getElementById('total')
 const emptyMessage = document.getElementById('empty')
 const feedback = document.getElementById('feedback')
+
+const editStart = document.getElementById('edit-start')
+const editCancel = document.getElementById('edit-cancel')
+const editSave = document.getElementById('edit-save')
+const editBar = document.getElementById('edit-bar')
+const editStatus = document.getElementById('edit-status')
+const selectAll = document.getElementById('select-all')
+const selectedCount = document.getElementById('selected-count')
+const deleteSelected = document.getElementById('delete-selected')
+const bulkButtons = [...editBar.querySelectorAll('[data-set-status]'), deleteSelected]
 
 // These IDs match pantry_amount_id in the database: 0 = plenty, 1 = low, 2 = none.
 const pantryStatuses = [
@@ -15,6 +34,11 @@ const pantryStatuses = [
   { id: 1, key: 'low', label: 'Running low' },
   { id: 2, key: 'none', label: 'None' },
 ]
+
+// True between pressing Edit and Save/Cancel
+let editing = false
+// True while Save changes is talking to the server
+let saving = false
 
 async function requestApi(path, options = {}) {
   const response = await fetch(path, options)
@@ -27,10 +51,18 @@ async function requestApi(path, options = {}) {
   return payload
 }
 
+// Message under the Add form
 function showFeedback(message, isError = false) {
   feedback.textContent = message
   feedback.classList.toggle('is-error', isError)
   feedback.hidden = false
+}
+
+// Message above the list (what will change, or how saving went)
+function showEditStatus(message, isError = false) {
+  editStatus.textContent = message
+  editStatus.classList.toggle('is-error', isError)
+  editStatus.hidden = !message
 }
 
 function findStatus(statusId) {
@@ -44,17 +76,119 @@ function titleCaseIngredient(name) {
   )
 }
 
-function renderStatus(itemElement, statusId) {
-  const status = findStatus(statusId)
-  const button = itemElement.querySelector('button[data-status]')
-  const name = itemElement.querySelector('.item-name').textContent
+function plural(count, word) {
+  return `${count} ${word}${count === 1 ? '' : 's'}`
+}
 
-  itemElement.dataset.pantryAmountId = String(status.id)
-  button.className = `chip ${status.key}`
-  button.dataset.status = status.key
-  button.textContent = status.label
-  button.setAttribute('aria-label', `Inventory status for ${name}: ${status.label}`)
-  syncRowControls(itemElement)
+function allItems() {
+  return [...pantryGrid.querySelectorAll('.item')]
+}
+
+// ---------- What each row holds while editing ----------
+// data-pantry-amount-id is the saved amount. A change waits in
+// data-pending-amount-id, and a row to delete gets the class is-removing.
+
+function shownAmount(item) {
+  return Number(item.dataset.pendingAmountId ?? item.dataset.pantryAmountId)
+}
+
+function isRemoving(item) {
+  return item.classList.contains('is-removing')
+}
+
+function isChanged(item) {
+  return !isRemoving(item) && shownAmount(item) !== Number(item.dataset.pantryAmountId)
+}
+
+function isSelected(item) {
+  return item.querySelector('.item-select').checked
+}
+
+function setPendingAmount(item, statusId) {
+  if (Number(statusId) === Number(item.dataset.pantryAmountId)) delete item.dataset.pendingAmountId
+  else item.dataset.pendingAmountId = String(statusId)
+}
+
+// Draws one row to match its state and the page's mode
+function renderItem(item) {
+  const status = findStatus(shownAmount(item))
+  const name = item.querySelector('.item-name').textContent
+  const chip = item.querySelector('button[data-status]')
+  const checkbox = item.querySelector('.item-select')
+  const removing = isRemoving(item)
+
+  chip.className = `chip ${status.key}`
+  chip.dataset.status = status.key
+  chip.textContent = status.label
+  chip.hidden = removing
+  chip.disabled = !editing || saving
+  chip.title = editing ? 'Click to change the amount' : ''
+  chip.setAttribute('aria-label', editing ? `${name}: ${status.label}. Click to change.` : `${name}: ${status.label}`)
+
+  checkbox.hidden = !editing
+  checkbox.disabled = saving
+  item.querySelector('.item-removing').hidden = !removing
+  item.querySelector('.item-undo').disabled = saving
+  item.classList.toggle('is-changed', isChanged(item))
+  item.classList.toggle('is-selected', editing && checkbox.checked)
+}
+
+// Draws the Edit / Cancel / Save buttons, the tools bar and the summary line
+function renderEditTools() {
+  const items = allItems()
+  const visible = items.filter((item) => !item.hidden)
+  const selected = items.filter(isSelected)
+  const changed = items.filter(isChanged).length
+  const removing = items.filter(isRemoving).length
+
+  editStart.hidden = editing
+  editStart.disabled = items.length === 0
+  editCancel.hidden = !editing
+  editSave.hidden = !editing
+  editBar.hidden = !editing
+  editCancel.disabled = saving
+  editSave.disabled = saving || (changed === 0 && removing === 0)
+  editSave.textContent = saving ? 'Saving…' : 'Save changes'
+  if (!editing) return
+
+  const visibleSelected = visible.filter(isSelected).length
+  selectAll.disabled = saving || visible.length === 0
+  selectAll.checked = visible.length > 0 && visibleSelected === visible.length
+  selectAll.indeterminate = visibleSelected > 0 && visibleSelected < visible.length
+  selectedCount.textContent = selected.length > 0 ? `${selected.length} selected` : 'Select all'
+  bulkButtons.forEach((button) => { button.disabled = saving || selected.length === 0 })
+
+  if (!saving && !editStatus.classList.contains('is-error')) {
+    const parts = []
+    if (changed > 0) parts.push(`${plural(changed, 'amount')} changed`)
+    if (removing > 0) parts.push(`${plural(removing, 'ingredient')} to remove`)
+    showEditStatus(parts.length > 0
+      ? `${parts.join(' · ')}. Press Save changes to keep ${changed + removing === 1 ? 'it' : 'them'}.`
+      : 'Click an amount to change it, or tick ingredients to change or delete several at once.')
+  }
+}
+
+function renderAll() {
+  allItems().forEach(renderItem)
+  renderEditTools()
+}
+
+// Forgets every unsaved change and tick
+function clearPending() {
+  allItems().forEach((item) => {
+    delete item.dataset.pendingAmountId
+    item.classList.remove('is-removing')
+    item.querySelector('.item-select').checked = false
+  })
+}
+
+function setEditing(value) {
+  editing = value
+  document.body.classList.toggle('pantry-editing', editing)
+  clearPending()
+  editStatus.classList.remove('is-error')
+  if (!editing) showEditStatus('')
+  renderAll()
 }
 
 function createPantryItem(record) {
@@ -64,13 +198,10 @@ function createPantryItem(record) {
 
   item.dataset.ingredientId = String(record.ingredient_id)
   item.dataset.name = name.toLocaleLowerCase()
+  item.dataset.pantryAmountId = String(record.pantry_amount_id ?? 0)
   item.querySelector('.item-name').textContent = displayName
-  item.querySelector('.item-name-input').value = name
-  item.querySelector('.item-name-input').setAttribute('aria-label', `Edit ${displayName}`)
-  item.querySelector('[data-action="edit"]').setAttribute('aria-label', `Edit ${displayName}`)
-  item.querySelector('.del').setAttribute('aria-label', `Remove ${displayName}`)
-  renderStatus(item, record.pantry_amount_id ?? 0)
-  syncRowControls(item)
+  item.querySelector('.item-select').setAttribute('aria-label', `Select ${displayName}`)
+  renderItem(item)
 
   return item
 }
@@ -80,7 +211,7 @@ function updateTotal() {
 }
 
 function sortPantry() {
-  const items = [...pantryGrid.querySelectorAll('.item')]
+  const items = allItems()
   items.sort((left, right) => {
     const amountDifference = Number(left.dataset.pantryAmountId) - Number(right.dataset.pantryAmountId)
     if (amountDifference !== 0) return amountDifference
@@ -92,89 +223,54 @@ function sortPantry() {
   items.forEach((item) => pantryGrid.append(item))
 }
 
+// The amount chosen under the search box: 0, 1 or 2, or null for All
+let amountFilter = null
+
+function setAmountFilter(value) {
+  amountFilter = value
+  amountFilterButtons.forEach((button) => {
+    const buttonValue = button.dataset.amount === '' ? null : Number(button.dataset.amount)
+    button.setAttribute('aria-pressed', String(buttonValue === amountFilter))
+  })
+  filterPantry()
+}
+
+// Shows the ingredients that match both the search text and the amount filter.
+// The filter goes by the saved amount, so a row doesn't vanish mid-edit.
 function filterPantry() {
   const query = pantrySearch.value.trim().toLocaleLowerCase()
-  const items = [...pantryGrid.querySelectorAll('.item')]
+  const items = allItems()
   let visibleCount = 0
 
   items.forEach((item) => {
     const matches = item.dataset.name.includes(query)
+      && (amountFilter === null || Number(item.dataset.pantryAmountId) === amountFilter)
     item.hidden = !matches
     if (matches) visibleCount += 1
   })
 
   emptyMessage.hidden = visibleCount > 0
-  emptyMessage.textContent = items.length === 0
-    ? 'Your pantry is empty. Add an ingredient to get started.'
-    : `No ingredients match “${pantrySearch.value.trim()}”.`
-}
-
-function setRowBusy(item, busy) {
-  item.setAttribute('aria-busy', String(busy))
-  syncRowControls(item)
-}
-
-function syncRowControls(item) {
-  const busy = item.getAttribute('aria-busy') === 'true'
-  const editing = item.classList.contains('is-editing')
-
-  item.querySelectorAll('button, input').forEach((control) => {
-    const editOnly = control.matches('button[data-status], .item-name-input, .del')
-    control.disabled = busy || (editOnly && !editing)
-  })
-
-  const statusButton = item.querySelector('button[data-status]')
-  const name = item.querySelector('.item-name').textContent
-  const statusLabel = findStatus(item.dataset.pantryAmountId).label
-  statusButton.title = editing ? 'Status change is not saved until you click Save' : 'Click Edit to change inventory status'
-  statusButton.setAttribute(
-    'aria-label',
-    editing
-      ? `Inventory status for ${name}: ${statusLabel}. Click to change; save to apply.`
-      : `Inventory status for ${name}: ${statusLabel}. Click Edit to change it.`
-  )
-}
-
-function setEditing(item, editing) {
-  const name = item.querySelector('.item-name').textContent
-  const input = item.querySelector('.item-name-input')
-
-  if (editing) {
-    item.dataset.originalName = name
-    item.dataset.originalPantryAmountId = item.dataset.pantryAmountId
-  }
-
-  item.classList.toggle('is-editing', editing)
-  input.hidden = !editing
-  item.querySelector('[data-action="edit"]').hidden = editing
-  item.querySelector('[data-action="save"]').hidden = !editing
-  item.querySelector('[data-action="cancel"]').hidden = !editing
-  item.querySelector('.del').hidden = !editing
-
-  if (editing) {
-    input.value = name
-    input.setAttribute('aria-label', `Edit ${name}`)
+  if (items.length === 0) {
+    emptyMessage.textContent = 'Your pantry is empty. Add an ingredient to get started.'
   } else {
-    input.value = name
-    delete item.dataset.originalName
-    delete item.dataset.originalPantryAmountId
+    const amount = amountFilter === null ? '' : ` marked “${findStatus(amountFilter).label}”`
+    const search = query ? ` match “${pantrySearch.value.trim()}”` : ''
+    emptyMessage.textContent = search
+      ? `No ingredients${amount}${search}.`
+      : `No ingredients are${amount}.`
   }
-
-  syncRowControls(item)
-
-  if (editing) {
-    input.focus()
-    input.select()
-  }
-}
-
-function cancelEditing(item) {
-  renderStatus(item, item.dataset.originalPantryAmountId)
-  setEditing(item, false)
-  showFeedback('Changes discarded.')
+  renderEditTools()
 }
 
 pantrySearch.addEventListener('input', filterPantry)
+
+amountFilterBar.addEventListener('click', (event) => {
+  const button = event.target.closest('.amount-filter-btn')
+  if (!button) return
+  setAmountFilter(button.dataset.amount === '' ? null : Number(button.dataset.amount))
+})
+
+// ---------- Adding (saves straight away) ----------
 
 addForm.addEventListener('submit', async (event) => {
   event.preventDefault()
@@ -191,17 +287,18 @@ addForm.addEventListener('submit', async (event) => {
     const record = await requestApi('/api/me/pantry', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({
-        ingredient_name: ingredientName,
-        pantry_amount_id: Number(addStatus.value),
-      }),
+      // A new ingredient always starts as "Plenty left" (0); change it with Edit
+      body: JSON.stringify({ ingredient_name: ingredientName, pantry_amount_id: 0 }),
     })
 
     pantryGrid.append(createPantryItem(record))
-    sortPantry()
+    // Rows stay where they are during an edit, so nothing jumps under the pointer
+    if (!editing) sortPantry()
     addInput.value = ''
     updateTotal()
-    filterPantry()
+    // New ingredients are "Plenty left": don't let another filter hide it
+    if (amountFilter !== null && amountFilter !== Number(record.pantry_amount_id ?? 0)) setAmountFilter(null)
+    else filterPantry()
     showFeedback(`${titleCaseIngredient(record.ingredient_name)} added to your pantry.`)
     addInput.focus()
   } catch (error) {
@@ -211,117 +308,167 @@ addForm.addEventListener('submit', async (event) => {
   }
 })
 
-pantryGrid.addEventListener('click', async (event) => {
+// ---------- Edit mode ----------
+
+editStart.addEventListener('click', () => setEditing(true))
+
+editCancel.addEventListener('click', () => {
+  const hadChanges = allItems().some((item) => isChanged(item) || isRemoving(item))
+  setEditing(false)
+  if (hadChanges) showEditStatus('Changes discarded.')
+  editStart.focus()
+})
+
+pantryGrid.addEventListener('click', (event) => {
+  if (!editing || saving) return
   const item = event.target.closest('.item')
   if (!item) return
 
-  const actionButton = event.target.closest('button[data-action]')
-  if (actionButton?.dataset.action === 'edit') {
-    setEditing(item, true)
+  // Undo a delete that hasn't been saved yet
+  if (event.target.closest('.item-undo')) {
+    item.classList.remove('is-removing')
+    editStatus.classList.remove('is-error')
+    renderAll()
     return
   }
 
-  if (actionButton?.dataset.action === 'cancel') {
-    cancelEditing(item)
+  // Clicking the amount steps to the next one: plenty -> low -> none -> plenty
+  if (event.target.closest('button[data-status]')) {
+    const currentIndex = pantryStatuses.findIndex((status) => status.id === shownAmount(item))
+    setPendingAmount(item, pantryStatuses[(currentIndex + 1) % pantryStatuses.length].id)
+    editStatus.classList.remove('is-error')
+    renderAll()
     return
   }
 
-  if (actionButton?.dataset.action === 'save') {
-    const input = item.querySelector('.item-name-input')
-    const ingredientName = input.value.trim()
-    const originalName = item.dataset.originalName
-    const pantryAmountId = Number(item.dataset.pantryAmountId)
-    const originalPantryAmountId = Number(item.dataset.originalPantryAmountId)
+  // Anywhere else on the row ticks it, like clicking its tick box
+  if (!event.target.closest('.item-select') && !isRemoving(item)) {
+    const checkbox = item.querySelector('.item-select')
+    checkbox.checked = !checkbox.checked
+    renderAll()
+  }
+})
 
-    if (!ingredientName) {
-      showFeedback('Ingredient name cannot be empty.', true)
-      input.focus()
-      return
-    }
+pantryGrid.addEventListener('change', (event) => {
+  if (event.target.closest('.item-select')) renderAll()
+})
 
-    if (ingredientName === originalName && pantryAmountId === originalPantryAmountId) {
-      setEditing(item, false)
-      showFeedback('No changes to save.')
-      return
-    }
+// Ticks or unticks every ingredient on show (a search narrows which those are)
+selectAll.addEventListener('change', () => {
+  allItems().forEach((item) => {
+    if (!item.hidden && !isRemoving(item)) item.querySelector('.item-select').checked = selectAll.checked
+  })
+  renderAll()
+})
 
-    setRowBusy(item, true)
-    try {
-      const record = await requestApi(`/api/me/pantry/${encodeURIComponent(item.dataset.ingredientId)}`, {
+// "Set to": the same amount for every ticked ingredient
+editBar.addEventListener('click', (event) => {
+  const button = event.target.closest('[data-set-status]')
+  if (!button) return
+  allItems().filter(isSelected).forEach((item) => {
+    if (!isRemoving(item)) setPendingAmount(item, button.dataset.setStatus)
+  })
+  editStatus.classList.remove('is-error')
+  renderAll()
+})
+
+// Delete: marks the ticked ingredients; they go when the changes are saved
+deleteSelected.addEventListener('click', () => {
+  allItems().filter(isSelected).forEach((item) => {
+    item.classList.add('is-removing')
+    item.querySelector('.item-select').checked = false
+  })
+  editStatus.classList.remove('is-error')
+  renderAll()
+})
+
+// "Are you sure?" popup: says how many ingredients will be deleted and names
+// them. Resolves true only if the user presses the Delete button.
+const confirmDialog = document.getElementById('confirm-remove')
+
+function confirmRemoval(removals) {
+  const count = removals.length
+  const names = removals.map((item) => item.querySelector('.item-name').textContent)
+  const keepButton = confirmDialog.querySelector('button[value="cancel"]')
+
+  document.getElementById('confirm-remove-title').textContent = `Delete ${plural(count, 'ingredient')}?`
+  document.getElementById('confirm-remove-text').textContent = count === 1
+    ? 'You are about to delete 1 ingredient from your pantry. This cannot be undone.'
+    : `You are about to delete ${count} ingredients from your pantry. This cannot be undone.`
+  document.getElementById('confirm-remove-list').replaceChildren(...names.map((name) => {
+    const row = document.createElement('li')
+    row.textContent = name
+    return row
+  }))
+  keepButton.textContent = count === 1 ? 'Keep it' : 'Keep them'
+  document.getElementById('confirm-remove-yes').textContent = `Delete ${plural(count, 'ingredient')}`
+
+  confirmDialog.returnValue = ''
+  confirmDialog.showModal()
+  return new Promise((resolve) => {
+    confirmDialog.addEventListener('close', () => resolve(confirmDialog.returnValue === 'delete'), { once: true })
+  })
+}
+
+// Clicking the dimmed background is the same as "Keep them"
+confirmDialog.addEventListener('click', (event) => {
+  if (event.target === confirmDialog) confirmDialog.close('cancel')
+})
+
+editSave.addEventListener('click', async () => {
+  const items = allItems()
+  const changes = items.filter(isChanged)
+  const removals = items.filter(isRemoving)
+  if (changes.length === 0 && removals.length === 0) return
+  // Deleting can't be undone once saved, so ask first
+  if (removals.length > 0 && !(await confirmRemoval(removals))) return
+
+  saving = true
+  showEditStatus('')
+  renderAll()
+
+  const itemUrl = (item) => `/api/me/pantry/${encodeURIComponent(item.dataset.ingredientId)}`
+  // Each ingredient is saved on its own, so one failure doesn't undo the rest
+  const results = await Promise.allSettled([
+    ...changes.map(async (item) => {
+      const record = await requestApi(itemUrl(item), {
         method: 'PATCH',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ ingredient_name: ingredientName, pantry_amount_id: pantryAmountId }),
+        body: JSON.stringify({ pantry_amount_id: shownAmount(item) }),
       })
-      const savedName = record.ingredient_name
-      const displayName = titleCaseIngredient(savedName)
-      // Renaming can point the item at a different ingredient, so its id can change
-      item.dataset.ingredientId = String(record.ingredient_id)
-      item.querySelector('.item-name').textContent = displayName
-      item.dataset.name = savedName.toLocaleLowerCase()
-      item.querySelector('.del').setAttribute('aria-label', `Remove ${displayName}`)
-      item.querySelector('[data-action="edit"]').setAttribute('aria-label', `Edit ${displayName}`)
-      renderStatus(item, record.pantry_amount_id ?? item.dataset.pantryAmountId)
-      setEditing(item, false)
-      sortPantry()
-      filterPantry()
-      showFeedback(`${displayName} saved.`)
-    } catch (error) {
-      showFeedback(error.message || 'Could not save that ingredient name.', true)
-    } finally {
-      setRowBusy(item, false)
-    }
-    return
-  }
+      item.dataset.pantryAmountId = String(record.pantry_amount_id)
+      delete item.dataset.pendingAmountId
+    }),
+    ...removals.map(async (item) => {
+      await requestApi(itemUrl(item), { method: 'DELETE' })
+      item.remove()
+    }),
+  ])
 
-  const statusButton = event.target.closest('button[data-status]')
-  if (statusButton) {
-    if (!item.classList.contains('is-editing')) return
+  saving = false
+  updateTotal()
+  const failed = results.filter((result) => result.status === 'rejected').length
 
-    const currentStatusId = Number(item.dataset.pantryAmountId)
-    const currentIndex = pantryStatuses.findIndex((status) => status.id === currentStatusId)
-    const nextStatus = pantryStatuses[(currentIndex + 1) % pantryStatuses.length]
-    renderStatus(item, nextStatus.id)
-    showFeedback(`${item.querySelector('.item-name').textContent}: ${nextStatus.label} selected. Click Save to apply.`)
-    return
-  }
-
-  const deleteButton = event.target.closest('button.del')
-  if (!deleteButton) return
-  if (!item.classList.contains('is-editing')) return
-
-  const ingredientName = item.querySelector('.item-name').textContent
-  if (!window.confirm(`Remove ${ingredientName} from your pantry?`)) return
-
-  setRowBusy(item, true)
-  try {
-    await requestApi(`/api/me/pantry/${encodeURIComponent(item.dataset.ingredientId)}`, {
-      method: 'DELETE',
-    })
-    item.remove()
-    updateTotal()
+  if (failed > 0) {
+    // Stay in edit mode: what didn't save is still marked, ready to try again
+    editStatus.classList.add('is-error')
+    showEditStatus(`${plural(failed, 'change')} couldn't be saved. Press Save changes to try again.`, true)
     filterPantry()
-    showFeedback(`${ingredientName} removed from your pantry.`)
-  } catch (error) {
-    showFeedback(error.message || 'Could not remove that ingredient.', true)
-  } finally {
-    if (item.isConnected) setRowBusy(item, false)
+    renderAll()
+    return
   }
+
+  setEditing(false)
+  sortPantry()
+  filterPantry()
+  const parts = []
+  if (changes.length > 0) parts.push(`${plural(changes.length, 'amount')} updated`)
+  if (removals.length > 0) parts.push(`${plural(removals.length, 'ingredient')} removed`)
+  showEditStatus(`Saved: ${parts.join(', ')}.`)
+  editStart.focus()
 })
 
-pantryGrid.addEventListener('keydown', (event) => {
-  const input = event.target.closest('.item-name-input')
-  if (!input) return
-
-  const item = input.closest('.item')
-  if (event.key === 'Enter') {
-    event.preventDefault()
-    item.querySelector('[data-action="save"]').click()
-  } else if (event.key === 'Escape') {
-    cancelEditing(item)
-  }
-})
-
-pantryGrid.querySelectorAll('.item').forEach(syncRowControls)
 sortPantry()
 updateTotal()
 filterPantry()
+renderAll()
