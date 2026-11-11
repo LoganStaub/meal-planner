@@ -2,6 +2,7 @@
   // Locals the route can pass when re-rendering after a failed POST:
   //   error  - message shown above the form
   //   values - { email } so the user doesn't retype it
+  //   next   - page to open after logging in (e.g. /calendar)
   const values = locals.values || {}
 %>
 <!DOCTYPE html>
@@ -29,15 +30,11 @@
                 <p class="auth-error" role="alert"><%= error %></p>
             <% } %>
 
-            <% if (locals.unverifiedEmail) { %>
-                <%# Shown when the password was right but the email isn't verified yet %>
-                <form class="auth-resend" method="post" action="/resend-verification">
-                    <input type="hidden" name="email" value="<%= unverifiedEmail %>">
-                    <button class="auth-btn auth-btn-secondary" type="submit">Resend verification email</button>
-                </form>
-            <% } %>
 
             <form class="auth-form" method="post" action="/login" novalidate>
+                <% if (locals.next) { %>
+                    <input type="hidden" name="next" value="<%= next %>">
+                <% } %>
                 <div class="field">
                     <label for="email">Email</label>
                     <input id="email" name="email" type="email" autocomplete="email" required
@@ -45,7 +42,10 @@
                 </div>
 
                 <div class="field">
-                    <label for="password">Password</label>
+                    <div class="field-label-row">
+                        <label for="password">Password</label>
+                        <a class="field-link" href="/forgot-password">Forgot password?</a>
+                    </div>
                     <input id="password" name="password" type="password" autocomplete="current-password" required>
                 </div>
 

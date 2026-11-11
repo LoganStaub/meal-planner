@@ -3,9 +3,10 @@
 import 'dotenv/config'
 import express from 'express'
 import session from 'express-session'
-import connectPgSimple from 'connect-pg-simple'
+import { RedisStore } from 'connect-redis'
 import { fileURLToPath } from 'node:url'
 import { pool } from './db.js'
+import { redis, SESSION_PREFIX } from './redis.js'
 import ingredientsRouter from './routes/ingredients.js'
 import recipesRouter from './routes/recipes.js'
 import lookupsRouter from './routes/lookups.js'
@@ -21,7 +22,7 @@ if (!process.env.SESSION_SECRET) {
 // The per-user tables come from db/migrations. Fail with a clear message
 // instead of confusing errors on every page if they haven't been run yet.
 const { rows: missingTables } = await pool.query(
-  `select name from unnest(array['session', 'user_pantry', 'user_liked_recipes', 'pending_signups']) as name
+  `select name from unnest(array['user_pantry', 'user_liked_recipes']) as name
    where to_regclass('public.' || name) is null`
 )
 if (missingTables.length > 0) {
@@ -34,7 +35,6 @@ const app = express()
 const PORT = process.env.PORT || 3000
 const viewsPath = fileURLToPath(new URL('../../front/views', import.meta.url))
 const publicPath = fileURLToPath(new URL('../../front/public', import.meta.url))
-const PgSession = connectPgSimple(session)
 
 const statuses = {
   plenty: { id: 0, label: 'Plenty left' },
@@ -54,12 +54,13 @@ app.use(express.json())
 app.use(express.urlencoded({ extended: false }))
 
 // Logged-in state. The browser only holds a random session id in the "sid"
-// cookie; req.session.userId is kept in the session table in Postgres, so
-// people stay logged in when the server restarts.
+// cookie; req.session.userId is kept in Redis (under sess:<sid>), so people
+// stay logged in when the server restarts. Redis deletes each session by
+// itself when the cookie's maxAge runs out.
 app.use(
   session({
     name: 'sid',
-    store: new PgSession({ pool, tableName: 'session' }),
+    store: new RedisStore({ client: redis, prefix: SESSION_PREFIX }),
     secret: process.env.SESSION_SECRET,
     resave: false,
     saveUninitialized: false,
@@ -86,7 +87,7 @@ app.use((req, res, next) => {
 // req.user / currentUser for everything below
 app.use(loadUser)
 
-// /login, /signup and /logout
+// /login, /signup, /logout, /forgot-password, /reset-password, /account/password
 app.use(authRouter)
 
 // Visiting the site: logged-in users go home, everyone else logs in first.

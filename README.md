@@ -50,6 +50,7 @@ Names are **snake_case** (`recipe_title`, not `RecipeTitle`).
 | Frontend | EJS page templates in `front/views/`, with CSS and JavaScript in `front/public/` |
 | API      | Node.js + Express 5 (`back/src/server.js`), called from the browser with `fetch`       |
 | Database | PostgreSQL, accessed from the server with `node-postgres` (`pg`)                  |
+| Sessions | Redis, through `express-session` + `connect-redis` (`back/src/redis.js`)            |
 | Tooling  | Node.js 18.18+ (`npm start`, `npm run db:init`, `npm run check`)                  |
 
 **Why this fits our team:** we started on Supabase's hosted backend, but lost access when the free trial ended. Running our own Express server on top of plain Postgres means nothing depends on a paid service: everyone runs the whole stack locally, the schema is SQL in this repo, and the same code can later point at any hosted Postgres (Render, Neon, Railway, etc.) by changing `DATABASE_URL`.
@@ -59,28 +60,34 @@ Names are **snake_case** (`recipe_title`, not `RecipeTitle`).
 ## How to Get It Running
 
 1. **Install Node.js 18.18+ and PostgreSQL.** On Windows, the [PostgreSQL installer](https://www.postgresql.org/download/windows/) includes pgAdmin and `psql`. Remember the password you set for the `postgres` user.
-2. **Create an empty database** named `meal_planner` (in pgAdmin: right-click Databases → Create, or run `createdb -U postgres meal_planner`).
-3. **Clone and install:**
+2. **Get Redis running.** Logins are stored in Redis, and the server won't start without it. Pick one:
+   - **Mac:** `brew install redis && brew services start redis`. It then starts by itself whenever your Mac boots. Check it with `redis-cli ping` (should print `PONG`).
+   - **Windows, or if you'd rather not install anything:** create a free database on [Upstash](https://upstash.com) and copy its Redis URL (starts with `rediss://`). You'll paste it into `.env` in step 5. Teammates can share one.
+3. **Create an empty database** named `meal_planner` (in pgAdmin: right-click Databases → Create, or run `createdb -U postgres meal_planner`).
+4. **Clone and install:**
    ```bash
    git clone https://github.com/LoganStaub/meal-planner.git
    cd meal-planner
    cd back
    npm install
    ```
-4. **Configure:** from `back/`, copy `.env.example` to `.env` and set `DATABASE_URL`, e.g. `postgres://postgres:YOUR_PASSWORD@localhost:5432/meal_planner`.
-5. **Create the tables.** This drops and recreates them, so only run it on a fresh or throwaway database:
+5. **Configure:** from `back/`, copy `.env.example` to `.env` and set:
+   - `DATABASE_URL`, e.g. `postgres://postgres:YOUR_PASSWORD@localhost:5432/meal_planner`
+   - `SESSION_SECRET`, a long random string (the command to make one is in `.env.example`)
+   - `REDIS_URL`, only if you're using a hosted Redis. Leave it empty for a local Redis (`redis://localhost:6379`).
+6. **Create the tables.** This drops and recreates them, so only run it on a fresh or throwaway database:
    ```bash
    npm run db:init
    ```
-6. **Check the connection.** You should see a table of recipe classes (Breakfast, Lunch, …):
+7. **Check the connection.** You should see a table of recipe classes (Breakfast, Lunch, …):
    ```bash
    npm run check
    ```
-7. **Start the server** and open <http://localhost:3000>:
+8. **Start the server** and open <http://localhost:3000>:
    ```bash
    npm start        # or: npm run dev  (restarts when you save a file)
    ```
-8. **Optional: add test data** for the calendar (user 1 and a few meals this week):
+9. **Optional: add test data** for the calendar (user 1 and a few meals this week):
    ```bash
    npm run db:seed
    ```
@@ -152,9 +159,46 @@ const { rows } = await pool.query('select * from recipes where recipe_id = $1', 
 
 Then mount the router in `back/src/server.js`.
 
-### Who can read/write what
+### Accounts and passwords
 
-There is **no login yet**, so every route is open to anyone who can reach the server. Supabase Auth and Row Level Security used to restrict `users` and `calendar` to the signed-in user. That now has to be built in Express (for example sessions or JWTs, plus `bcrypt` for `users.password_hash`) before the calendar and profile features go live.
+After pulling, run `npm install` and `npm run db:migrate` from `back/`, and make sure Redis is running (step 2 of [How to Get It Running](#how-to-get-it-running)).
+
+Everything is in `back/src/routes/auth.js`. Every page and `/api` route needs a logged-in user, and only admins can change the shared recipe and ingredient lists.
+
+| Page | What it does |
+| ---- | ------------ |
+| `/signup` | Creates the account and logs the user in right away. No email verification. |
+| `/login` | Opening a page while logged out (e.g. `/calendar`) goes to `/login?next=/calendar` and back there after logging in. |
+| `/forgot-password` | Emails a one-time reset link that expires in 1 hour. Always shows the same message, so it doesn't reveal which emails have accounts. |
+| `/reset-password?token=` | Sets the new password, logs out every device, then logs this one in. |
+| `/account/password` | Change password while logged in (linked from the profile menu). Logs out other devices. |
+
+Passwords must be 8 to 72 characters (bcrypt ignores anything past 72 bytes). Without `SMTP_HOST` in `.env`, emails (password resets) are printed in the server console instead of sent.
+
+#### What's stored in Redis
+
+Logins and password reset links are temporary, so they live in Redis instead of Postgres, and Redis deletes them by itself when they expire. The browser only holds a random session id in the `sid` cookie.
+
+| Redis key | What it holds |
+| --------- | ------------- |
+| `sess:<sid>` | One login, e.g. `{"userId": 42, "cookie": {...}}`. Redis deletes it by itself after 7 days. |
+| `user_sessions:<userId>` | The session ids of all of that user's logins, so a password change or reset can log out their other devices. |
+| `reset:<tokenHash>` | A password reset link (a hash of its token, never the token itself) and the user it's for. Expires after 1 hour, and is deleted as soon as it's used. |
+| `reset_user:<userId>` | That user's current reset link, so only the newest one works and changing the password cancels it. |
+| `reset_cooldown:<userId>` | Exists for 60 seconds after a reset email is sent, so a user can get at most one per minute. |
+
+Logging out deletes the session. Restarting the server doesn't log anyone out, but clearing Redis logs everyone out and cancels any reset links. To see the keys locally: `redis-cli --scan --pattern 'sess:*'` (or `'reset*'`).
+
+The old `session`, `pending_signups` and `password_reset_tokens` tables in Postgres aren't used anymore. Migration `005_drop_unused_auth_tables.sql` removes them.
+
+Rate limits are per IP address and kept in memory, so they reset when the server restarts:
+
+| Form | Limit |
+| ---- | ----- |
+| Login | 10 wrong passwords per 15 minutes |
+| Change password | 10 wrong passwords per 15 minutes |
+| Forgot password | 5 requests per 15 minutes |
+| Signup | 10 per hour |
 
 ### Changing the database
 

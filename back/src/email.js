@@ -2,7 +2,7 @@
 //
 // Set SMTP_HOST, SMTP_PORT, SMTP_USER, SMTP_PASS and MAIL_FROM in .env to
 // send real emails (see .env.example). Without SMTP_HOST, emails are printed
-// in the server console instead, so signup can be tested locally.
+// in the server console instead, so password reset can be tested locally.
 import nodemailer from 'nodemailer'
 
 const smtpConfigured = Boolean(process.env.SMTP_HOST)
@@ -35,27 +35,30 @@ function escapeHtml(value) {
   )
 }
 
-export function sendVerificationEmail({ to, firstName, link }) {
+export function sendPasswordResetEmail({ to, firstName, link }) {
   const name = firstName ? ` ${firstName}` : ''
   return sendEmail({
     to,
-    subject: 'Verify your Meal Planner account',
+    subject: 'Reset your Meal Planner password',
     text:
-      `Hi${name},\n\nConfirm your email to finish creating your Meal Planner account:\n\n${link}\n\n` +
-      `This link works once and expires in 24 hours. If you didn't sign up, you can ignore this email.`,
+      `Hi${name},\n\nSomeone asked to reset the password for your Meal Planner account. ` +
+      `To choose a new password, open this link:\n\n${link}\n\n` +
+      `This link works once and expires in 1 hour. If you didn't ask for this, you can ignore this email; ` +
+      `your password won't change.`,
     html: `
       <div style="font-family: system-ui, sans-serif; color: #1F2328; max-width: 480px;">
         <p>Hi${escapeHtml(name)},</p>
-        <p>Confirm your email to finish creating your Meal Planner account.</p>
+        <p>Someone asked to reset the password for your Meal Planner account.</p>
         <p>
           <a href="${escapeHtml(link)}"
              style="display: inline-block; padding: 12px 20px; background: #D4552A; color: #fff;
                     border-radius: 999px; text-decoration: none; font-weight: 600;">
-            Verify my email
+            Choose a new password
           </a>
         </p>
         <p style="color: #5B6068; font-size: 14px;">
-          This link works once and expires in 24 hours. If you didn't sign up, you can ignore this email.
+          This link works once and expires in 1 hour. If you didn't ask for this, you can ignore this
+          email; your password won't change.
         </p>
       </div>`,
   })

@@ -179,6 +179,28 @@ body {
     background-color: var(--accent-soft);
 }
 
-.auth-resend {
-    margin: 0 0 20px;
+/* ---------- Password reset / change ---------- */
+.field-label-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: baseline;
+    gap: 12px;
+}
+
+.field-link {
+    font-size: 0.85rem;
+    font-weight: 600;
+    color: var(--accent);
+    text-decoration: none;
+}
+
+.field-link:hover {
+    text-decoration: underline;
+}
+
+/* A link that looks like .auth-btn */
+.auth-btn-link {
+    display: block;
+    text-align: center;
+    text-decoration: none;
 }
