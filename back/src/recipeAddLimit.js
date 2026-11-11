@@ -1,82 +1,84 @@
-// Daily limits for "Add your own recipe" (see routes/recipeAssistant.js).
+// Daily limits for "Add a recipe with AI" (see routes/recipeAssistant.js).
 //
-// The recipes table has no "added by" or "added at" columns, so the database
-// can't tell us how many recipes a user added today. Until it can, the counts
-// live in a small JSON file (back/data/recipe-add-log.json, git-ignored):
-//   { "2026-11-10": { "1": { "added": 2, "checks": 5 } } }
-// Only today's entry is kept. To move this into the database later, replace
-// the functions below; nothing else needs to change.
-import fs from 'node:fs'
-import { fileURLToPath } from 'node:url'
+//   * Saved recipes: 3 per user per day, counted from recipes.created_by and
+//     recipes.created_at (db/migrations/007_recipe_created_by.sql).
+//   * AI checks: 5 per user per day, counted in Redis, because a check that
+//     is rejected or never saved leaves nothing in the database. Each check
+//     costs money, so the cap protects the Anthropic bill.
+//
+// A "day" runs midnight to midnight in APP_TIME_ZONE (see .env.example).
+// Render's servers run on UTC, so without it the limit would reset in the
+// late afternoon or evening in US time zones.
+import { redis } from './redis.js'
 
-// A user can save this many of their own recipes per day.
 export const MAX_RECIPES_PER_DAY = 3
-// Each AI check costs money, so checks are capped too (rejected or abandoned
-// recipes still count as a check).
-export const MAX_CHECKS_PER_DAY = 10
+export const MAX_CHECKS_PER_DAY = 5
 
-const logPath = fileURLToPath(new URL('../data/recipe-add-log.json', import.meta.url))
+export const APP_TIME_ZONE = process.env.APP_TIME_ZONE || 'America/Denver'
 
-// The server's local day, e.g. '2026-11-10'. Limits reset at local midnight.
+// Today's date in APP_TIME_ZONE, e.g. '2026-11-10'
 function today() {
-  const now = new Date()
-  const pad = (n) => String(n).padStart(2, '0')
-  return `${now.getFullYear()}-${pad(now.getMonth() + 1)}-${pad(now.getDate())}`
+  // en-CA formats dates as YYYY-MM-DD
+  return new Intl.DateTimeFormat('en-CA', { timeZone: APP_TIME_ZONE }).format(new Date())
 }
 
-function readToday() {
-  try {
-    const log = JSON.parse(fs.readFileSync(logPath, 'utf8'))
-    const entry = log[today()]
-    return entry && typeof entry === 'object' ? entry : {}
-  } catch {
-    // No file yet, or it's unreadable: start the day fresh
-    return {}
-  }
+// Check counts are kept for two days, then Redis deletes them by itself
+const checksKey = (userId) => `recipe_checks:${today()}:${userId}`
+const CHECKS_TTL_SECONDS = 2 * 24 * 60 * 60
+
+// How many recipes this user added since midnight in APP_TIME_ZONE.
+// `db` is the pool or a client inside a transaction.
+export async function countAddedToday(db, userId) {
+  const { rows } = await db.query(
+    `select count(*)::int as added
+     from recipes
+     where created_by = $1
+       and created_at >= (date_trunc('day', now() at time zone $2) at time zone $2)`,
+    [userId, APP_TIME_ZONE]
+  )
+  return rows[0].added
 }
 
-function writeToday(users) {
-  fs.mkdirSync(fileURLToPath(new URL('../data/', import.meta.url)), { recursive: true })
-  fs.writeFileSync(logPath, JSON.stringify({ [today()]: users }, null, 2))
-}
-
-function change(userId, field, amount) {
-  const users = readToday()
-  const counts = { added: 0, checks: 0, ...users[userId] }
-  counts[field] = Math.max(0, counts[field] + amount)
-  users[userId] = counts
-  writeToday(users)
+async function countChecksToday(userId) {
+  return Number(await redis.get(checksKey(userId))) || 0
 }
 
 // { added, checks, remaining, checksRemaining } for today
-export function getUsage(userId) {
-  const counts = { added: 0, checks: 0, ...readToday()[userId] }
+export async function getUsage(db, userId) {
+  const [added, checks] = await Promise.all([countAddedToday(db, userId), countChecksToday(userId)])
   return {
-    added: counts.added,
-    checks: counts.checks,
-    remaining: Math.max(0, MAX_RECIPES_PER_DAY - counts.added),
-    checksRemaining: Math.max(0, MAX_CHECKS_PER_DAY - counts.checks),
+    added,
+    checks,
+    remaining: Math.max(0, MAX_RECIPES_PER_DAY - added),
+    checksRemaining: Math.max(0, MAX_CHECKS_PER_DAY - checks),
   }
 }
 
-export function recordCheck(userId) {
-  change(userId, 'checks', 1)
-}
-
-// Gives a check back when the assistant couldn't be reached at all
-export function refundCheck(userId) {
-  change(userId, 'checks', -1)
-}
-
-// Takes one of today's recipe slots. Returns false if none are left.
-// Call this BEFORE saving and give the slot back with releaseSlot() if the
-// save fails, so two saves at the same moment can't both slip under the limit.
-export function reserveSlot(userId) {
-  if (getUsage(userId).remaining === 0) return false
-  change(userId, 'added', 1)
+// Uses up one of today's checks. Returns false, without using one, if none
+// are left. INCR is atomic, so two checks at the same moment can't both
+// squeeze past the cap.
+export async function claimCheck(userId) {
+  const key = checksKey(userId)
+  const count = await redis.incr(key)
+  if (count === 1) await redis.expire(key, CHECKS_TTL_SECONDS)
+  if (count > MAX_CHECKS_PER_DAY) {
+    await redis.decr(key)
+    return false
+  }
   return true
 }
 
-export function releaseSlot(userId) {
-  change(userId, 'added', -1)
+// Gives a check back when the assistant couldn't be reached at all
+export async function refundCheck(userId) {
+  const count = await redis.decr(checksKey(userId))
+  if (count < 0) await redis.set(checksKey(userId), '0', { expiration: { type: 'EX', value: CHECKS_TTL_SECONDS } })
+}
+
+// Call inside a transaction, before inserting the recipe. Waits for any other
+// save by the same user to finish (the lock is released at commit/rollback),
+// then reports whether they still have a recipe left today. This stops two
+// saves at the same moment from both slipping under the limit.
+export async function lockAndCheckDailyLimit(db, userId) {
+  await db.query("select pg_advisory_xact_lock(hashtext('recipe_add_limit'), $1)", [userId])
+  return (await countAddedToday(db, userId)) < MAX_RECIPES_PER_DAY
 }

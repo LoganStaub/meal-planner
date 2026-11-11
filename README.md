@@ -154,11 +154,11 @@ All routes return JSON and need a logged-in user (they answer `401` otherwise). 
 | PATCH  | `/api/me/pantry/:ingredientId` | Change `ingredient_name` and/or `pantry_amount_id` |
 | DELETE | `/api/me/pantry/:ingredientId` | Remove one (`204`) |
 
-**"Add your own recipe" assistant** (Search page). Any logged-in user can add recipes this way, because Claude checks each one first; limits are per user per day (`back/src/recipeAddLimit.js`). Needs `ANTHROPIC_API_KEY` in `.env`.
+**"Add a recipe with AI" assistant** (Search page). Any logged-in user can add recipes to the shared list this way, because Claude checks each one first. Each user can save 3 recipes and run 5 AI checks per day, resetting at midnight in `APP_TIME_ZONE` (`back/src/recipeAddLimit.js`). Saved recipes record who added them in `recipes.created_by` and `created_at` (migration 007). Checked drafts wait in Redis for 30 minutes. Needs `ANTHROPIC_API_KEY` in `.env`.
 
 | Method | Route | What it does |
 | ------ | ----- | ------------ |
-| GET    | `/api/recipe-assistant/status` | How many recipes you can still add today |
+| GET    | `/api/recipe-assistant/status` | How many recipes and checks you have left today |
 | POST   | `/api/recipe-assistant/check` | `{ text }`: Claude turns it into a recipe draft, or explains why not |
 | POST   | `/api/recipe-assistant/drafts/:draftId/save` | Save a checked draft to `recipes` (`201`) |
 
