@@ -91,7 +91,8 @@
         const obj_progress = document.getElementById("progress");
         const obj_like = document.getElementById("like-btn");
         const obj_dialog = document.getElementById("recipe-details");
-        const obj_profile = document.getElementById("profile");
+        // The shared profile menu (partials/profile-menu.ejs, js/profile-menu.js)
+        const obj_profileMenu = document.getElementById("profile-menu");
         const obj_prevArrow = document.getElementById("prev-arrow");
         const obj_nextArrow = document.getElementById("next-arrow");
 
@@ -152,7 +153,7 @@
         // moves to the next (+1) or previous (-1) meal with a slide animation.
         // nFromX is where the card was dragged to, so the animation continues from there.
         async function GoTo(nDirection, nFromX = 0) {
-            if (bAnimating || obj_dialog.open || obj_profile.open || obj_plan.open) return;
+            if (bAnimating || obj_dialog.open || !obj_profileMenu.hidden || obj_plan.open) return;
 
             // from the "all caught up" screen, going back shows the last meal again
             if (!obj_done.hidden) {
@@ -508,20 +509,5 @@
             if (event.target === obj_dialog) obj_dialog.close();
         });
 
-
-        // ---------- Profile and settings popup ----------
-
-        document.getElementById("open-profile").addEventListener("click", function() {
-            obj_profile.showModal();
-        });
-
-        document.getElementById("close-profile").addEventListener("click", function() {
-            obj_profile.close();
-        });
-
-        // clicking the dimmed background closes the popup
-        obj_profile.addEventListener("click", function(event) {
-            if (event.target === obj_profile) obj_profile.close();
-        });
 
         RenderMeal();

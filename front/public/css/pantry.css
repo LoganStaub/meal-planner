@@ -5,8 +5,9 @@
   --border: #d9dee6;
   --text: #1f2430;
   --muted: #5d6675;
-  --accent: #d9531e;
-  --accent-soft: #fddccf;
+  --accent: #D4552A;
+  --accent-hover: #BC4720;
+  --accent-soft: #FCDCCD;
   --green: #3d6b3f;
   --green-soft: #d8ecd6;
   --slate: #5d6675;
@@ -25,16 +26,9 @@ body {
   justify-content: flex-start;
   padding: clamp(8px, 1.3vw, 18px) clamp(10px, 1.4vw, 20px) 10px;
 }
+/* The pantry card. Size, corners and shadow: page-card.css */
 .laptop {
-  width: min(100% - 2 * clamp(10px, 1.4vw, 20px), 1600px);
-  margin-block: clamp(8px, 1.3vw, 18px);
-  min-height: 0;
-  margin-inline: auto;
   background: var(--canvas);
-  border: 1px solid var(--border);
-  border-radius: clamp(16px, 2vw, 28px);
-  overflow: hidden;
-  box-shadow: 0 30px 60px -20px rgba(40, 60, 100, .25);
 }
 
 svg { fill: none; stroke: currentColor; stroke-width: 1.8; stroke-linecap: round; stroke-linejoin: round; }
@@ -153,9 +147,9 @@ button.chip:active { transform: scale(.96); }
   height: 48px; padding: 0 22px; border: 0; border-radius: 16px;
   background: var(--accent); color: #fff;
   font: inherit; font-size: 15px; font-weight: 600; cursor: pointer;
-  transition: filter .15s;
+  transition: background-color .2s ease;
 }
-.btn:hover { filter: brightness(1.08); }
+.btn:hover { background: var(--accent-hover); }
 .btn svg { width: 16px; height: 16px; stroke-width: 2.4; }
 .btn:disabled, button.chip:disabled, .del:disabled { cursor: wait; opacity: .6; }
 .feedback { min-height: 1.25rem; margin-top: 10px; color: var(--green); font-size: 13px; }
@@ -209,7 +203,6 @@ button.chip:active { transform: scale(.96); }
 
 @media (max-width: 620px) {
 
-  .laptop { width: calc(100% - 16px); margin-block: 8px; border-radius: 18px; }
   .pantry-hero { height: 110px; }
   .pantry-hero-title { left: 16px; bottom: 16px; }
   .pantry-hero h1 { font-size: 28px; }

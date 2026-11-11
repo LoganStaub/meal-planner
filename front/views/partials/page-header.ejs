@@ -5,15 +5,13 @@
 
     include('partials/page-header', { pageTitle: 'Pantry' })
 
-  The circle opens the shared profile menu (partials/profile-menu.ejs +
-  js/profile-menu.js). The home page has its own profile popup, so it
-  passes profileButtonId: 'open-profile' and profileOpensDialog: true.
+  The circle opens the shared profile menu, so a page using this also needs
+  partials/profile-menu.ejs, js/profile-menu.js and css/profile-menu.css.
 %>
 <header class="page-header">
   <h1 class="page-header-title"><%= pageTitle %></h1>
-  <button type="button" class="account-button<%= locals.profileButtonId ? '' : ' profile-trigger' %>"
-    id="<%= locals.profileButtonId || 'profile-trigger' %>"
-    <% if (locals.profileOpensDialog) { %>aria-haspopup="dialog"<% } else { %>aria-controls="profile-menu" aria-expanded="false"<% } %>
+  <button type="button" class="account-button profile-trigger" id="profile-trigger"
+    aria-controls="profile-menu" aria-expanded="false"
     aria-label="<%= currentUser.display_name %>: profile and settings"
     title="<%= currentUser.display_name %>"><%= currentUser.initials %></button>
 </header>
