@@ -15,7 +15,7 @@ The full schema is `back/db/schema.sql` plus the files in `back/db/migrations/` 
 ```text
 front/
   views/                EJS page templates
-    partials/           Shared pieces (header, profile menu, phone bottom nav, pantry item)
+    partials/           Shared pieces (top bar, sidebar/bottom nav, profile menu, pantry item)
   public/               Browser assets served by Express
     css/                Stylesheets
     images/             Images served to the frontend
@@ -130,7 +130,18 @@ Names are **snake_case** (`recipe_title`, not `RecipeTitle`).
 
 The home page's recipe details popup is the `<dialog id="recipe-details">` in `front/views/index.ejs`. Its content goes in `#details-body`, and the open recipe's ID is in `dialog.dataset.recipeId`.
 
-**Navigation:** every page has the same navigation: a bottom bar on phones and tablets, and a left sidebar from 1024px wide (Home first, then Calendar, Shopping, Recipes, Pantry). Home, Calendar and Recipes build it into their own layout (`.nav` in `index.css` / `calendar.css`). Shopping, Pantry and Liked include `front/views/partials/site-nav.ejs` with `front/public/css/site-nav.css`, which copies that look exactly; those pages need `class="has-site-nav"` on `<body>`. Pass `active: 'pantry'` (etc.) when rendering to highlight the current page. Every page also shares one top bar, `front/views/partials/page-header.ejs` with `front/public/css/page-header.css`: the page title in the middle and the account circle in the top-right corner, which opens the profile menu. Include it with `include('partials/page-header', { pageTitle: 'Pantry' })`. It's the only place the bar and the circle are styled, so don't restyle them in a page's own CSS. The app is called **Meal Planner** everywhere, and tab titles follow `Page | Meal Planner`.
+### Shared layout
+
+Every page is built from the same pieces, so they look and behave the same. Each piece is styled in exactly one stylesheet; don't restyle it in a page's own CSS.
+
+| Piece | Files | Notes |
+| ----- | ----- | ----- |
+| Navigation | `.nav` in `index.css` / `calendar.css` (Home, Calendar, Recipes); `front/views/partials/site-nav.ejs` + `front/public/css/site-nav.css` (Shopping, Pantry, Liked) | Bottom bar on phones and tablets, left sidebar from 1024px wide (Home first, then Calendar, Shopping, Recipes, Pantry). `site-nav` copies the other look exactly; pages using it need `class="has-site-nav"` on `<body>`. Pass `active: 'pantry'` (etc.) when rendering to highlight the current page |
+| Top bar | `front/views/partials/page-header.ejs` + `front/public/css/page-header.css` | Page title in the middle, account circle in the top-right corner (72px tall). `include('partials/page-header', { pageTitle: 'Pantry' })` |
+| Profile menu | `front/views/partials/profile-menu.ejs` + `front/public/js/profile-menu.js` + `front/public/css/profile-menu.css` | Opened by the account circle, on every page including Home. A page with the top bar needs all three |
+| Page card | `front/public/css/page-card.css` | The big rounded card around Home's photo, the Pantry and Liked recipes (`class="page-card"`). Edge to edge on phones; on computers 16px from the top bar and edges with rounded corners. Load it after the page's own stylesheet |
+
+**Name and colors:** the app is called **Meal Planner** everywhere, and tab titles follow `Page | Meal Planner`. The accent color is `#D4552A`, with `#BC4720` for hover and `#FCDCCD` as its light tint. Use those three for anything orange.
 
 ## Verifying the Vertical Slice
 

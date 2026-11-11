@@ -4,8 +4,8 @@
   --liked-ink: #1f2430;
   --liked-muted: #5d6675;
   --liked-line: #d9dee6;
-  --liked-accent: #d9531e;
-  --liked-accent-soft: #fddccf;
+  --liked-accent: #D4552A;
+  --liked-accent-soft: #FCDCCD;
   --liked-green: #3d6b3f;
   --liked-placeholder: #e6ebf1;
 }
@@ -22,14 +22,9 @@ body {
   -webkit-font-smoothing: antialiased;
 }
 
+/* The liked recipes card. Size, corners and shadow: page-card.css */
 .app {
-  width: min(100% - 2 * clamp(10px, 1.4vw, 20px), 1600px);
-  margin: clamp(8px, 1.3vw, 18px) auto;
-  overflow: hidden;
   background: #f7f4f1;
-  border: 1px solid var(--liked-line);
-  border-radius: 22px;
-  box-shadow: 0 30px 60px -20px rgba(40, 60, 100, .25);
 }
 
 
@@ -96,7 +91,6 @@ body {
 
 @media (max-width: 520px) {
   body { padding: 0; }
-  .app { width: 100%; margin: 0; border: 0; border-radius: 0; }
   .hero { min-height: 190px; padding-bottom: 64px; }
   .saved-pill { right: 18px; bottom: 16px; }
   .grid { grid-template-columns: minmax(0, 1fr); gap: 12px; padding: 14px; }

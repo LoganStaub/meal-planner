@@ -5,7 +5,7 @@
   --ink: #1f2328;
   --muted: #6b6f80;
   --line: #e2e0ea;
-  --accent: #d4552a;
+  --accent: #D4552A;
   --green-bg: #dcebd7;
   --green-ink: #3e7b3d;
 
@@ -183,7 +183,7 @@
 }
 
 .shopping .shop-add-btn:hover {
-  background: #bc4720;
+  background: #BC4720;
 }
 
 .shopping .shop-add input:focus-visible,
