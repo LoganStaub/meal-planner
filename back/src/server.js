@@ -13,6 +13,7 @@ import lookupsRouter from './routes/lookups.js'
 import calendarRouter from './routes/calendar.js'
 import likesRouter from './routes/likes.js'
 import pantryRouter from './routes/pantry.js'
+import shoppingRouter, { getShoppingItems} from './routes/shopping.js'
 import authRouter, { loadUser, requireLogin } from './routes/auth.js'
 import searchRouter from './routes/search.js'
 import recipeAssistantRouter from './routes/recipeAssistant.js'
@@ -109,6 +110,7 @@ app.use('/api', lookupsRouter)
 app.use('/api/me/calendar', calendarRouter)
 app.use('/api/me/likes', likesRouter)
 app.use('/api/me/pantry', pantryRouter)
+app.use('/api/me/shopping', shoppingRouter)
 
 // Recipes page's "Add your own recipe" assistant: /api/recipe-assistant/...
 app.use('/api', recipeAssistantRouter)
@@ -183,17 +185,10 @@ app.get(['/pantry', '/pantry.html', '/pantry.ejs'], async (req, res) => {
   })
 })
 
-// Shopping list page. Sample data for now; later this will come from the
-// calendar, recipe_ingredients and pantry tables.
-app.get(['/shopping', '/shopping.html'], (req, res) => {
-  const items = [
-    { name: 'Broccolini', forRecipe: 'Sesame miso salmon', amount: '250g' },
-    { name: 'Salmon fillets', forRecipe: 'Sesame miso salmon', amount: '2' },
-    { name: 'Zucchini', forRecipe: 'Creamy lemon orzo', amount: '2' },
-    { name: 'Fresh parsley', forRecipe: 'Shakshuka + orzo', amount: '1 bunch' },
-    { name: 'Lemons', forRecipe: 'Flatbread + orzo', amount: '3' },
-  ]
-
+// Shopping list page: ingredients for this week's calendar that the pantry
+// doesn't cover. See routes/shopping.js.
+app.get(['/shopping', '/shopping.html'], async (req, res) => {
+  const items = await getShoppingItems(req.user.user_id)
   res.render('shopping', { items, active: 'shopping' })
 })
 

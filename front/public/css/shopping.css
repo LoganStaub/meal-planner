@@ -215,3 +215,13 @@
     margin-top: 0;
   }
 }
+
+.shop-note {
+  margin: 16px 0;
+  font-size: 15px;
+  text-align: center;
+  color: #6b6b6b;
+}
+.shop-note.error {
+  color: #b3261e;
+}

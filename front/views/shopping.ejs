@@ -24,7 +24,7 @@
     <div class="shop-layout">
       <div class="shop-side">
         <section class="shop-week">
-          <p class="shop-week-label">This week</p>
+          <p class="shop-week-label">Next 7 days</p>
           <p class="shop-week-count" id="items-left-text"><%= items.length %> <%= items.length === 1 ? 'item' : 'items' %> left</p>
         </section>
 
@@ -38,9 +38,10 @@
 
       <section class="shop-list-section" aria-labelledby="shop-list-heading">
         <h2 class="shop-list-heading" id="shop-list-heading">Your list</h2>
+        <%# Ticking an item saves it to your pantry (see routes/shopping.js) %>
         <ul class="shop-list" id="item-list">
           <% items.forEach(item => { %>
-            <li class="shop-item">
+            <li class="shop-item" data-ingredient-id="<%= item.ingredient_id %>">
               <input type="checkbox" class="shop-check" aria-label="Got <%= item.name %>">
               <div class="shop-text">
                 <span class="shop-name"><%= item.name %></span>
@@ -48,10 +49,14 @@
                   <span class="shop-for">For <%= item.forRecipe %></span>
                 <% } %>
               </div>
-              <span class="shop-amount"><%= item.amount %></span>
+              <% if (item.amount) { %>
+                <span class="shop-amount"><%= item.amount %></span>
+              <% } %>
             </li>
           <% }) %>
         </ul>
+        <p class="shop-note" id="empty-note"<%= items.length ? ' hidden' : '' %>>Nothing to buy. Plan some meals on the calendar and your list will fill in.</p>
+        <p class="shop-note error" id="error-note" hidden></p>
       </section>
     </div>
   </main>
