@@ -13,9 +13,11 @@ import lookupsRouter from './routes/lookups.js'
 import calendarRouter from './routes/calendar.js'
 import likesRouter from './routes/likes.js'
 import pantryRouter from './routes/pantry.js'
+import accountRouter from './routes/account.js'
 import authRouter, { loadUser, requireLogin } from './routes/auth.js'
 import searchRouter from './routes/search.js'
 import recipeAssistantRouter from './routes/recipeAssistant.js'
+import { AVATAR_COLORS, DEFAULT_AVATAR_COLOR } from './avatarColors.js'
 
 if (!process.env.SESSION_SECRET) {
   throw new Error('Missing SESSION_SECRET. Add it to .env (see .env.example).')
@@ -33,7 +35,18 @@ if (missingTables.length > 0) {
   )
 }
 
+// users.avatar_color comes from migration 008
+const { rows: avatarColumn } = await pool.query(
+  `select 1 from information_schema.columns where table_name = 'users' and column_name = 'avatar_color'`
+)
+if (avatarColumn.length === 0) {
+  throw new Error('Missing column users.avatar_color. Run: npm run db:migrate')
+}
+
 const app = express()
+// The profile icon colors for the Account settings popup (partials/account-dialog.ejs)
+app.locals.avatarColors = AVATAR_COLORS
+app.locals.defaultAvatarColor = DEFAULT_AVATAR_COLOR
 const PORT = process.env.PORT || 3000
 const viewsPath = fileURLToPath(new URL('../../front/views', import.meta.url))
 const publicPath = fileURLToPath(new URL('../../front/public', import.meta.url))
@@ -109,6 +122,7 @@ app.use('/api', lookupsRouter)
 app.use('/api/me/calendar', calendarRouter)
 app.use('/api/me/likes', likesRouter)
 app.use('/api/me/pantry', pantryRouter)
+app.use('/api/me/account', accountRouter)
 
 // Search page's "Add your own recipe" assistant: /api/recipe-assistant/...
 app.use('/api', recipeAssistantRouter)

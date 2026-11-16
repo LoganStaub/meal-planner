@@ -13,6 +13,7 @@
     "db:init": "node scripts/initDb.js && node scripts/migrate.js",
     "db:seed": "node scripts/seedCalendar.js",
     "db:seed-recipes": "node scripts/seedRecipes.js",
+    "db:seed-classics": "node scripts/seedClassicRecipes.js",
     "db:migrate": "node scripts/migrate.js",
     "user:role": "node scripts/setRole.js"
   },

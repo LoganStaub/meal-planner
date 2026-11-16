@@ -28,7 +28,7 @@
     <% }) %>
   </nav>
 
-  <button class="avatar profile-trigger" id="profile-trigger" type="button" aria-label="<%= currentUser.display_name %>: profile and settings" aria-controls="profile-menu" aria-expanded="false" title="<%= currentUser.display_name %>">
+  <button class="avatar profile-trigger" id="profile-trigger" type="button" aria-label="<%= currentUser.display_name %>: profile and settings" aria-controls="profile-menu" aria-expanded="false" title="<%= currentUser.display_name %>" style="<%= currentUser.avatar_style %>">
     <%= currentUser.initials %>
   </button>
 </header>

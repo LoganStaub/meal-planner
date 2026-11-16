@@ -10,6 +10,7 @@
     <link href="https://fonts.googleapis.com/css2?family=DM+Sans:opsz,wght@9..40,400;9..40,500;9..40,600;9..40,700&display=swap" rel="stylesheet">
 
     <link rel="stylesheet" href="/css/index.css">
+    <link rel="stylesheet" href="/css/account-settings.css">
     <script src="/js/no-back-cache.js"></script>
 </head>
 
@@ -27,9 +28,6 @@
         <symbol id="icon-list" viewBox="0 0 24 24"><path d="m3 17 2 2 4-4"/><path d="m3 7 2 2 4-4"/><path d="M13 6h8"/><path d="M13 12h8"/><path d="M13 18h8"/></symbol>
         <symbol id="icon-home" viewBox="0 0 24 24"><path d="M15 21v-8a1 1 0 0 0-1-1h-4a1 1 0 0 0-1 1v8"/><path d="M3 10a2 2 0 0 1 .709-1.528l7-5.999a2 2 0 0 1 2.582 0l7 5.999A2 2 0 0 1 21 10v9a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/></symbol>
         <symbol id="icon-search" viewBox="0 0 24 24"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.3-4.3"/></symbol>
-        <symbol id="icon-leaf" viewBox="0 0 24 24"><path d="M11 20A7 7 0 0 1 9.8 6.1C15.5 5 17 4.48 19 2c1 2 2 4.18 2 8 0 5.5-4.78 10-10 10Z"/><path d="M2 21c0-3 1.85-5.36 5.08-6C9.5 14.52 12 13 13 12"/></symbol>
-        <symbol id="icon-sliders" viewBox="0 0 24 24"><path d="M21 4h-7"/><path d="M10 4H3"/><path d="M21 12h-9"/><path d="M8 12H3"/><path d="M21 20h-5"/><path d="M12 20H3"/><path d="M14 2v4"/><path d="M8 10v4"/><path d="M16 18v4"/></symbol>
-        <symbol id="icon-bell" viewBox="0 0 24 24"><path d="M10.268 21a2 2 0 0 0 3.464 0"/><path d="M3.262 15.326A1 1 0 0 0 4 17h16a1 1 0 0 0 .74-1.673C19.41 13.956 18 12.499 18 8A6 6 0 0 0 6 8c0 4.499-1.411 5.956-2.738 7.326"/></symbol>
         <symbol id="icon-basket" viewBox="0 0 24 24"><path d="m15 11-1 9"/><path d="m19 11-4-7"/><path d="M2 11h20"/><path d="m3.5 11 1.6 7.4a2 2 0 0 0 2 1.6h9.8a2 2 0 0 0 2-1.6l1.7-7.4"/><path d="M4.5 15.5h15"/><path d="m5 11 4-7"/><path d="m9 11 1 9"/></symbol>
     </svg>
 
@@ -86,8 +84,8 @@
             <header class="app-header">
                 <div class="header-row">
                     <h1 class="brand">Meal Planner<span>.</span></h1>
-                    <button type="button" class="profile-btn" id="open-profile" aria-label="<%= currentUser.display_name %>: profile and settings" aria-haspopup="dialog" title="<%= currentUser.display_name %>">
-                        <%= currentUser.initials %>
+                    <button type="button" class="profile-btn" id="open-profile" aria-label="<%= currentUser.display_name %>: profile and settings" aria-haspopup="dialog" title="<%= currentUser.display_name %>" data-account="avatar" style="<%= currentUser.avatar_style %>">
+                        <% if (currentUser.profile_pic) { %><img src="<%= currentUser.profile_pic %>" alt=""><% } else { %><%= currentUser.initials %><% } %>
                     </button>
                 </div>
 
@@ -135,7 +133,7 @@
         </div>
     </dialog>
 
-    <!-- Profile and settings popup. Placeholder data until it loads from the database. -->
+    <!-- Profile and settings popup. Only working features. -->
     <dialog class="profile" id="profile" aria-labelledby="profile-title">
         <div class="profile-header">
             <button type="button" class="profile-back" id="close-profile" aria-label="Back">
@@ -147,21 +145,25 @@
         <div class="profile-body">
             <section class="profile-main">
                 <div class="profile-identity">
-                    <div class="avatar" aria-hidden="true"><%= currentUser.initials %></div>
+                    <div class="avatar" aria-hidden="true" data-account="avatar" style="<%= currentUser.avatar_style %>"><% if (currentUser.profile_pic) { %><img src="<%= currentUser.profile_pic %>" alt=""><% } else { %><%= currentUser.initials %><% } %></div>
                     <div>
-                        <p class="profile-name"><%= currentUser.display_name %></p>
-                        <p class="profile-sub"><%= currentUser.email %><% if (currentUser.is_admin) { %> · Admin<% } %></p>
+                        <p class="profile-name" data-account="name"><%= currentUser.display_name %></p>
+                        <p class="profile-sub"><span data-account="email"><%= currentUser.email %></span><% if (currentUser.is_admin) { %> · Admin<% } %></p>
                     </div>
-                </div>
-
-                <div class="taste-card">
-                    <h3 class="taste-title"><svg class="icon"><use href="#icon-user"/></svg>Your taste profile</h3>
-                    <p class="taste-text">You lean toward quick, vegetable-forward meals with a little heat.</p>
                 </div>
             </section>
 
-            <!-- Settings destinations are wired as they become available. -->
             <ul class="settings-list">
+                <li>
+                    <button type="button" class="settings-row" id="account-settings-open" aria-haspopup="dialog" aria-controls="account-dialog">
+                        <span class="settings-icon"><svg class="icon"><use href="#icon-user"/></svg></span>
+                        <span class="settings-text">
+                            <span class="settings-title">Account settings</span>
+                            <span class="settings-desc">Name, email, phone, photo or delete account</span>
+                        </span>
+                        <svg class="icon"><use href="#icon-chevron-right"/></svg>
+                    </button>
+                </li>
                 <li>
                     <a class="settings-row" href="/liked">
                         <span class="settings-icon"><svg class="icon"><use href="#icon-heart"/></svg></span>
@@ -182,47 +184,7 @@
                         <svg class="icon"><use href="#icon-chevron-right"/></svg>
                     </a>
                 </li>
-                <li>
-                    <button type="button" class="settings-row">
-                        <span class="settings-icon"><svg class="icon"><use href="#icon-leaf"/></svg></span>
-                        <span class="settings-text">
-                            <span class="settings-title">Dietary preferences</span>
-                            <span class="settings-desc">Vegetarian-friendly</span>
-                        </span>
-                        <svg class="icon"><use href="#icon-chevron-right"/></svg>
-                    </button>
-                </li>
-                <li>
-                    <button type="button" class="settings-row">
-                        <span class="settings-icon"><svg class="icon"><use href="#icon-sliders"/></svg></span>
-                        <span class="settings-text">
-                            <span class="settings-title">Recommendation settings</span>
-                            <span class="settings-desc">Balanced variety</span>
-                        </span>
-                        <svg class="icon"><use href="#icon-chevron-right"/></svg>
-                    </button>
-                </li>
-                <li>
-                    <button type="button" class="settings-row">
-                        <span class="settings-icon"><svg class="icon"><use href="#icon-bell"/></svg></span>
-                        <span class="settings-text">
-                            <span class="settings-title">Notifications</span>
-                            <span class="settings-desc">Weekly planning reminder</span>
-                        </span>
-                        <svg class="icon"><use href="#icon-chevron-right"/></svg>
-                    </button>
-                </li>
             </ul>
-
-            <section class="profile-restrictions">
-                <h3 class="section-label">Dietary restrictions</h3>
-                <div class="chips">
-                    <span class="chip chip-green">Vegetarian meals</span>
-                    <span class="chip">No peanuts</span>
-                    <!-- TODO: open a picker and save the new restriction -->
-                    <button type="button" class="chip chip-add">+ Add preference</button>
-                </div>
-            </section>
 
             <form class="profile-logout" method="post" action="/logout">
                 <button type="submit" class="logout-btn">Log out</button>
@@ -230,6 +192,9 @@
         </div>
     </dialog>
 
+    <%- include('partials/account-dialog') %>
+
     <script src="/js/index.js" defer></script>
+    <script src="/js/account-settings.js" defer></script>
 </body>
 </html>

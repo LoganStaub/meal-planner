@@ -1,0 +1,128 @@
+/* ---------- Account settings popup (home page only: partials/account-dialog.ejs) ---------- */
+.account-heading { display: flex; align-items: center; justify-content: space-between; gap: 12px; }
+.account-heading h2 { margin: 0; font-size: 18px; font-weight: 700; }
+.account-close {
+  display: grid;
+  width: 32px;
+  height: 32px;
+  flex: 0 0 auto;
+  place-items: center;
+  padding: 0;
+  color: #5d6675;
+  background: #f7f4f1;
+  border: 0;
+  border-radius: 50%;
+  cursor: pointer;
+}
+.account-close svg { width: 17px; height: 17px; fill: none; stroke: currentColor; stroke-width: 2; stroke-linecap: round; }
+.account-dialog {
+  width: min(460px, calc(100vw - 24px));
+  max-height: min(90vh, 760px);
+  padding: 20px;
+  color: #1f2430;
+  background: #fff;
+  border: 1px solid #d9dee6;
+  border-radius: 20px;
+  box-shadow: 0 18px 50px rgba(31, 35, 40, .25);
+  font: inherit;
+}
+.account-dialog::backdrop { background: rgba(31, 36, 48, .45); }
+.account-form, .account-delete-form { display: grid; gap: 12px; margin-top: 16px; }
+.account-dialog label { display: grid; gap: 5px; font-size: 12px; font-weight: 600; }
+.account-dialog label small { color: #5d6675; font-weight: 400; }
+.account-dialog input {
+  width: 100%;
+  box-sizing: border-box;
+  padding: 9px 11px;
+  color: inherit;
+  background: #fff;
+  border: 1px solid #d9dee6;
+  border-radius: 10px;
+  font: inherit;
+  font-size: 14px;
+  font-weight: 400;
+}
+.account-dialog input:focus-visible,
+.account-dialog button:focus-visible { outline: 2px solid #d9531e; outline-offset: 2px; }
+.account-row { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+.account-field-with-action { display: flex; gap: 8px; }
+.account-remove {
+  flex: 0 0 auto;
+  padding: 0 12px;
+  color: #5d6675;
+  background: #f7f4f1;
+  border: 0;
+  border-radius: 10px;
+  font: inherit;
+  font-size: 12px;
+  cursor: pointer;
+}
+.account-remove:hover { color: #b42318; }
+.account-message { margin: 0; padding: 9px 12px; color: #1f6f43; background: #ecf8f0; border-radius: 10px; font-size: 12px; }
+.account-message-error { color: #b42318; background: #fef3f2; }
+.account-actions { display: flex; justify-content: flex-end; gap: 8px; margin-top: 4px; }
+.account-actions button,
+.account-danger-start {
+  padding: 9px 16px;
+  border-radius: 999px;
+  font: inherit;
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+}
+.account-primary { color: #fff; background: #d9531e; border: 1px solid #d9531e; }
+.account-primary:hover { background: #c2461a; }
+.account-secondary { color: #1f2430; background: transparent; border: 1px solid #d9dee6; }
+.account-secondary:hover { background: #faf8f5; }
+.account-actions button:disabled { opacity: .5; cursor: not-allowed; }
+
+.account-danger { margin-top: 20px; padding: 14px; border: 1px solid #f1c4bf; border-radius: 14px; background: #fffaf9; }
+.account-danger h3 { margin: 0 0 4px; color: #b42318; font-size: 13px; }
+.account-danger p { margin: 0; color: #5d6675; font-size: 12px; line-height: 1.45; }
+.account-danger-start { margin-top: 10px; color: #b42318; background: transparent; border: 1px solid #f1c4bf; }
+.account-danger-start:hover { background: #fef3f2; }
+.account-danger-start[hidden], .account-delete-form[hidden], .account-form[hidden] { display: none; }
+/* Delete step on its own: the details form is hidden, so no gap above the box */
+.account-form[hidden] + .account-danger { margin-top: 16px; }
+.account-danger-confirm { color: #fff; background: #b42318; border: 1px solid #b42318; }
+.account-danger-confirm:hover:not(:disabled) { background: #912018; }
+
+@media (max-width: 620px) {
+  .account-dialog { padding: 16px; }
+  .account-row { grid-template-columns: 1fr; }
+}
+
+/* Profile photo in the home page's header button and profile popup */
+.profile-btn, .profile .avatar { overflow: hidden; }
+.profile-btn img, .profile .avatar img { width: 100%; height: 100%; object-fit: cover; }
+
+/* Profile icon color picker: a row of round swatches (radio buttons) */
+.account-colors { margin: 0; padding: 0; border: 0; min-width: 0; }
+.account-colors legend { padding: 0; margin-bottom: 8px; font-size: 12px; font-weight: 600; }
+.account-swatches { display: flex; flex-wrap: wrap; gap: 8px; }
+.account-swatch { position: relative; display: block; width: 30px; height: 30px; cursor: pointer; }
+.account-swatch input { position: absolute; inset: 0; width: 100%; height: 100%; margin: 0; padding: 0; opacity: 0; cursor: pointer; }
+.account-swatch::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background: var(--swatch);
+  border-radius: 50%;
+  box-shadow: 0 0 0 2px #fff, 0 0 0 3px transparent;
+  transition: box-shadow .15s ease;
+}
+.account-swatch:hover::before { box-shadow: 0 0 0 2px #fff, 0 0 0 4px #d9dee6; }
+.account-swatch:has(input:checked)::before { box-shadow: 0 0 0 2px #fff, 0 0 0 4px #1f2430; }
+.account-swatch:has(input:checked)::after {
+  content: "";
+  position: absolute;
+  left: 10px;
+  top: 7px;
+  width: 7px;
+  height: 12px;
+  border: solid #fff;
+  border-width: 0 2.5px 2.5px 0;
+  transform: rotate(45deg);
+}
+.account-swatch:has(input:focus-visible)::before { box-shadow: 0 0 0 2px #fff, 0 0 0 4px #d9531e; }
+.visually-hidden { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; }

@@ -90,9 +90,11 @@ Names are **snake_case** (`recipe_title`, not `RecipeTitle`).
    ```bash
    npm start        # or: npm run dev  (restarts when you save a file)
    ```
-9. **Optional: add test data** for the calendar (user 1 and a few meals this week):
+9. **Optional: add test data.** Each is safe to run more than once:
    ```bash
-   npm run db:seed
+   npm run db:seed-recipes    # the 5 recipes the home page shows as placeholders
+   npm run db:seed-classics   # 5 real recipes, one per meal type (sources in scripts/seedClassicRecipes.js)
+   npm run db:seed            # test user 1 and a few meals this week
    ```
 
 > Opening the pages by double-clicking them doesn't work for anything that loads data. Pages have to be loaded from the server so their `/api` calls reach Express.
