@@ -39,7 +39,7 @@ const threeDayPlanSql = await readQuery('okr4_three_day_plan.sql')
 
 const ENTRY_POINT_LABELS = {
   home_card: 'Home card',
-  recipe_details: 'Recipe window',
+  recipe_details: 'Recipe page',
   calendar: 'Calendar + button',
   unknown: 'Unknown',
 }

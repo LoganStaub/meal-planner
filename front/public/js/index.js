@@ -90,7 +90,6 @@
         const obj_done = document.getElementById("done");
         const obj_progress = document.getElementById("progress");
         const obj_like = document.getElementById("like-btn");
-        const obj_dialog = document.getElementById("recipe-details");
         // The shared profile menu (partials/profile-menu.ejs, js/profile-menu.js)
         const obj_profileMenu = document.getElementById("profile-menu");
         const obj_prevArrow = document.getElementById("prev-arrow");
@@ -153,7 +152,7 @@
         // moves to the next (+1) or previous (-1) meal with a slide animation.
         // nFromX is where the card was dragged to, so the animation continues from there.
         async function GoTo(nDirection, nFromX = 0) {
-            if (bAnimating || obj_dialog.open || !obj_profileMenu.hidden || obj_plan.open) return;
+            if (bAnimating || !obj_profileMenu.hidden || obj_plan.open) return;
 
             // from the "all caught up" screen, going back shows the last meal again
             if (!obj_done.hidden) {
@@ -326,8 +325,8 @@
         }
         LoadLikes();
 
-        // ---------- Add to calendar popup ----------
-        // The popup itself is shared with the Recipes page: js/recipe-details.js
+        // ---------- Add to meal plan popup ----------
+        // The popup itself is shared with the recipe page: js/plan-dialog.js
         const obj_plan = document.getElementById("plan-dialog");
 
         document.getElementById("calendar-btn").addEventListener("click", function() {
@@ -342,29 +341,14 @@
         });
 
 
-        // ---------- Recipe window ----------
-        // Clicking the recipe's name opens the shared recipe window
-        // (js/recipe-details.js), which loads the recipe from the database.
+        // ---------- Recipe page ----------
+        // Clicking the recipe's name opens its own page (/recipes/:id,
+        // views/recipe.ejs) with the ingredients and directions.
 
         document.getElementById("open-details").addEventListener("click", function() {
-            // a swipe that started on the title shouldn't also open the window
+            // a swipe that started on the title shouldn't also open the page
             if (bSuppressClick) return;
-
-            const meal = meals[nCurrent];
-            // the photo and description aren't in the database yet, so pass them along
-            RecipeDetails.open(meal.recipe_id, {
-                title: meal.recipe_title,
-                description: meal.description,
-                image_url: meal.image_url
-            });
-        });
-
-        // liking or unliking inside the window updates this page's heart too
-        document.addEventListener("recipe-like-change", function(event) {
-            const meal = meals.find(function(m) { return m.recipe_id === event.detail.recipe_id; });
-            if (!meal) return;
-            meal.liked = event.detail.liked;
-            RenderLike();
+            location.href = "/recipes/" + encodeURIComponent(meals[nCurrent].recipe_id);
         });
 
 

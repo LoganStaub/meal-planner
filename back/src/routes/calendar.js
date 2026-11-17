@@ -11,7 +11,8 @@ const router = Router()
 // Where an "add to calendar" started, sent by the page as entry_point so the
 // OKR numbers can be split by it (src/routes/admin.js):
 //   home_card       the Home page card's Add to calendar button
-//   recipe_details  the recipe window's Add to calendar button
+//   recipe_details  the recipe page's Add to meal plan button (/recipes/:id;
+//                   it was a popup window, hence the name)
 //   calendar        a + / Add link on the calendar, then Add on the Recipes page
 const ENTRY_POINTS = new Set(['home_card', 'recipe_details', 'calendar'])
 

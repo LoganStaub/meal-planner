@@ -11,7 +11,7 @@
     <link href="https://fonts.googleapis.com/css2?family=DM+Sans:opsz,wght@9..40,400;9..40,500;9..40,600;9..40,700&display=swap" rel="stylesheet">
 
     <link rel="stylesheet" href="/css/index.css">
-    <link rel="stylesheet" href="/css/recipe-details.css">
+    <link rel="stylesheet" href="/css/plan-dialog.css">
     <link rel="stylesheet" href="/css/page-card.css">
     <link rel="stylesheet" href="/css/page-header.css">
     <link rel="stylesheet" href="/css/profile-menu.css">
@@ -48,7 +48,7 @@
                         <span class="meta-time" id="meal-time"></span><span class="meta-dot">·</span><span id="meal-tag"></span><span class="meta-dot">·</span><span id="meal-servings"></span>
                     </p>
 
-                    <button type="button" class="summary" id="open-details" aria-haspopup="dialog">
+                    <button type="button" class="summary" id="open-details">
                         <h2 class="recipe-title" id="meal-title"></h2>
                         <p class="recipe-desc" id="meal-desc"></p>
                     </button>
@@ -118,13 +118,13 @@
         </nav>
     </div>
 
-    <%# The recipe window and the "Add to meal plan" popup (js/recipe-details.js) %>
-    <%- include('partials/recipe-details') %>
+    <%# The "Add to meal plan" popup (js/plan-dialog.js) %>
+    <%- include('partials/plan-dialog') %>
 
     <%- include('partials/profile-menu') %>
     <script src="/js/events.js" defer></script>
     <script src="/js/profile-menu.js" defer></script>
-    <script src="/js/recipe-details.js" defer></script>
+    <script src="/js/plan-dialog.js" defer></script>
     <script src="/js/index.js" defer></script>
 </body>
 </html>

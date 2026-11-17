@@ -22,11 +22,13 @@ router.get('/', async (req, res) => {
   res.json(rows)
 })
 
-// GET /api/recipes/:id  -> one recipe with its ingredient list (in order).
-// This is what the recipe window shows (front/public/js/recipe-details.js).
-router.get('/:id', async (req, res) => {
-  // recipes.liked is the old shared column; liked here is this user's own like.
-  // added_by is the first name of the user who added it with the AI assistant.
+// One recipe with its ingredient list (in order), or null if it doesn't exist.
+// Used by GET /api/recipes/:id and the recipe page (/recipes/:id, routes/search.js).
+//   liked: this user has liked it (recipes.liked is the old shared column)
+//   added_by: first name of the user who added it with the AI assistant
+//   recipe_ingredients[].pantry_amount_id: this user's own pantry: 0 plenty,
+//     1 running low, 2 none, and null when it isn't in their pantry at all
+export async function getRecipe(recipeId, userId) {
   const recipe = await pool.query(
     `select r.*, rc.recipe_class_desc, u.first_name as added_by,
             exists (
@@ -37,14 +39,10 @@ router.get('/:id', async (req, res) => {
      left join recipe_classes rc on rc.recipe_class_id = r.recipe_class_id
      left join users u on u.user_id = r.created_by
      where r.recipe_id = $1`,
-    [req.params.id, req.user.user_id]
+    [recipeId, userId]
   )
-  if (recipe.rows.length === 0) {
-    return res.status(404).json({ error: 'Recipe not found' })
-  }
+  if (recipe.rows.length === 0) return null
 
-  // pantry_amount_id is this user's own pantry: 0 plenty, 1 running low,
-  // 2 none, and null when the ingredient isn't in their pantry at all
   const ingredients = await pool.query(
     `select ri.recipe_seq_number, ri.amount, i.ingredient_id, i.ingredient_name,
             m.measurement_desc, up.pantry_amount_id
@@ -54,9 +52,18 @@ router.get('/:id', async (req, res) => {
      left join user_pantry up on up.ingredient_id = ri.ingredient_id and up.user_id = $2
      where ri.recipe_id = $1
      order by ri.recipe_seq_number`,
-    [req.params.id, req.user.user_id]
+    [recipeId, userId]
   )
-  res.json({ ...recipe.rows[0], recipe_ingredients: ingredients.rows })
+  return { ...recipe.rows[0], recipe_ingredients: ingredients.rows }
+}
+
+// GET /api/recipes/:id  -> one recipe with its ingredient list (getRecipe above)
+router.get('/:id', async (req, res) => {
+  const recipe = await getRecipe(req.params.id, req.user.user_id)
+  if (!recipe) {
+    return res.status(404).json({ error: 'Recipe not found' })
+  }
+  res.json(recipe)
 })
 
 // POST /api/recipes  { recipe_title, recipe_class_id?, cost?, prep_time?, macros?, instructions? }
