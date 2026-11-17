@@ -1,3 +1,4 @@
+<%# Profile menu for every page. Only working links. Also brings the Account settings popup (partials/account-dialog.ejs, js/account-settings.js). %>
 <aside class="profile-menu" id="profile-menu" role="dialog" aria-labelledby="profile-menu-title" hidden>
   <div class="profile-menu-heading">
     <h2 id="profile-menu-title">Profile and settings</h2>
@@ -7,19 +8,23 @@
   </div>
 
   <div class="profile-menu-identity">
-    <div class="profile-menu-avatar" aria-hidden="true"><%= currentUser.initials %></div>
+    <div class="profile-menu-avatar" aria-hidden="true" data-account="avatar" style="<%= currentUser.avatar_style %>">
+      <% if (currentUser.profile_pic) { %><img src="<%= currentUser.profile_pic %>" alt=""><% } else { %><%= currentUser.initials %><% } %>
+    </div>
     <div>
-      <p class="profile-menu-name"><%= currentUser.display_name %></p>
-      <p class="profile-menu-subtitle"><%= currentUser.email %><% if (currentUser.is_admin) { %> · Admin<% } %></p>
+      <p class="profile-menu-name" data-account="name"><%= currentUser.display_name %></p>
+      <p class="profile-menu-subtitle"><span data-account="email"><%= currentUser.email %></span><% if (currentUser.is_admin) { %> · Admin<% } %></p>
     </div>
   </div>
 
-  <section class="profile-menu-taste">
-    <h3>Your taste profile</h3>
-    <p>You lean toward quick, vegetable-forward meals with a little heat.</p>
-  </section>
-
   <ul class="profile-menu-settings">
+    <li>
+      <button class="profile-menu-row" id="account-settings-open" type="button" aria-haspopup="dialog" aria-controls="account-dialog">
+        <span class="profile-menu-icon" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M19 21v-2a4 4 0 0 0-4-4H9a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg></span>
+        <span class="profile-menu-copy"><strong>Account settings</strong><small>Name, email, phone, photo or delete account</small></span>
+        <svg class="profile-menu-chevron" viewBox="0 0 24 24" aria-hidden="true"><path d="m9 18 6-6-6-6"/></svg>
+      </button>
+    </li>
     <li>
       <a class="profile-menu-row" href="/liked">
         <span class="profile-menu-icon" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M20.8 4.6a5.5 5.5 0 0 0-7.8 0L12 5.7l-1.1-1.1a5.5 5.5 0 0 0-7.8 7.8l1.1 1.1L12 21l7.8-7.5 1.1-1.1a5.5 5.5 0 0 0-.1-7.8Z"/></svg></span>
@@ -41,33 +46,13 @@
         <svg class="profile-menu-chevron" viewBox="0 0 24 24" aria-hidden="true"><path d="m9 18 6-6-6-6"/></svg>
       </a>
     </li>
-    <li>
-      <div class="profile-menu-row">
-        <span class="profile-menu-icon" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M11 20A7 7 0 0 1 9.8 6.1C15.5 5 17 4.5 19 2c1 2 2 4.2 2 8 0 5.5-4.8 10-10 10Z"/><path d="M2 21c0-3 1.9-5.4 5.1-6C9.5 14.5 12 13 13 12"/></svg></span>
-        <span class="profile-menu-copy"><strong>Dietary preferences</strong><small>Vegetarian-friendly</small></span>
-      </div>
-    </li>
-    <li>
-      <div class="profile-menu-row">
-        <span class="profile-menu-icon" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M21 4h-7M10 4H3M21 12h-9M8 12H3M21 20h-5M12 20H3M14 2v4M8 10v4M16 18v4"/></svg></span>
-        <span class="profile-menu-copy"><strong>Recommendation settings</strong><small>Balanced variety</small></span>
-      </div>
-    </li>
-    <li>
-      <div class="profile-menu-row">
-        <span class="profile-menu-icon" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M18 8a6 6 0 0 0-12 0c0 7-3 7-3 9h18c0-2-3-2-3-9M10 21h4"/></svg></span>
-        <span class="profile-menu-copy"><strong>Notifications</strong><small>Weekly planning reminder</small></span>
-      </div>
-    </li>
   </ul>
-
-  <section class="profile-menu-restrictions">
-    <h3>Dietary restrictions</h3>
-    <div class="profile-menu-chips"><span>Vegetarian meals</span><span>No peanuts</span></div>
-    <button class="profile-menu-add" type="button">+ Add preference</button>
-  </section>
 
   <form class="profile-menu-logout" method="post" action="/logout">
     <button type="submit">Log out</button>
   </form>
 </aside>
+
+<link rel="stylesheet" href="/css/account-settings.css">
+<%- include('account-dialog') %>
+<script src="/js/account-settings.js" defer></script>

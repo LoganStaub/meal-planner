@@ -16,3 +16,8 @@ export function isDateKey(value) {
 export function isPantryAmount(value) {
   return [0, 1, 2].includes(value)
 }
+
+// A star rating: a whole number from 1 to 5 (the JSON number, not '4')
+export function isRating(value) {
+  return Number.isInteger(value) && value >= 1 && value <= 5
+}

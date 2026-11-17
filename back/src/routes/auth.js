@@ -21,7 +21,7 @@ const RESEND_COOLDOWN_SECONDS = 60
 
 // Compared against when there's no account, so a wrong email takes as long
 // as a wrong password and the response time doesn't reveal which emails exist.
-const DUMMY_HASH = await bcrypt.hash(randomBytes(16).toString('hex'), SALT_ROUNDS)
+export const DUMMY_HASH = await bcrypt.hash(randomBytes(16).toString('hex'), SALT_ROUNDS)
 
 // Returns an error message, or undefined if the new password is fine.
 function passwordError(password, confirmPassword) {
@@ -88,7 +88,7 @@ export async function loadUser(req, res, next) {
   if (!userId) return next()
 
   const { rows } = await pool.query(
-    'select user_id, first_name, last_name, email, role from users where user_id = $1',
+    'select user_id, first_name, last_name, email, phone, profile_pic, avatar_color, role from users where user_id = $1',
     [userId]
   )
   const user = rows[0]
@@ -103,6 +103,8 @@ export async function loadUser(req, res, next) {
   user.display_name = [first, last].filter(Boolean).join(' ') || user.email
   user.initials = ((first[0] || '') + (last[0] || '')).toUpperCase() || user.email[0].toUpperCase()
   user.is_admin = user.role === 'admin'
+  // For style="" on profile icons; the CSS falls back to the default color when it's empty
+  user.avatar_style = user.avatar_color ? `--avatar-color: ${user.avatar_color}` : ''
 
   req.user = user
   res.locals.currentUser = user
@@ -281,7 +283,7 @@ router.post('/signup', signupLimiter, async (req, res) => {
 // Ends every saved login for a user, except keepSid (the session making
 // the change). Someone who stole the old password gets logged out.
 // The list can hold ids of sessions that already expired; deleting those is harmless.
-async function endSessions(userId, keepSid = null) {
+export async function endSessions(userId, keepSid = null) {
   const key = userSessionsKey(userId)
   const sids = (await redis.sMembers(key)).filter((sid) => sid !== keepSid)
   if (sids.length === 0) return
@@ -309,7 +311,7 @@ async function findResetToken(token) {
 }
 
 // Cancels the user's reset link, if they have one
-async function cancelResetLink(userId) {
+export async function cancelResetLink(userId) {
   const tokenHash = await redis.getDel(resetUserKey(userId))
   if (tokenHash) await redis.del(resetKey(tokenHash))
 }

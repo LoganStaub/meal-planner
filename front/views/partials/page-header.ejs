@@ -15,5 +15,5 @@
   <button type="button" class="account-button profile-trigger" id="profile-trigger"
     aria-controls="profile-menu" aria-expanded="false"
     aria-label="<%= currentUser.display_name %>: profile and settings"
-    title="<%= currentUser.display_name %>"><%= currentUser.initials %></button>
+    title="<%= currentUser.display_name %>" data-account="avatar" style="<%= currentUser.avatar_style %>"><% if (currentUser.profile_pic) { %><img src="<%= currentUser.profile_pic %>" alt=""><% } else { %><%= currentUser.initials %><% } %></button>
 </header>

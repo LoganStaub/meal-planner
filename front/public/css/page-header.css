@@ -100,7 +100,8 @@
     transform: translateY(-50%);
     border: 0;
     border-radius: 50%;
-    background-color: #D4552A;
+    /* --avatar-color: the color the user picked in Account settings */
+    background-color: var(--avatar-color, #D4552A);
     box-shadow: none;
     color: #FFFFFF;
     font-family: "DM Sans", system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
@@ -113,8 +114,24 @@
     transition: background-color 0.2s ease;
 }
 
+/* a profile picture fills the circle */
+.account-button {
+    overflow: hidden;
+}
+
+.account-button img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+}
+
 .account-button:hover {
-    background-color: #BC4720;
+    background-color: var(--avatar-color, #BC4720);
+}
+
+/* a picked color has no hand-made hover shade, so darken it a little */
+.account-button[style*="--avatar-color"]:hover {
+    filter: brightness(0.92);
 }
 
 .account-button:focus-visible {

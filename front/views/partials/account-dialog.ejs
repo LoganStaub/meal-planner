@@ -1,0 +1,82 @@
+<%# Account settings popup. Opened from "Account settings" above; talks to /api/me/account (see js/account-settings.js). Included by partials/profile-menu.ejs, so it's on every page. %>
+<dialog class="account-dialog" id="account-dialog" aria-labelledby="account-dialog-title">
+  <div class="account-heading">
+    <h2 id="account-dialog-title">Account settings</h2>
+    <button class="account-close" id="account-dialog-close" type="button" aria-label="Close account settings">
+      <svg viewBox="0 0 24 24" aria-hidden="true"><path d="m18 6-12 12M6 6l12 12"/></svg>
+    </button>
+  </div>
+
+  <form class="account-form" id="account-form" novalidate>
+    <p class="account-message" id="account-message" role="status" hidden></p>
+
+    <div class="account-row">
+      <label>First name
+        <input name="first_name" autocomplete="given-name" maxlength="100" required>
+      </label>
+      <label>Last name
+        <input name="last_name" autocomplete="family-name" maxlength="100" required>
+      </label>
+    </div>
+
+    <label>Email
+      <input name="email" type="email" autocomplete="email" maxlength="254" required>
+    </label>
+
+    <label class="account-password-for-email" id="account-email-password" hidden>Current password
+      <small>Needed to change your login email.</small>
+      <input name="current_password" type="password" autocomplete="current-password">
+    </label>
+
+    <label>Phone <small>(optional)</small>
+      <span class="account-field-with-action">
+        <input name="phone" type="tel" autocomplete="tel" maxlength="25" placeholder="Add a phone number">
+        <button class="account-remove" type="button" data-clear="phone">Remove</button>
+      </span>
+    </label>
+
+    <label>Profile picture URL <small>(optional)</small>
+      <span class="account-field-with-action">
+        <input name="profile_pic" type="url" inputmode="url" maxlength="2048" placeholder="https://…">
+        <button class="account-remove" type="button" data-clear="profile_pic">Remove</button>
+      </span>
+    </label>
+
+    <fieldset class="account-colors">
+      <legend>Profile icon color</legend>
+      <div class="account-swatches">
+        <% avatarColors.forEach((color) => { %>
+          <label class="account-swatch" title="<%= color.name %>" style="--swatch: <%= color.value %>">
+            <input type="radio" name="avatar_color" value="<%= color.value %>"<%= color.value === defaultAvatarColor ? ' data-default' : '' %>>
+            <span class="visually-hidden"><%= color.name %></span>
+          </label>
+        <% }) %>
+      </div>
+    </fieldset>
+
+    <div class="account-actions">
+      <button class="account-secondary" id="account-cancel" type="button">Cancel</button>
+      <button class="account-primary" id="account-save" type="submit">Save changes</button>
+    </div>
+  </form>
+
+  <section class="account-danger" aria-labelledby="account-danger-title">
+    <h3 id="account-danger-title">Delete account</h3>
+    <p>Permanently deletes your account, meal plan, liked recipes and pantry. This can't be undone.</p>
+    <button class="account-danger-start" id="account-delete-start" type="button">Delete my account…</button>
+
+    <form class="account-delete-form" id="account-delete-form" hidden novalidate>
+      <p class="account-message account-message-error" id="account-delete-message" role="alert" hidden></p>
+      <label>Your password
+        <input name="password" type="password" autocomplete="current-password" required>
+      </label>
+      <label>Type <strong>DELETE</strong> to confirm
+        <input name="confirm" autocomplete="off" autocapitalize="characters" spellcheck="false" required>
+      </label>
+      <div class="account-actions">
+        <button class="account-secondary" id="account-delete-cancel" type="button">Cancel</button>
+        <button class="account-danger-confirm" id="account-delete-confirm" type="submit" disabled>Permanently delete</button>
+      </div>
+    </form>
+  </section>
+</dialog>

@@ -12,13 +12,16 @@ import recipesRouter from './routes/recipes.js'
 import lookupsRouter from './routes/lookups.js'
 import calendarRouter from './routes/calendar.js'
 import likesRouter from './routes/likes.js'
+import ratingsRouter from './routes/ratings.js'
 import pantryRouter from './routes/pantry.js'
+import accountRouter from './routes/account.js'
 import shoppingRouter, { getShoppingItems} from './routes/shopping.js'
 import authRouter, { loadUser, requireLogin } from './routes/auth.js'
 import searchRouter from './routes/search.js'
 import recipeAssistantRouter from './routes/recipeAssistant.js'
 import eventsRouter from './routes/events.js'
 import adminRouter from './routes/admin.js'
+import { AVATAR_COLORS, DEFAULT_AVATAR_COLOR } from './avatarColors.js'
 
 if (!process.env.SESSION_SECRET) {
   throw new Error('Missing SESSION_SECRET. Add it to .env (see .env.example).')
@@ -27,7 +30,7 @@ if (!process.env.SESSION_SECRET) {
 // The per-user tables come from db/migrations. Fail with a clear message
 // instead of confusing errors on every page if they haven't been run yet.
 const { rows: missingTables } = await pool.query(
-  `select name from unnest(array['user_pantry', 'user_liked_recipes', 'events']) as name
+  `select name from unnest(array['user_pantry', 'user_liked_recipes', 'events', 'user_recipe_ratings', 'recipe_rating_stats']) as name
    where to_regclass('public.' || name) is null`
 )
 if (missingTables.length > 0) {
@@ -36,7 +39,18 @@ if (missingTables.length > 0) {
   )
 }
 
+// users.avatar_color comes from migration 011
+const { rows: avatarColumn } = await pool.query(
+  `select 1 from information_schema.columns where table_name = 'users' and column_name = 'avatar_color'`
+)
+if (avatarColumn.length === 0) {
+  throw new Error('Missing column users.avatar_color. Run: npm run db:migrate')
+}
+
 const app = express()
+// The profile icon colors for the Account settings popup (partials/account-dialog.ejs)
+app.locals.avatarColors = AVATAR_COLORS
+app.locals.defaultAvatarColor = DEFAULT_AVATAR_COLOR
 const PORT = process.env.PORT || 3000
 const viewsPath = fileURLToPath(new URL('../../front/views', import.meta.url))
 const publicPath = fileURLToPath(new URL('../../front/public', import.meta.url))
@@ -111,7 +125,9 @@ app.use('/api', lookupsRouter)
 // The logged-in user's own data
 app.use('/api/me/calendar', calendarRouter)
 app.use('/api/me/likes', likesRouter)
+app.use('/api/me/ratings', ratingsRouter)
 app.use('/api/me/pantry', pantryRouter)
+app.use('/api/me/account', accountRouter)
 app.use('/api/me/shopping', shoppingRouter)
 
 // Recipes page's "Add your own recipe" assistant: /api/recipe-assistant/...
@@ -137,7 +153,9 @@ app.get(['/calendar', '/calendar.html'], (req, res) => {
 app.use(searchRouter)
 
 // Render the recipes this user has liked. inPantry / toBuy count each
-// recipe's ingredients against this user's pantry.
+// recipe's ingredients against this user's pantry. ratingAverage /
+// ratingCount are the recipe's anonymous totals; myRating is only this
+// user's own rating (see routes/ratings.js).
 app.get(['/liked', '/liked.html'], async (req, res) => {
   const { rows } = await pool.query(
     `select r.recipe_id,
@@ -145,6 +163,9 @@ app.get(['/liked', '/liked.html'], async (req, res) => {
             coalesce(r.prep_time, 0)::int as time,
             coalesce(rc.recipe_class_desc, 'Recipe') as tag,
             coalesce(r.instructions, 'A recipe saved to your collection.') as description,
+            rs.rating_avg::float as "ratingAverage",
+            coalesce(rs.rating_count, 0) as "ratingCount",
+            ur.rating as "myRating",
             count(ri.ingredient_id) filter (
               where up.pantry_amount_id in (0, 1)
             )::int as "inPantry",
@@ -154,10 +175,12 @@ app.get(['/liked', '/liked.html'], async (req, res) => {
      from user_liked_recipes ul
      join recipes r on r.recipe_id = ul.recipe_id
      left join recipe_classes rc on rc.recipe_class_id = r.recipe_class_id
+     left join recipe_rating_stats rs on rs.recipe_id = r.recipe_id
+     left join user_recipe_ratings ur on ur.recipe_id = r.recipe_id and ur.user_id = ul.user_id
      left join recipe_ingredients ri on ri.recipe_id = r.recipe_id
      left join user_pantry up on up.ingredient_id = ri.ingredient_id and up.user_id = ul.user_id
      where ul.user_id = $1
-     group by r.recipe_id, rc.recipe_class_desc
+     group by r.recipe_id, rc.recipe_class_desc, rs.rating_avg, rs.rating_count, ur.rating
      order by r.recipe_title`,
     [req.user.user_id]
   )
