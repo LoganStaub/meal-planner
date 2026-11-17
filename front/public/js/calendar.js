@@ -18,7 +18,7 @@ function searchUrl(date, slot, { unfiltered = false } = {}) {
 }
 
 function recipeUrl(recipeId) {
-    return `/recipe?id=${encodeURIComponent(recipeId)}`;
+    return `/recipes/${encodeURIComponent(recipeId)}`;
 }
 
 // Heading for a day with meals (and while loading)
@@ -410,8 +410,19 @@ function renderCalendar() {
 // Re-renders right away, then fetches only if the week changed
 // (or the last load for this week failed)
 function showSelectedDate() {
+    keepDateInAddress();
     renderCalendar();
     loadWeek();
+}
+
+// Puts the selected day in the address (/calendar?date=YYYY-MM-DD), so
+// coming back from a recipe, refreshing or sharing the link returns to this
+// day instead of today. replaceState, so picking days doesn't fill up the
+// browser's back history.
+function keepDateInAddress() {
+    const url = new URL(location.href);
+    url.searchParams.set("date", getLocalDateKey(selectedDate));
+    history.replaceState(null, "", url);
 }
 
 document.getElementById("previous-week").addEventListener("click", () => {

@@ -16,7 +16,6 @@
     <link rel="stylesheet" href="/css/search.css">
     <link rel="stylesheet" href="/css/page-header.css">
     <link rel="stylesheet" href="/css/recipe-add.css">
-    <link rel="stylesheet" href="/css/recipe-details.css">
     <link rel="stylesheet" href="/css/profile-menu.css">
     <script src="/js/no-back-cache.js"></script>
 </head>
@@ -142,9 +141,9 @@
                                 <% if (r.time) { %><span class="recipe-time"><svg class="icon"><use href="#icon-clock"/></svg><%= r.time %></span><% } %>
                                 <span class="recipe-class"><%= r.tag %></span>
                             </div>
-                            <%# Clicking the card opens the recipe window (js/recipe-details.js).
-                                The address is the same recipe for opening in a new tab. %>
-                            <h3><a class="recipe-link" href="/recipe?id=<%= r.recipe_id %>" data-recipe-details="<%= r.recipe_id %>" aria-haspopup="dialog"><%= r.title %></a></h3>
+                            <%# Clicking the card opens the recipe's own page (views/recipe.ejs).
+                                recipeQuery keeps the day being planned, if any. %>
+                            <h3><a class="recipe-link" href="/recipes/<%= r.recipe_id %><%= recipeQuery %>"><%= r.title %></a></h3>
                             <% if (r.protein !== null) { %><p class="recipe-protein"><%= r.protein %>g protein</p><% } %>
                         </div>
                         <% if (plan) { %>
@@ -262,13 +261,9 @@
         </div>
     </dialog>
 
-    <%# The recipe window and its "Add to meal plan" popup (js/recipe-details.js) %>
-    <%- include('partials/recipe-details') %>
-
     <%- include('partials/profile-menu') %>
     <script src="/js/events.js" defer></script>
     <script src="/js/profile-menu.js" defer></script>
-    <script src="/js/recipe-details.js" defer></script>
     <script src="/js/recipe-add.js" defer></script>
     <% if (plan) { %><script src="/js/search.js" defer></script><% } %>
 </body>

@@ -8,6 +8,8 @@ import { Router } from 'express'
 import { pool } from '../db.js'
 import { isDateKey } from '../validators.js'
 import { MEAL_SLOTS } from './calendar.js'
+import { getRecipe } from './recipes.js'
+import { describeRecipe } from '../recipeView.js'
 
 const router = Router()
 
@@ -127,16 +129,53 @@ router.get(['/search', '/search.html'], (req, res) => {
   res.redirect(301, '/recipes' + (queryStart === -1 ? '' : req.originalUrl.slice(queryStart)))
 })
 
-// A link straight to one recipe (the calendar's meals use it): /recipe?id=3
-// opens the Recipes page with that recipe's window showing. recipe-details.js
-// reads the ?recipe= number.
+const isRecipeId = (value) => typeof value === 'string' && /^\d{1,9}$/.test(value)
+
+// Old links to one recipe: /recipe?id=3 -> /recipes/3
 router.get('/recipe', (req, res) => {
-  const id = typeof req.query.id === 'string' && /^\d{1,9}$/.test(req.query.id) ? req.query.id : null
-  res.redirect(id ? `/recipes?recipe=${id}` : '/recipes')
+  res.redirect(isRecipeId(req.query.id) ? `/recipes/${req.query.id}` : '/recipes')
+})
+
+// The recipe page's back link returns to where the user came from (keeping
+// a Recipes search or Meal Plan day), or to Recipes if that's unknown.
+function backLink(req) {
+  const fallback = { href: '/recipes', label: 'Back to recipes' }
+  let from
+  try {
+    from = new URL(req.get('referer') ?? '')
+  } catch {
+    return fallback
+  }
+  if (from.host !== req.get('host')) return fallback
+  const here = from.pathname + from.search
+  if (from.pathname === '/recipes') return { href: here, label: 'Back to recipes' }
+  if (from.pathname === '/home' || from.pathname === '/') return { href: '/home', label: 'Back to home' }
+  if (from.pathname === '/calendar') return { href: here, label: 'Back to meal plan' }
+  if (from.pathname === '/liked') return { href: '/liked', label: 'Back to liked recipes' }
+  return fallback
+}
+
+// GET /recipes/:id  One recipe on its own page: ingredients (with this
+// user's pantry), directions, Like and Add to meal plan.
+// From the Recipes page while adding to a day (see the banner below) it also
+// gets ?date=&slot=, so Add to meal plan starts on that day and meal.
+router.get('/recipes/:id', async (req, res) => {
+  const back = backLink(req)
+  const recipe = isRecipeId(req.params.id) ? await getRecipe(req.params.id, req.user.user_id) : null
+  if (!recipe) {
+    return res.status(404).render('recipe', { recipe: null, back, plan: null, active: 'recipes' })
+  }
+
+  const date = isDateKey(req.query.date) ? req.query.date : null
+  const plan = date && { date, slot: parseSlot(req.query.slot) }
+  res.render('recipe', { recipe: describeRecipe(recipe), back, plan, active: 'recipes' })
 })
 
 // GET /recipes?q=&filter=&date=&slot=
 router.get(['/recipes', '/recipes.html'], async (req, res) => {
+  // Old links that opened a recipe window: /recipes?recipe=3 -> /recipes/3
+  if (isRecipeId(req.query.recipe)) return res.redirect(`/recipes/${req.query.recipe}`)
+
   const q = typeof req.query.q === 'string' ? req.query.q.trim().slice(0, 100) : ''
 
   // Planning mode only turns on for a real date; a bad slot just means "pick one"
@@ -176,6 +215,8 @@ router.get(['/recipes', '/recipes.html'], async (req, res) => {
     q,
     recipes,
     plan,
+    // Recipe links keep the day being planned (see /recipes/:id)
+    recipeQuery: plan ? `?${new URLSearchParams({ date, ...(slot ? { slot } : {}) })}` : '',
     filters: FILTERS.map((f) => ({
       key: f.key,
       label: f.label,
