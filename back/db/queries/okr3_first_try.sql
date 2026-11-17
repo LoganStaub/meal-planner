@@ -21,15 +21,9 @@
 -- =====================================================================
 
 with first_start as (
-  select distinct on (e.user_id)
-         e.user_id,
-         e.created_at as started_at,
-         coalesce(e.metadata ->> 'entry_point', 'unknown') as entry_point
-  from events e
-  join users u on u.user_id = e.user_id
-  where e.event_name = 'add_to_calendar_started'
-    and u.created_at >= $1::timestamptz
-  order by e.user_id, e.created_at, e.id
+  -- Each new user's first add_to_calendar_started (shared with OKR 4,
+  -- see db/migrations/010_okr_first_calendar_starts.sql)
+  select * from new_user_first_calendar_starts($1::timestamptz)
 ),
 
 attempts as (

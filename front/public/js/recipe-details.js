@@ -1,4 +1,4 @@
-// The recipe window and the "Add to calendar" popup, shared by the Home and
+// The recipe window and the "Add to meal plan" popup, shared by the Home and
 // Recipes pages (views/partials/recipe-details.ejs, css/recipe-details.css).
 //
 // Other scripts on the page can use:
@@ -32,7 +32,7 @@
         location.href = `/login?next=${encodeURIComponent(location.pathname + location.search)}`;
     }
 
-    // ---------- Add to calendar popup ----------
+    // ---------- Add to meal plan popup ----------
     // Pick a day and a meal, then POST /api/me/calendar.
 
     const plan = document.getElementById("plan-dialog");
@@ -110,7 +110,7 @@
 
     function resetDuplicateQuestion() {
         confirmDuplicate = false;
-        planSubmit.textContent = "Add to calendar";
+        planSubmit.textContent = "Add to meal plan";
         showPlanMessage("");
     }
 
@@ -175,12 +175,12 @@
                 }
                 return;
             }
-            if (!response.ok) throw new Error(body.error || "Couldn't add it to your calendar. Please try again.");
+            if (!response.ok) throw new Error(body.error || "Couldn't add it to your meal plan. Please try again.");
 
             planSaved = true;
             document.getElementById("plan-done-text").replaceChildren(
                 el("strong", "", planRecipe.recipe_title || "The recipe"),
-                ` is on your calendar for ${MEAL_SLOTS[slot].toLowerCase()} on ${formatDay(date)}.`);
+                ` is on your meal plan for ${MEAL_SLOTS[slot].toLowerCase()} on ${formatDay(date)}.`);
             planDoneLink.href = `/calendar?date=${encodeURIComponent(date)}`;
             planChoose.hidden = true;
             planDone.hidden = false;
