@@ -3,7 +3,11 @@
 //
 // Other scripts on the page can use:
 //   RecipeDetails.open(recipeId, { title, description, image_url })
-//   PlanDialog.open({ recipe_id, recipe_title, recipe_class_desc })
+//   PlanDialog.open({ recipe_id, recipe_title, recipe_class_desc }, { entryPoint })
+//
+// The popup logs add_to_calendar_started / _cancelled / _error for the OKR
+// numbers (js/events.js). entryPoint says which button opened it; the server
+// logs add_to_calendar_completed with the same entry point.
 //
 // A link with data-recipe-details="<recipe id>" opens the window when clicked,
 // and /recipes?recipe=<id> opens it as soon as the page loads.
@@ -46,6 +50,25 @@
     // Set when the recipe is already planned in another meal that day and
     // the user is being asked whether to add it again
     let confirmDuplicate = false;
+    // Which button opened the popup: "recipe_details" or "home_card"
+    let planEntryPoint = "recipe_details";
+    // True once the recipe is saved, so closing afterwards isn't a cancel
+    let planSaved = false;
+
+    function trackPlan(eventName, extra = {}) {
+        window.logEvent?.(eventName, {
+            entry_point: planEntryPoint,
+            recipe_id: planRecipe?.recipe_id,
+            ...extra,
+        });
+    }
+
+    // A problem caught here in the browser. Errors from the server are
+    // logged by the server (back/src/routes/calendar.js).
+    function showPlanError(text) {
+        showPlanMessage(text);
+        trackPlan("add_to_calendar_error", { message: text, source: "client" });
+    }
 
     // "2026-11-10" in the visitor's own time zone
     function dateKey(date = new Date()) {
@@ -91,8 +114,10 @@
         showPlanMessage("");
     }
 
-    function openPlan(recipe) {
+    function openPlan(recipe, { entryPoint = "recipe_details" } = {}) {
         planRecipe = recipe;
+        planEntryPoint = entryPoint;
+        planSaved = false;
         document.getElementById("plan-recipe").textContent = recipe.recipe_title;
 
         const today = dateKey();
@@ -107,14 +132,15 @@
         planChoose.hidden = false;
         planDone.hidden = true;
         plan.showModal();
+        trackPlan("add_to_calendar_started");
     }
 
     async function savePlan() {
         const date = planDate.value;
         const slot = selectedSlot();
-        if (!date) { showPlanMessage("Choose a day."); planDate.focus(); return; }
-        if (date < planDate.min) { showPlanMessage("Choose today or a later day."); planDate.focus(); return; }
-        if (!slot) { showPlanMessage("Choose a meal."); return; }
+        if (!date) { showPlanError("Choose a day."); planDate.focus(); return; }
+        if (date < planDate.min) { showPlanError("Choose today or a later day."); planDate.focus(); return; }
+        if (!slot) { showPlanError("Choose a meal."); return; }
 
         planSubmit.disabled = true;
         showPlanMessage("");
@@ -127,6 +153,7 @@
                     meal_slot: slot,
                     recipe_id: planRecipe.recipe_id,
                     allow_duplicate: confirmDuplicate,
+                    entry_point: planEntryPoint,
                 }),
             });
             const body = await response.json().catch(() => ({}));
@@ -150,6 +177,7 @@
             }
             if (!response.ok) throw new Error(body.error || "Couldn't add it to your calendar. Please try again.");
 
+            planSaved = true;
             document.getElementById("plan-done-text").replaceChildren(
                 el("strong", "", planRecipe.recipe_title || "The recipe"),
                 ` is on your calendar for ${MEAL_SLOTS[slot].toLowerCase()} on ${formatDay(date)}.`);
@@ -158,7 +186,12 @@
             planDone.hidden = false;
             planDoneLink.focus();
         } catch (error) {
-            showPlanMessage(error instanceof TypeError ? "Couldn't reach the server. Please try again." : error.message);
+            if (error instanceof TypeError) {
+                // Never reached the server, so the server couldn't log it
+                showPlanError("Couldn't reach the server. Please try again.");
+            } else {
+                showPlanMessage(error.message);
+            }
         } finally {
             planSubmit.disabled = false;
         }
@@ -181,6 +214,10 @@
     // Clicking the dimmed background closes the popup
     plan.addEventListener("click", (event) => {
         if (event.target === plan) plan.close();
+    });
+    // Closed without saving (Cancel, ×, the background or Esc)
+    plan.addEventListener("close", () => {
+        if (!planSaved) trackPlan("add_to_calendar_cancelled");
     });
 
     window.PlanDialog = { open: openPlan };

@@ -579,4 +579,14 @@ monthPicker.addEventListener("click", (event) => {
     if (event.target === monthPicker) monthPicker.close();
 });
 
+// Every + / Add link here goes to the Recipes page for a day (searchUrl).
+// Following one starts adding to the calendar, for the OKR numbers
+// (js/events.js); the Recipes page logs how it ends (js/search.js).
+// The sidebar's plain /recipes link has no date, so it doesn't count.
+document.addEventListener("click", (event) => {
+    if (event.target.closest?.('a[href^="/recipes?date="]')) {
+        window.logEvent?.("add_to_calendar_started", { entry_point: "calendar" });
+    }
+});
+
 showSelectedDate();

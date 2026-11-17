@@ -331,7 +331,7 @@
         const obj_plan = document.getElementById("plan-dialog");
 
         document.getElementById("calendar-btn").addEventListener("click", function() {
-            PlanDialog.open(meals[nCurrent]);
+            PlanDialog.open(meals[nCurrent], { entryPoint: "home_card" });
         });
 
         document.getElementById("restart-btn").addEventListener("click", function() {
