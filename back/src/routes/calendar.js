@@ -148,7 +148,7 @@ router.delete('/:calendarId', async (req, res) => {
     [req.user.user_id, calendarId]
   )
   if (rowCount === 0) {
-    return res.status(404).json({ error: 'That meal is not on the calendar' })
+    return res.status(404).json({ error: 'That meal is not on your meal plan' })
   }
   res.status(204).end()
 })

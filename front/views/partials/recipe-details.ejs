@@ -1,4 +1,4 @@
-<%# The recipe window and the "Add to calendar" popup, shared by the Home and
+<%# The recipe window and the "Add to meal plan" popup, shared by the Home and
     Recipes pages. A page that includes this also needs css/recipe-details.css
     and js/recipe-details.js.
 
@@ -30,7 +30,7 @@
     <div class="rw-actions" id="details-actions" hidden>
         <button type="button" class="rw-btn rw-primary" id="details-calendar">
             <svg class="icon"><use href="#rd-icon-calendar-plus"/></svg>
-            <span>Add to calendar</span>
+            <span>Add to meal plan</span>
         </button>
         <button type="button" class="rw-btn rw-like" id="details-like" aria-pressed="false">
             <svg class="icon"><use href="#rd-icon-heart"/></svg>
@@ -39,12 +39,12 @@
     </div>
 </dialog>
 
-<%# "Add to calendar" popup: pick a day and a meal, then save to /api/me/calendar %>
+<%# "Add to meal plan" popup: pick a day and a meal, then save to /api/me/calendar %>
 <dialog class="details plan" id="plan-dialog" aria-labelledby="plan-heading">
     <form class="plan-form" id="plan-form" novalidate>
         <div class="details-header">
             <div>
-                <h2 id="plan-heading">Add to calendar</h2>
+                <h2 id="plan-heading">Add to meal plan</h2>
                 <p class="plan-recipe" id="plan-recipe"></p>
             </div>
             <button type="button" class="details-close" data-plan-close aria-label="Close">
@@ -70,7 +70,7 @@
 
             <div class="plan-actions">
                 <button type="button" class="plan-btn" data-plan-close>Cancel</button>
-                <button type="submit" class="plan-btn plan-primary" id="plan-submit">Add to calendar</button>
+                <button type="submit" class="plan-btn plan-primary" id="plan-submit">Add to meal plan</button>
             </div>
         </div>
 
@@ -81,7 +81,7 @@
             <p id="plan-done-text" role="status"></p>
             <div class="plan-actions">
                 <button type="button" class="plan-btn" data-plan-close>Keep browsing</button>
-                <a class="plan-btn plan-primary" id="plan-done-link" href="/calendar">See calendar</a>
+                <a class="plan-btn plan-primary" id="plan-done-link" href="/calendar">See meal plan</a>
             </div>
         </div>
     </form>

@@ -66,7 +66,7 @@
                         <svg class="icon"><use href="#icon-calendar"/></svg>
                         <p>Adding to <strong><%= plan.dayLabel %><% if (plan.slotLabel) { %> – <%= plan.slotLabel %><% } %></strong></p>
                         <%# Keeps searching, but stops adding to this day %>
-                        <a class="plan-dismiss" href="<%= plan.dismissHref %>" aria-label="Browse recipes without adding to the calendar" title="Browse without adding to the calendar">
+                        <a class="plan-dismiss" href="<%= plan.dismissHref %>" aria-label="Browse recipes without adding to your meal plan" title="Browse without adding to your meal plan">
                             <svg class="icon"><use href="#icon-x"/></svg>
                         </a>
                     </div>
@@ -85,7 +85,7 @@
                         </span>
                         <a class="plan-back" href="<%= plan.calendarHref %>">
                             <svg class="icon"><use href="#icon-chevron-left"/></svg>
-                            Back to calendar
+                            Back to meal plan
                         </a>
                     </div>
                 </section>
@@ -151,7 +151,7 @@
                         <%# Names the meal it adds to, so the destination is never a surprise %>
                         <button type="button" class="add-to-calendar" data-recipe-id="<%= r.recipe_id %>" data-recipe-title="<%= r.title %>"<% if (!plan.slot) { %> disabled title="Choose a meal above first"<% } %>>
                             <svg class="icon"><use href="#icon-plus"/></svg>
-                            <%= plan.slotLabel ? `Add to ${plan.slotLabel.toLowerCase()}` : 'Add to calendar' %><span class="visually-hidden">: <%= r.title %></span>
+                            <%= plan.slotLabel ? `Add to ${plan.slotLabel.toLowerCase()}` : 'Add to meal plan' %><span class="visually-hidden">: <%= r.title %></span>
                         </button>
                         <% } %>
                     </li>
@@ -164,7 +164,7 @@
         <nav class="nav" aria-label="Main">
             <p class="nav-brand"><img class="brand-logo" src="/images/logo.svg" alt="" width="28" height="28">Preply<span>.</span></p>
             <ul>
-                <li><a class="nav-link" href="/calendar"><span class="nav-icon"><svg class="icon"><use href="#icon-calendar"/></svg></span>Calendar</a></li>
+                <li><a class="nav-link" href="/calendar"><span class="nav-icon"><svg class="icon"><use href="#icon-calendar"/></svg></span>Meal Plan</a></li>
                 <li><a class="nav-link" href="/shopping"><span class="nav-icon"><svg class="icon"><use href="#icon-list"/></svg></span>Shopping</a></li>
                 <li class="nav-home"><a class="nav-link" href="/"><span class="nav-icon"><svg class="icon"><use href="#icon-home"/></svg></span>Home</a></li>
                 <li><a class="nav-link" href="/recipes" aria-current="page"><span class="nav-icon"><svg class="icon"><use href="#icon-recipes"/></svg></span>Recipes</a></li>
@@ -262,7 +262,7 @@
         </div>
     </dialog>
 
-    <%# The recipe window and its "Add to calendar" popup (js/recipe-details.js) %>
+    <%# The recipe window and its "Add to meal plan" popup (js/recipe-details.js) %>
     <%- include('partials/recipe-details') %>
 
     <%- include('partials/profile-menu') %>
