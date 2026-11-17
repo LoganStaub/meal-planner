@@ -1,0 +1,41 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Not authorized | Preply</title>
+<link rel="icon" type="image/svg+xml" href="/images/logo.svg">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=DM+Sans:opsz,wght@9..40,400;9..40,500;9..40,600;9..40,700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="/css/admin.css">
+<link rel="stylesheet" href="/css/page-card.css">
+<link rel="stylesheet" href="/css/profile-menu.css">
+<link rel="stylesheet" href="/css/page-header.css">
+<link rel="stylesheet" href="/css/site-nav.css">
+<script src="/js/no-back-cache.js"></script>
+</head>
+<body class="has-site-nav">
+
+<%- include('partials/page-header', { pageTitle: 'Admin' }) %>
+
+<div class="admin admin-denied page-card">
+  <main class="denied">
+    <div class="denied-icon" aria-hidden="true">
+      <svg viewBox="0 0 24 24"><rect x="4" y="11" width="16" height="10" rx="2"/><path d="M8 11V7a4 4 0 0 1 8 0v4"/></svg>
+    </div>
+    <p class="admin-eyebrow">Admins only</p>
+    <h1>You're not authorized to view this page</h1>
+    <p class="denied-text">The admin dashboard is only available to Preply admins. If you think you should have access, ask a teammate to make your account an admin.</p>
+    <a class="admin-back" href="/home">
+      <svg viewBox="0 0 24 24" aria-hidden="true"><path d="m15 18-6-6 6-6"/></svg>
+      Back to Preply
+    </a>
+  </main>
+</div>
+
+<%- include('partials/site-nav') %>
+<%- include('partials/profile-menu') %>
+<script src="/js/profile-menu.js" defer></script>
+</body>
+</html>

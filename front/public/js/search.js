@@ -3,6 +3,12 @@
 // to the calendar on that day.
 
 // Saves to /api/me/calendar: the server knows who is logged in, so no user id is sent.
+//
+// For the OKR numbers (js/events.js): the calendar's + link logged
+// add_to_calendar_started; this page logs a cancel when the user leaves the
+// banner (× or Back to calendar) or says no to adding a repeat, and an error
+// for problems caught in the browser. The server logs the completed add
+// and its own errors, with entry_point "calendar".
 // Same numbers as calendar.meal_slot (see back/db/schema.sql)
 const MEAL_SLOTS = { 1: "Breakfast", 2: "Lunch", 3: "Dinner", 4: "Snack", 5: "Dessert" };
 
@@ -25,6 +31,21 @@ function showError(message) {
     pageErrorMessage.textContent = message;
     pageError.hidden = false;
     pageError.scrollIntoView({ behavior: "smooth", block: "center" });
+}
+
+function track(eventName, metadata = {}) {
+    window.logEvent?.(eventName, { entry_point: "calendar", ...metadata });
+}
+
+// A problem the server never saw (it logs its own errors)
+function showClientError(message, recipeId) {
+    showError(message);
+    track("add_to_calendar_error", { message, recipe_id: recipeId, source: "client" });
+}
+
+// Leaving the "Adding to …" banner without adding anything
+for (const link of planBanner.querySelectorAll(".plan-dismiss, .plan-back")) {
+    link.addEventListener("click", () => track("add_to_calendar_cancelled"));
 }
 
 // [3] -> "dinner", [2, 3] -> "lunch and dinner"
@@ -75,6 +96,7 @@ function postMeal(date, slot, recipeId, allowDuplicate) {
             meal_slot: slot,
             recipe_id: recipeId,
             allow_duplicate: allowDuplicate,
+            entry_point: "calendar",
         }),
     });
 }
@@ -82,11 +104,11 @@ function postMeal(date, slot, recipeId, allowDuplicate) {
 async function addToCalendar(button) {
     const date = planBanner.dataset.date;
     const slot = Number(planBanner.dataset.slot);
+    const recipeId = Number(button.dataset.recipeId);
     if (!slot) {
-        showError("Choose a meal above first.");
+        showClientError("Choose a meal above first.", recipeId);
         return;
     }
-    const recipeId = Number(button.dataset.recipeId);
 
     button.disabled = true;
     button.setAttribute("aria-busy", "true");
@@ -101,6 +123,11 @@ async function addToCalendar(button) {
             }
             const addAgain = await askAboutDuplicate(button.dataset.recipeTitle, body.meal_slots || [], slot);
             if (!addAgain) {
+                // Saying no to a repeat is a cancel. A repeat in the same meal
+                // can't be added at all, and the server logged that as an error.
+                if (!(body.meal_slots || []).includes(slot)) {
+                    track("add_to_calendar_cancelled", { recipe_id: recipeId });
+                }
                 button.disabled = false;
                 button.removeAttribute("aria-busy");
                 button.focus();
@@ -114,7 +141,11 @@ async function addToCalendar(button) {
         }
         location.href = `/calendar?date=${encodeURIComponent(date)}`;
     } catch (error) {
-        showError(error instanceof TypeError ? "Couldn't reach the server. Please try again." : error.message);
+        if (error instanceof TypeError) {
+            showClientError("Couldn't reach the server. Please try again.", recipeId);
+        } else {
+            showError(error.message);
+        }
         button.disabled = false;
         button.removeAttribute("aria-busy");
     }

@@ -17,6 +17,8 @@ import shoppingRouter, { getShoppingItems} from './routes/shopping.js'
 import authRouter, { loadUser, requireLogin } from './routes/auth.js'
 import searchRouter from './routes/search.js'
 import recipeAssistantRouter from './routes/recipeAssistant.js'
+import eventsRouter from './routes/events.js'
+import adminRouter from './routes/admin.js'
 
 if (!process.env.SESSION_SECRET) {
   throw new Error('Missing SESSION_SECRET. Add it to .env (see .env.example).')
@@ -25,7 +27,7 @@ if (!process.env.SESSION_SECRET) {
 // The per-user tables come from db/migrations. Fail with a clear message
 // instead of confusing errors on every page if they haven't been run yet.
 const { rows: missingTables } = await pool.query(
-  `select name from unnest(array['user_pantry', 'user_liked_recipes']) as name
+  `select name from unnest(array['user_pantry', 'user_liked_recipes', 'events']) as name
    where to_regclass('public.' || name) is null`
 )
 if (missingTables.length > 0) {
@@ -114,6 +116,12 @@ app.use('/api/me/shopping', shoppingRouter)
 
 // Recipes page's "Add your own recipe" assistant: /api/recipe-assistant/...
 app.use('/api', recipeAssistantRouter)
+
+// POST /api/events: pages log what users do, for the OKRs. See routes/events.js.
+app.use('/api', eventsRouter)
+
+// Admin dashboard with the OKR numbers: /admin and /admin/okrs. See routes/admin.js.
+app.use(adminRouter)
 
 // Render the home page from its EJS view.
 app.get(['/home', '/index.html'], (req, res) => {
