@@ -5,12 +5,16 @@
   --border: #d9dee6;
   --text: #1f2430;
   --muted: #5d6675;
-  --accent: #d9531e;
-  --accent-soft: #fddccf;
+  --accent: #D4552A;
+  --accent-hover: #BC4720;
+  --accent-soft: #FCDCCD;
   --green: #3d6b3f;
   --green-soft: #d8ecd6;
   --slate: #5d6675;
   --slate-soft: #e6ebf1;
+  /* Edit mode's tint and borders */
+  --edit-tint: #FFF4EE;
+  --edit-border: #F0C2AE;
 }
 * { box-sizing: border-box; margin: 0; padding: 0; }
 body {
@@ -25,68 +29,18 @@ body {
   justify-content: flex-start;
   padding: clamp(8px, 1.3vw, 18px) clamp(10px, 1.4vw, 20px) 10px;
 }
+/* The pantry card. Size, corners and shadow: page-card.css */
 .laptop {
-  width: min(100%, 1600px);
-  min-height: 0;
-  margin-inline: auto;
   background: var(--canvas);
-  border: 1px solid var(--border);
-  border-radius: clamp(16px, 2vw, 28px);
-  overflow: hidden;
-  box-shadow: 0 30px 60px -20px rgba(40, 60, 100, .25);
 }
-/* Header */
-header {
-  background: var(--surface);
-  border-bottom: 1px solid var(--border);
-  min-height: 68px;
-  padding: 10px clamp(16px, 2vw, 28px);
-  display: grid;
-  grid-template-columns: minmax(140px, 1fr) auto minmax(36px, 1fr);
-  align-items: center;
-  gap: 12px;
-}
-.brand { display: flex; align-items: center; gap: 12px; font-weight: 700; font-size: 17px; }
-.brand-logo {
-  width: 36px; height: 36px; border-radius: 50%;
-  background: var(--accent); display: grid; place-items: center;
-}
-.brand-logo svg { width: 18px; height: 18px; stroke: #fff; }
-nav {
-  display: flex; gap: 4px; padding: 4px;
-  border: 1px solid var(--border); border-radius: 999px; background: var(--surface);
-}
-nav a {
-  display: flex; align-items: center; gap: 8px;
-  padding: 8px 14px; border-radius: 999px;
-  font-size: 14px; font-weight: 500; color: var(--muted);
-  text-decoration: none;
-  transition: color .2s ease, background-color .2s ease, box-shadow .2s ease;
-}
-nav a svg { width: 16px; height: 16px; }
-nav a.active { background: var(--accent-soft); color: var(--accent); }
-nav a:hover {
-  color: var(--text);
-  background-color: rgba(31, 35, 40, .06);
-  box-shadow: 0 4px 14px rgba(31, 35, 40, .10);
-}
-nav a.active:hover {
-  color: var(--accent);
-  background-color: var(--accent-soft);
-}
-.avatar {
-  justify-self: end; width: 36px; height: 36px; border-radius: 50%;
-  border: 1px solid var(--avatar-color, var(--accent)); background: var(--avatar-color, var(--accent));
-  display: grid; place-items: center; color: #fff; cursor: pointer; padding: 0;
-  font: inherit; font-size: 12px; font-weight: 700;
-}
+
 svg { fill: none; stroke: currentColor; stroke-width: 1.8; stroke-linecap: round; stroke-linejoin: round; }
 
 /* Pantry banner */
 .pantry-hero {
   position: relative;
   isolation: isolate;
-  height: clamp(150px, 17vw, 220px);
+  height: clamp(110px, 12vw, 160px);
   overflow: hidden;
   background: #cbb394;
 }
@@ -143,8 +97,18 @@ h1 { font-size: 32px; font-weight: 600; letter-spacing: -.02em; margin: 8px 0 14
 .count { display: flex; align-items: baseline; gap: 8px; margin: 6px 0 10px; }
 .count strong { font-size: 30px; font-weight: 500; line-height: 1; }
 .count span { font-size: 17px; color: var(--muted); }
-.legend { display: flex; gap: 8px; }
-.legend .chip { flex: 1; text-align: center; padding: 6px 4px; }
+/* The amount chips, which are also the filters (All, Plenty left, …) */
+/* Two by two in the narrow sidebar (computers) and on phones; one row of
+   four when the card spans the full width (tablets) */
+.legend { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 8px; }
+.legend .chip { text-align: center; padding: 7px 10px; }
+.chip.all { background: #ECE8E4; color: var(--text); }
+/* The picked filter gets a ring in its own color */
+.legend .amount-filter-btn { transition: box-shadow .15s, transform .1s, filter .15s; }
+.legend .amount-filter-btn[aria-pressed="true"] { box-shadow: 0 0 0 2px var(--surface), 0 0 0 4px currentColor; }
+@media (max-width: 960px) and (min-width: 480px) {
+  .legend { grid-template-columns: repeat(4, minmax(0, 1fr)); }
+}
 
 .chip {
   border: 0; font: inherit; font-size: 12px; font-weight: 600;
@@ -154,8 +118,9 @@ h1 { font-size: 32px; font-weight: 600; letter-spacing: -.02em; margin: 8px 0 14
 .chip.low    { background: var(--slate-soft); color: var(--slate); }
 .chip.none   { background: var(--accent-soft); color: var(--accent); }
 button.chip { cursor: pointer; transition: transform .1s, filter .15s; }
-button.chip:hover { filter: brightness(.96); }
-button.chip:active { transform: scale(.96); }
+/* Only an amount that can be clicked (edit mode) reacts to the mouse */
+button.chip:not(:disabled):hover { filter: brightness(.96); }
+button.chip:not(:disabled):active { transform: scale(.96); }
 
 .field {
   display: flex; align-items: center; gap: 12px;
@@ -174,33 +139,20 @@ button.chip:active { transform: scale(.96); }
 .add-row {
   display: grid;
   grid-template-columns: minmax(0, 1fr) auto;
-  grid-template-rows: 48px auto;
   gap: 8px;
 }
 .add-row .add-name-field { grid-column: 1; grid-row: 1; min-width: 0; height: 48px; }
-.inventory-field {
-  grid-column: 1 / -1; grid-row: 2; min-width: 0;
-  display: flex; align-items: center; justify-content: space-between; gap: 8px;
-  height: 48px; font-size: 13px;
-}
-.inventory-field span { min-width: 0; flex: 1 1 auto; color: var(--muted); }
-.inventory-field select {
-  flex: 0 1 180px; width: 60%; min-width: 120px; max-width: 180px;
-  height: 48px; padding: 0 16px; border: 1px solid var(--border); border-radius: 16px;
-  background: var(--surface); color: var(--text); font: inherit; font-size: 14px;
-}
-.inventory-field select:focus { outline: 0; border-color: var(--accent); box-shadow: 0 0 0 3px var(--accent-soft); }
 .add-row .btn { grid-column: 2; grid-row: 1; justify-content: center; }
 .btn {
   display: flex; align-items: center; gap: 8px;
   height: 48px; padding: 0 22px; border: 0; border-radius: 16px;
   background: var(--accent); color: #fff;
   font: inherit; font-size: 15px; font-weight: 600; cursor: pointer;
-  transition: filter .15s;
+  transition: background-color .2s ease;
 }
-.btn:hover { filter: brightness(1.08); }
+.btn:hover { background: var(--accent-hover); }
 .btn svg { width: 16px; height: 16px; stroke-width: 2.4; }
-.btn:disabled, button.chip:disabled, .del:disabled { cursor: wait; opacity: .6; }
+.btn:disabled { cursor: wait; opacity: .6; }
 .feedback { min-height: 1.25rem; margin-top: 10px; color: var(--green); font-size: 13px; }
 .feedback.is-error { color: var(--accent); }
 
@@ -215,18 +167,75 @@ button.chip:active { transform: scale(.96); }
   background: var(--surface); border: 1px solid var(--border); border-radius: 14px;
   font-weight: 500; font-size: 15px;
 }
-.item[aria-busy="true"] { opacity: .65; }
 .item-name { min-width: 0; flex: 1 1 100px; overflow-wrap: anywhere; }
-.item-name-input {
-  flex: 1 1 150px; min-width: 0; width: 100%; height: 40px; padding: 0 10px;
-  border: 1px solid var(--border); border-radius: 10px; background: var(--surface);
-  color: var(--text); font: inherit;
-}
-.item-name-input:focus { outline: 3px solid var(--accent-soft); border-color: var(--accent); }
-.item.is-editing .item-name { display: none; }
-.item:not(.is-editing) .del { display: none; }
-.item.is-editing button.chip { cursor: pointer; }
 .item-right { display: flex; align-items: center; justify-content: flex-end; gap: 8px; flex: 0 0 auto; }
+/* Outside edit mode the amount is only a label */
+.item button.chip:disabled { cursor: default; }
+
+/* ---------- Edit mode (js/pantry.js) ----------
+   One Edit button for the whole list. The heading and tools stay in view
+   while the list scrolls. */
+.edit-tools {
+  position: sticky; top: 0; z-index: 1;
+  margin-bottom: 10px; background: var(--canvas);
+}
+.edit-tools .list-head { margin-bottom: 0; padding-bottom: 6px; }
+.list-actions { display: flex; gap: 8px; }
+.edit-bar {
+  display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between;
+  gap: 8px 14px; padding: 10px 12px; margin-top: 4px;
+  background: var(--edit-tint); border: 1.5px solid var(--accent); border-radius: 14px;
+}
+
+/* The Edit button stands out in the accent color so it's easy to find */
+.item-action.edit-start {
+  display: inline-flex; align-items: center; gap: 6px;
+  border-color: var(--accent); background: var(--accent-soft); color: var(--accent);
+}
+.item-action.edit-start:hover { background: var(--accent); color: #fff; }
+.edit-start svg { width: 14px; height: 14px; stroke-width: 2.2; }
+
+/* While editing: an "Editing" badge by the heading, and every ingredient
+   gets an accent-tinted border so it's clear the list can be changed */
+.pantry-editing .list-head h2::after {
+  content: "Editing";
+  display: inline-block; margin-left: 10px; padding: 3px 10px; vertical-align: 3px;
+  border-radius: 999px; background: var(--accent); color: #fff;
+  font-size: 11px; font-weight: 700; letter-spacing: .06em; text-transform: uppercase;
+}
+.pantry-editing .item { border-color: var(--edit-border); }
+.select-all { display: flex; align-items: center; gap: 8px; font-size: 14px; font-weight: 600; cursor: pointer; }
+.edit-bar-actions { display: flex; flex-wrap: wrap; align-items: center; gap: 6px; }
+.edit-bar-label { font-size: 13px; color: var(--muted); }
+.edit-bar button:disabled { cursor: default; opacity: .45; }
+.item-action.delete-action { display: inline-flex; align-items: center; gap: 6px; margin-left: 6px; color: var(--accent); }
+.delete-action svg { width: 15px; height: 15px; }
+.edit-status { margin-top: 8px; font-size: 13px; color: var(--muted); }
+.edit-status.is-error { color: var(--accent); font-weight: 600; }
+
+.item-select, .select-all input {
+  flex: none; width: 20px; height: 20px; margin: 0;
+  accent-color: var(--accent); cursor: pointer;
+}
+.pantry-editing .item { cursor: pointer; }
+.pantry-editing .item button.chip:not(:disabled) { box-shadow: inset 0 0 0 1px currentColor; }
+.item.is-selected { border-color: var(--accent); background: #FFF8F4; }
+/* An amount that has been changed but not saved yet */
+.pantry-editing .item.is-changed button.chip { box-shadow: 0 0 0 2px var(--surface), 0 0 0 4px var(--accent); }
+.item.is-removing { background: var(--canvas); border-style: dashed; cursor: default; }
+.item.is-removing .item-name { color: var(--muted); text-decoration: line-through; }
+.item.is-removing .item-select { visibility: hidden; }
+.item-removing { font-size: 12px; font-weight: 600; color: var(--accent); white-space: nowrap; }
+.item-undo {
+  margin-left: 4px; padding: 5px 9px; border: 1px solid var(--border); border-radius: 9px;
+  background: var(--surface); color: var(--text); font: inherit; font-size: 12px; font-weight: 600; cursor: pointer;
+}
+.item-undo:hover { border-color: var(--accent); }
+.item-select:focus-visible, .select-all input:focus-visible, .item-undo:focus-visible,
+.item-action:focus-visible, button.chip:focus-visible {
+  outline: 2px solid var(--accent); outline-offset: 2px;
+}
+
 .item-action {
   border: 1px solid var(--border); border-radius: 9px; padding: 7px 10px;
   background: var(--surface); color: var(--text); font: inherit; font-size: 12px;
@@ -235,36 +244,46 @@ button.chip:active { transform: scale(.96); }
 .item-action:hover { border-color: var(--accent); background: var(--accent-soft); }
 .item-action.save-action { border-color: var(--accent); background: var(--accent); color: #fff; }
 .item-action.save-action:hover { filter: brightness(1.06); }
-.item-action:disabled { cursor: wait; opacity: .6; }
-.del {
-  border: 0; background: none; color: var(--muted); cursor: pointer;
-  width: 24px; height: 24px; display: grid; place-items: center; border-radius: 6px;
+.item-action:disabled { cursor: default; opacity: .6; }
+/* "Are you sure?" before deleting (js/pantry.js) */
+.confirm-remove {
+  width: min(400px, calc(100% - 32px)); margin: auto; padding: 24px;
+  border: 0; border-radius: 22px; background: var(--surface); color: var(--text);
+  box-shadow: 0 24px 60px rgba(0, 0, 0, .25); text-align: center;
 }
-.del:hover { color: var(--accent); background: var(--accent-soft); }
-.del svg { width: 16px; height: 16px; }
+.confirm-remove::backdrop { background: rgba(20, 16, 14, .45); backdrop-filter: blur(4px); }
+.confirm-remove-icon {
+  display: grid; place-items: center; width: 52px; height: 52px; margin: 0 auto 14px;
+  border-radius: 50%; background: var(--accent-soft); color: var(--accent);
+}
+.confirm-remove-icon svg { width: 24px; height: 24px; }
+.confirm-remove h2 { font-size: 20px; font-weight: 700; }
+.confirm-remove p { margin-top: 8px; font-size: 15px; line-height: 1.45; color: var(--muted); }
+.confirm-remove-list {
+  max-height: 150px; margin-top: 12px; padding: 10px 14px; overflow-y: auto;
+  list-style: none; border-radius: 12px; background: var(--canvas);
+  font-size: 14px; font-weight: 500; line-height: 1.7; text-align: left;
+}
+.confirm-remove-actions { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-top: 18px; }
+.confirm-remove-actions .item-action { padding: 12px 10px; border-radius: 14px; font-size: 14px; }
+
 .empty { grid-column: 1 / -1; padding: 28px 0; text-align: center; color: var(--muted); font-size: 14px; }
 
 .caption { margin-top: 12px; font-size: 13px; color: var(--muted); text-align: center; }
 
 @media (max-width: 960px) {
-  header { grid-template-columns: 1fr auto; }
-  nav { display: none; }
   main { grid-template-columns: minmax(0, 1fr); padding: clamp(14px, 2vw, 22px); }
 }
 
 @media (max-width: 620px) {
-  body { padding: 8px; }
-  .laptop { border-radius: 18px; }
-  header { min-height: 64px; padding: 10px 16px; }
-  .brand { gap: 8px; font-size: 15px; }
-  .brand-logo { width: 32px; height: 32px; }
-  .pantry-hero { height: 150px; }
+
+  .pantry-hero { height: 110px; }
   .pantry-hero-title { left: 16px; bottom: 16px; }
   .pantry-hero h1 { font-size: 28px; }
   main { gap: 20px; padding: 18px 12px 22px; }
   h1 { font-size: 28px; }
   .summary { padding: 18px; }
-  .list-head { align-items: flex-start; flex-direction: column; gap: 4px; }
+  .list-head { align-items: center; }
   .grid { grid-template-columns: minmax(0, 1fr); }
   .item { gap: 8px; padding: 9px 10px; }
   .item-right { gap: 6px; }

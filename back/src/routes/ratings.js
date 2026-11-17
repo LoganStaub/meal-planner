@@ -3,7 +3,7 @@
 // Privacy: a user's own rating (user_recipe_ratings) is only ever sent back
 // to that same user. Everyone else only sees the recipe's anonymous totals
 // (recipe_rating_stats), which a database trigger keeps in sync. See
-// db/migrations/009_recipe_ratings.sql.
+// db/migrations/012_recipe_ratings.sql.
 import { Router } from 'express'
 import { pool } from '../db.js'
 import { isPositiveInt, isRating } from '../validators.js'

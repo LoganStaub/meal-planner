@@ -1,14 +1,11 @@
+<%# One pantry ingredient. The tick box, the clickable amount and "Will be
+    removed" only come into play in edit mode (js/pantry.js). %>
 <% const displayName = item.name.toLocaleLowerCase().replace(/(^|[\s-])([\p{L}\p{N}])/gu, (_, separator, letter) => separator + letter.toLocaleUpperCase()); %>
 <div class="item" data-ingredient-id="<%= item.ingredient_id %>" data-pantry-amount-id="<%= item.pantry_amount_id %>" data-name="<%= item.name.toLocaleLowerCase() %>">
+  <input class="item-select" type="checkbox" aria-label="Select <%= displayName %>" hidden>
   <span class="item-name"><%= displayName %></span>
-  <input class="item-name-input" type="text" value="<%= item.name %>" aria-label="Edit <%= displayName %>" hidden>
   <div class="item-right">
-    <button class="chip <%= item.status %>" type="button" data-status="<%= item.status %>" aria-label="Inventory status for <%= displayName %>: <%= statuses[item.status].label %>. Click Edit to change it." title="Click Edit to change inventory status" disabled><%= statuses[item.status].label %></button>
-    <button class="item-action edit-action" type="button" data-action="edit" aria-label="Edit <%= displayName %>" title="Edit ingredient">Edit</button>
-    <button class="item-action save-action" type="button" data-action="save" hidden>Save</button>
-    <button class="item-action cancel-action" type="button" data-action="cancel" hidden>Cancel</button>
-    <button class="del" type="button" aria-label="Remove <%= displayName %>" title="Remove ingredient" hidden disabled>
-      <svg viewBox="0 0 24 24"><path d="M4 7h16M10 11v6M14 11v6M6 7l1 13h10l1-13M9 7V4h6v3"/></svg>
-    </button>
+    <span class="item-removing" hidden>Will be removed <button class="item-undo" type="button">Undo</button></span>
+    <button class="chip <%= item.status %>" type="button" data-status="<%= item.status %>" aria-label="<%= displayName %>: <%= statuses[item.status].label %>" disabled><%= statuses[item.status].label %></button>
   </div>
 </div>

@@ -1,5 +1,5 @@
 -- =====================================================================
--- 008: profile icon color
+-- 011: profile icon color
 --
 -- HOW TO RUN:  npm run db:migrate   (from back/)
 --

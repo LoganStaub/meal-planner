@@ -19,7 +19,7 @@ const transport = smtpConfigured
     })
   : null
 
-const from = process.env.MAIL_FROM || 'Meal Planner <no-reply@localhost>'
+const from = process.env.MAIL_FROM || 'Preply <no-reply@localhost>'
 
 export async function sendEmail({ to, subject, text, html }) {
   if (!transport) {
@@ -39,16 +39,16 @@ export function sendPasswordResetEmail({ to, firstName, link }) {
   const name = firstName ? ` ${firstName}` : ''
   return sendEmail({
     to,
-    subject: 'Reset your Meal Planner password',
+    subject: 'Reset your Preply password',
     text:
-      `Hi${name},\n\nSomeone asked to reset the password for your Meal Planner account. ` +
+      `Hi${name},\n\nSomeone asked to reset the password for your Preply account. ` +
       `To choose a new password, open this link:\n\n${link}\n\n` +
       `This link works once and expires in 1 hour. If you didn't ask for this, you can ignore this email; ` +
       `your password won't change.`,
     html: `
       <div style="font-family: system-ui, sans-serif; color: #1F2328; max-width: 480px;">
         <p>Hi${escapeHtml(name)},</p>
-        <p>Someone asked to reset the password for your Meal Planner account.</p>
+        <p>Someone asked to reset the password for your Preply account.</p>
         <p>
           <a href="${escapeHtml(link)}"
              style="display: inline-block; padding: 12px 20px; background: #D4552A; color: #fff;

@@ -1,0 +1,43 @@
+/* The big rounded card that holds a page's content: Home's photo (.stage),
+   the Pantry (.laptop) and Liked recipes (.app). Add class="page-card".
+
+   This is the only place its size and look are set, so the three match.
+   Load it after the page's own stylesheet.
+
+   Phones and tablets: edge to edge between the top bar and the bottom nav.
+   Computers (1024px+): 16px from the top bar, the right edge and the
+   bottom, against the sidebar, with rounded corners and a soft shadow. */
+
+.page-card {
+    box-sizing: border-box;
+    align-self: stretch;   /* pantry.css centers the body's children */
+    width: auto;
+    max-width: none;
+    margin: 0;
+    overflow: hidden;      /* keeps photos inside the rounded corners */
+    border: 0;
+    border-radius: 0;
+    box-shadow: none;
+}
+
+/* Pantry and Liked fill the screen even when there's little on them,
+   like Home's photo (which gets its height from its own grid) */
+.has-site-nav .page-card {
+    min-height: calc(100vh - 72px - 110px);
+    min-height: calc(100dvh - 72px - 110px - env(safe-area-inset-top) - env(safe-area-inset-bottom));
+}
+
+@media (min-width: 1024px) {
+    .page-card {
+        margin: 16px 16px 16px 0;
+        border: 1px solid rgba(31, 35, 40, 0.08);
+        border-radius: 28px;
+        box-shadow: 0 18px 50px rgba(31, 35, 40, 0.12);
+    }
+
+    .has-site-nav .page-card {
+        /* screen height minus the 72px top bar and the 16px gaps */
+        min-height: calc(100vh - 72px - 32px);
+        min-height: calc(100dvh - 72px - 32px - env(safe-area-inset-top));
+    }
+}

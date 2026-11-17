@@ -52,6 +52,14 @@ body {
     color: var(--accent);
 }
 
+/* The logo in front of the name */
+.brand-logo {
+    width: 1.4em;
+    height: 1.4em;
+    margin-right: 0.4em;
+    vertical-align: -0.32em;
+}
+
 .auth-title {
     margin: 0;
     font-size: 1.6rem;

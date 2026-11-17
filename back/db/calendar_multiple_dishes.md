@@ -39,7 +39,7 @@ If it fails with `check constraint "calendar_meal_slot_check" ... is violated by
 Start the server (`npm run dev`), log in, and open <http://localhost:3000/calendar>:
 
 1. The week loads. Each day shows Breakfast, Lunch and Dinner, plus a **Snacks & desserts** group.
-2. **Add a dish:** click **+ Add breakfast**. On Search, click **Add to breakfast** on a recipe. You land back on the calendar with it added.
+2. **Add a dish:** click **+ Add breakfast**. On the Recipes page, click **Add to breakfast** on a recipe. You land back on the calendar with it added.
 3. **Several dishes:** click **+ Add another** on a meal that has a dish, and add a second recipe. Both show.
 4. **Duplicate warning:** add a recipe that's already on that day to a different meal. An "Add it again?" popup appears.
 5. **Remove:** click the **×** on a dish. Only that dish disappears.

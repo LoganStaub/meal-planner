@@ -3,14 +3,18 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
-    <title>Meal Planner</title>
+    <title>Home | Preply</title>
+    <link rel="icon" type="image/svg+xml" href="/images/logo.svg">
 
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=DM+Sans:opsz,wght@9..40,400;9..40,500;9..40,600;9..40,700&display=swap" rel="stylesheet">
 
     <link rel="stylesheet" href="/css/index.css">
-    <link rel="stylesheet" href="/css/account-settings.css">
+    <link rel="stylesheet" href="/css/plan-dialog.css">
+    <link rel="stylesheet" href="/css/page-card.css">
+    <link rel="stylesheet" href="/css/page-header.css">
+    <link rel="stylesheet" href="/css/profile-menu.css">
     <script src="/js/no-back-cache.js"></script>
 </head>
 
@@ -18,7 +22,6 @@
 
     <!-- Icon set (Lucide-style line icons), used below with <svg><use href="#icon-..."> -->
     <svg width="0" height="0" style="position: absolute" aria-hidden="true">
-        <symbol id="icon-user" viewBox="0 0 24 24"><path d="M19 21v-2a4 4 0 0 0-4-4H9a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></symbol>
         <symbol id="icon-x" viewBox="0 0 24 24"><path d="M18 6 6 18"/><path d="m6 6 12 12"/></symbol>
         <symbol id="icon-chevron-left" viewBox="0 0 24 24"><path d="m15 18-6-6 6-6"/></symbol>
         <symbol id="icon-chevron-right" viewBox="0 0 24 24"><path d="m9 18 6-6-6-6"/></symbol>
@@ -27,13 +30,14 @@
         <symbol id="icon-calendar" viewBox="0 0 24 24"><path d="M8 2v4"/><path d="M16 2v4"/><rect width="18" height="18" x="3" y="4" rx="2"/><path d="M3 10h18"/><path d="M8 14h.01"/><path d="M12 14h.01"/><path d="M16 14h.01"/><path d="M8 18h.01"/><path d="M12 18h.01"/><path d="M16 18h.01"/></symbol>
         <symbol id="icon-list" viewBox="0 0 24 24"><path d="m3 17 2 2 4-4"/><path d="m3 7 2 2 4-4"/><path d="M13 6h8"/><path d="M13 12h8"/><path d="M13 18h8"/></symbol>
         <symbol id="icon-home" viewBox="0 0 24 24"><path d="M15 21v-8a1 1 0 0 0-1-1h-4a1 1 0 0 0-1 1v8"/><path d="M3 10a2 2 0 0 1 .709-1.528l7-5.999a2 2 0 0 1 2.582 0l7 5.999A2 2 0 0 1 21 10v9a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/></symbol>
-        <symbol id="icon-search" viewBox="0 0 24 24"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.3-4.3"/></symbol>
+        <symbol id="icon-recipes" viewBox="0 0 24 24"><path d="M12 7v14"/><path d="M3 18a1 1 0 0 1-1-1V4a1 1 0 0 1 1-1h5a4 4 0 0 1 4 4 4 4 0 0 1 4-4h5a1 1 0 0 1 1 1v13a1 1 0 0 1-1 1h-6a3 3 0 0 0-3 3 3 3 0 0 0-3-3z"/></symbol>
         <symbol id="icon-basket" viewBox="0 0 24 24"><path d="m15 11-1 9"/><path d="m19 11-4-7"/><path d="M2 11h20"/><path d="m3.5 11 1.6 7.4a2 2 0 0 0 2 1.6h9.8a2 2 0 0 0 2-1.6l1.7-7.4"/><path d="M4.5 15.5h15"/><path d="m5 11 4-7"/><path d="m9 11 1 9"/></symbol>
     </svg>
 
     <div class="app">
+        <%- include('partials/page-header', { pageTitle: 'Home' }) %>
 
-        <main class="stage" id="stage">
+        <main class="stage page-card" id="stage">
 
             <!-- The current meal. Swipe left/right (or drag with the mouse) to change it. -->
             <article class="slide" id="slide">
@@ -44,7 +48,7 @@
                         <span class="meta-time" id="meal-time"></span><span class="meta-dot">·</span><span id="meal-tag"></span><span class="meta-dot">·</span><span id="meal-servings"></span><span id="meal-rating-wrap" hidden><span class="meta-dot">·</span><span class="meta-rating" id="meal-rating"></span></span>
                     </p>
 
-                    <button type="button" class="summary" id="open-details" aria-haspopup="dialog">
+                    <button type="button" class="summary" id="open-details">
                         <h2 class="recipe-title" id="meal-title"></h2>
                         <p class="recipe-desc" id="meal-desc"></p>
                     </button>
@@ -61,7 +65,7 @@
                         </button>
                         <button type="button" class="action-btn primary-btn" id="calendar-btn">
                             <svg class="icon"><use href="#icon-calendar-plus"/></svg>
-                            <span>Add to calendar</span>
+                            <span>Add to meal plan</span>
                         </button>
                         <button type="button" class="action-btn like-btn" id="like-btn" aria-label="Like" aria-pressed="false">
                             <svg class="icon"><use href="#icon-heart"/></svg>
@@ -82,12 +86,6 @@
             <div class="top-scrim"></div>
 
             <header class="app-header">
-                <div class="header-row">
-                    <h1 class="brand">Meal Planner<span>.</span></h1>
-                    <button type="button" class="profile-btn" id="open-profile" aria-label="<%= currentUser.display_name %>: profile and settings" aria-haspopup="dialog" title="<%= currentUser.display_name %>" data-account="avatar" style="<%= currentUser.avatar_style %>">
-                        <% if (currentUser.profile_pic) { %><img src="<%= currentUser.profile_pic %>" alt=""><% } else { %><%= currentUser.initials %><% } %>
-                    </button>
-                </div>
 
                 <div class="picks-row">
                     <%# index.js swaps this for the time of day (This morning's / This afternoon's / Tonight's) %>
@@ -109,92 +107,24 @@
         </main>
 
         <nav class="nav" aria-label="Main">
-            <p class="nav-brand">Meal Planner<span>.</span></p>
+            <p class="nav-brand"><img class="brand-logo" src="/images/logo.svg" alt="" width="28" height="28">Preply<span>.</span></p>
             <ul>
-                <li><a class="nav-link" href="/calendar"><span class="nav-icon"><svg class="icon"><use href="#icon-calendar"/></svg></span>Calendar</a></li>
+                <li><a class="nav-link" href="/calendar"><span class="nav-icon"><svg class="icon"><use href="#icon-calendar"/></svg></span>Meal Plan</a></li>
                 <li><a class="nav-link" href="/shopping.html"><span class="nav-icon"><svg class="icon"><use href="#icon-list"/></svg></span>Shopping</a></li>
                 <li class="nav-home"><a class="nav-link" href="/home" aria-current="page"><span class="nav-icon"><svg class="icon"><use href="#icon-home"/></svg></span>Home</a></li>
-                <li><a class="nav-link" href="/search.html"><span class="nav-icon"><svg class="icon"><use href="#icon-search"/></svg></span>Search</a></li>
+                <li><a class="nav-link" href="/recipes"><span class="nav-icon"><svg class="icon"><use href="#icon-recipes"/></svg></span>Recipes</a></li>
                 <li><a class="nav-link" href="/pantry"><span class="nav-icon"><svg class="icon"><use href="#icon-basket"/></svg></span>Pantry</a></li>
             </ul>
         </nav>
     </div>
 
-    <!-- Recipe details popup. Left blank on purpose: the full details page is being built separately. -->
-    <dialog class="details" id="recipe-details" aria-labelledby="details-title">
-        <div class="details-header">
-            <h2 id="details-title"></h2>
-            <button type="button" class="details-close" id="close-details" aria-label="Close">
-                <svg class="icon"><use href="#icon-x"/></svg>
-            </button>
-        </div>
-        <div class="details-body" id="details-body">
-            <!-- Recipe details go here -->
-        </div>
-    </dialog>
+    <%# The "Add to meal plan" popup (js/plan-dialog.js) %>
+    <%- include('partials/plan-dialog') %>
 
-    <!-- Profile and settings popup. Only working features. -->
-    <dialog class="profile" id="profile" aria-labelledby="profile-title">
-        <div class="profile-header">
-            <button type="button" class="profile-back" id="close-profile" aria-label="Back">
-                <svg class="icon"><use href="#icon-chevron-left"/></svg>
-            </button>
-            <h2 id="profile-title">Profile and Settings</h2>
-        </div>
-
-        <div class="profile-body">
-            <section class="profile-main">
-                <div class="profile-identity">
-                    <div class="avatar" aria-hidden="true" data-account="avatar" style="<%= currentUser.avatar_style %>"><% if (currentUser.profile_pic) { %><img src="<%= currentUser.profile_pic %>" alt=""><% } else { %><%= currentUser.initials %><% } %></div>
-                    <div>
-                        <p class="profile-name" data-account="name"><%= currentUser.display_name %></p>
-                        <p class="profile-sub"><span data-account="email"><%= currentUser.email %></span><% if (currentUser.is_admin) { %> · Admin<% } %></p>
-                    </div>
-                </div>
-            </section>
-
-            <ul class="settings-list">
-                <li>
-                    <button type="button" class="settings-row" id="account-settings-open" aria-haspopup="dialog" aria-controls="account-dialog">
-                        <span class="settings-icon"><svg class="icon"><use href="#icon-user"/></svg></span>
-                        <span class="settings-text">
-                            <span class="settings-title">Account settings</span>
-                            <span class="settings-desc">Name, email, phone, photo or delete account</span>
-                        </span>
-                        <svg class="icon"><use href="#icon-chevron-right"/></svg>
-                    </button>
-                </li>
-                <li>
-                    <a class="settings-row" href="/liked">
-                        <span class="settings-icon"><svg class="icon"><use href="#icon-heart"/></svg></span>
-                        <span class="settings-text">
-                            <span class="settings-title">Liked recipes</span>
-                            <span class="settings-desc">Your saved collection</span>
-                        </span>
-                        <svg class="icon"><use href="#icon-chevron-right"/></svg>
-                    </a>
-                </li>
-                <li>
-                    <a class="settings-row" href="/account/password">
-                        <span class="settings-icon"><svg class="icon" viewBox="0 0 24 24"><rect x="4" y="11" width="16" height="10" rx="2"/><path d="M8 11V7a4 4 0 0 1 8 0v4"/></svg></span>
-                        <span class="settings-text">
-                            <span class="settings-title">Change password</span>
-                            <span class="settings-desc">Update your login password</span>
-                        </span>
-                        <svg class="icon"><use href="#icon-chevron-right"/></svg>
-                    </a>
-                </li>
-            </ul>
-
-            <form class="profile-logout" method="post" action="/logout">
-                <button type="submit" class="logout-btn">Log out</button>
-            </form>
-        </div>
-    </dialog>
-
-    <%- include('partials/account-dialog') %>
-
+    <%- include('partials/profile-menu') %>
+    <script src="/js/events.js" defer></script>
+    <script src="/js/profile-menu.js" defer></script>
+    <script src="/js/plan-dialog.js" defer></script>
     <script src="/js/index.js" defer></script>
-    <script src="/js/account-settings.js" defer></script>
 </body>
 </html>

@@ -1,4 +1,5 @@
-// Search page: /search?q=chicken&filter=dinner
+// Recipes page: /recipes?q=chicken&filter=dinner
+// (It used to be called Search; /search and /search.html redirect here.)
 //
 // From the calendar's + buttons it also gets ?date=YYYY-MM-DD&slot=N. Then the
 // page shows an "Adding to …" banner and each result gets an Add to calendar
@@ -7,6 +8,8 @@ import { Router } from 'express'
 import { pool } from '../db.js'
 import { isDateKey } from '../validators.js'
 import { MEAL_SLOTS } from './calendar.js'
+import { getRecipe } from './recipes.js'
+import { describeRecipe } from '../recipeView.js'
 
 const router = Router()
 
@@ -57,7 +60,7 @@ function formatPlanDate(dateKey) {
   })
 }
 
-// Builds a /search link, leaving out null/undefined params. An empty string is
+// Builds a /recipes link, leaving out null/undefined params. An empty string is
 // kept on purpose: filter= means "no filter", so the slot default isn't applied.
 function searchHref(params) {
   const query = new URLSearchParams()
@@ -65,7 +68,7 @@ function searchHref(params) {
     if (value !== null && value !== undefined) query.set(key, value)
   }
   const text = query.toString()
-  return text ? `/search?${text}` : '/search'
+  return text ? `/recipes?${text}` : '/recipes'
 }
 
 // Every value from the user goes in `params` as $1, $2…; only fixed SQL
@@ -120,8 +123,59 @@ async function searchRecipes({ q, filter }) {
   }))
 }
 
-// GET /search?q=&filter=&date=&slot=
-router.get(['/search', '/search.html'], async (req, res) => {
+// Old links and bookmarks: /search?... -> /recipes?... (keeps the query string)
+router.get(['/search', '/search.html'], (req, res) => {
+  const queryStart = req.originalUrl.indexOf('?')
+  res.redirect(301, '/recipes' + (queryStart === -1 ? '' : req.originalUrl.slice(queryStart)))
+})
+
+const isRecipeId = (value) => typeof value === 'string' && /^\d{1,9}$/.test(value)
+
+// Old links to one recipe: /recipe?id=3 -> /recipes/3
+router.get('/recipe', (req, res) => {
+  res.redirect(isRecipeId(req.query.id) ? `/recipes/${req.query.id}` : '/recipes')
+})
+
+// The recipe page's back link returns to where the user came from (keeping
+// a Recipes search or Meal Plan day), or to Recipes if that's unknown.
+function backLink(req) {
+  const fallback = { href: '/recipes', label: 'Back to recipes' }
+  let from
+  try {
+    from = new URL(req.get('referer') ?? '')
+  } catch {
+    return fallback
+  }
+  if (from.host !== req.get('host')) return fallback
+  const here = from.pathname + from.search
+  if (from.pathname === '/recipes') return { href: here, label: 'Back to recipes' }
+  if (from.pathname === '/home' || from.pathname === '/') return { href: '/home', label: 'Back to home' }
+  if (from.pathname === '/calendar') return { href: here, label: 'Back to meal plan' }
+  if (from.pathname === '/liked') return { href: '/liked', label: 'Back to liked recipes' }
+  return fallback
+}
+
+// GET /recipes/:id  One recipe on its own page: ingredients (with this
+// user's pantry), directions, Like and Add to meal plan.
+// From the Recipes page while adding to a day (see the banner below) it also
+// gets ?date=&slot=, so Add to meal plan starts on that day and meal.
+router.get('/recipes/:id', async (req, res) => {
+  const back = backLink(req)
+  const recipe = isRecipeId(req.params.id) ? await getRecipe(req.params.id, req.user.user_id) : null
+  if (!recipe) {
+    return res.status(404).render('recipe', { recipe: null, back, plan: null, active: 'recipes' })
+  }
+
+  const date = isDateKey(req.query.date) ? req.query.date : null
+  const plan = date && { date, slot: parseSlot(req.query.slot) }
+  res.render('recipe', { recipe: describeRecipe(recipe), back, plan, active: 'recipes' })
+})
+
+// GET /recipes?q=&filter=&date=&slot=
+router.get(['/recipes', '/recipes.html'], async (req, res) => {
+  // Old links that opened a recipe window: /recipes?recipe=3 -> /recipes/3
+  if (isRecipeId(req.query.recipe)) return res.redirect(`/recipes/${req.query.recipe}`)
+
   const q = typeof req.query.q === 'string' ? req.query.q.trim().slice(0, 100) : ''
 
   // Planning mode only turns on for a real date; a bad slot just means "pick one"
@@ -161,6 +215,8 @@ router.get(['/search', '/search.html'], async (req, res) => {
     q,
     recipes,
     plan,
+    // Recipe links keep the day being planned (see /recipes/:id)
+    recipeQuery: plan ? `?${new URLSearchParams({ date, ...(slot ? { slot } : {}) })}` : '',
     filters: FILTERS.map((f) => ({
       key: f.key,
       label: f.label,
@@ -172,7 +228,7 @@ router.get(['/search', '/search.html'], async (req, res) => {
     filterCleared,
     clearSearchHref: searchHref({ ...keep, q: null }),
     showAllHref: searchHref({ date, slot, filter: noFilter }),
-    active: 'search',
+    active: 'recipes',
   })
 })
 

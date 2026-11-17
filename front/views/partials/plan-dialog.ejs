@@ -1,0 +1,57 @@
+<%# The "Add to meal plan" popup, shared by the Home page and the
+    recipe page. A page that includes this also needs css/plan-dialog.css and
+    js/plan-dialog.js, then opens it with PlanDialog.open(recipe). %>
+
+<%# Its own icons, so it works whatever icon set the page has %>
+<svg width="0" height="0" style="position: absolute" aria-hidden="true">
+    <symbol id="rd-icon-x" viewBox="0 0 24 24"><path d="M18 6 6 18"/><path d="m6 6 12 12"/></symbol>
+    <symbol id="rd-icon-calendar" viewBox="0 0 24 24"><path d="M8 2v4"/><path d="M16 2v4"/><rect width="18" height="18" x="3" y="4" rx="2"/><path d="M3 10h18"/><path d="M8 14h.01"/><path d="M12 14h.01"/><path d="M16 14h.01"/><path d="M8 18h.01"/><path d="M12 18h.01"/><path d="M16 18h.01"/></symbol>
+</svg>
+
+<%# "Add to meal plan" popup: pick a day and a meal, then save to /api/me/calendar %>
+<dialog class="details plan" id="plan-dialog" aria-labelledby="plan-heading">
+    <form class="plan-form" id="plan-form" novalidate>
+        <div class="details-header">
+            <div>
+                <h2 id="plan-heading">Add to meal plan</h2>
+                <p class="plan-recipe" id="plan-recipe"></p>
+            </div>
+            <button type="button" class="details-close" data-plan-close aria-label="Close">
+                <svg class="icon"><use href="#rd-icon-x"/></svg>
+            </button>
+        </div>
+
+        <div class="plan-body" id="plan-choose">
+            <label class="plan-label" for="plan-date">Day</label>
+            <input class="plan-date" type="date" id="plan-date" required>
+
+            <fieldset class="plan-meals">
+                <legend class="plan-label">Meal</legend>
+                <% [['1', 'Breakfast'], ['2', 'Lunch'], ['3', 'Dinner'], ['4', 'Snack'], ['5', 'Dessert']].forEach(function (slot) { %>
+                <label class="plan-meal">
+                    <input type="radio" name="meal_slot" value="<%= slot[0] %>">
+                    <span><%= slot[1] %></span>
+                </label>
+                <% }); %>
+            </fieldset>
+
+            <p class="plan-message" id="plan-message" role="alert" hidden></p>
+
+            <div class="plan-actions">
+                <button type="button" class="plan-btn" data-plan-close>Cancel</button>
+                <button type="submit" class="plan-btn plan-primary" id="plan-submit">Add to meal plan</button>
+            </div>
+        </div>
+
+        <div class="plan-body plan-done" id="plan-done" hidden>
+            <div class="plan-done-icon" aria-hidden="true">
+                <svg class="icon"><use href="#rd-icon-calendar"/></svg>
+            </div>
+            <p id="plan-done-text" role="status"></p>
+            <div class="plan-actions">
+                <button type="button" class="plan-btn" data-plan-close>Keep browsing</button>
+                <a class="plan-btn plan-primary" id="plan-done-link" href="/calendar">See meal plan</a>
+            </div>
+        </div>
+    </form>
+</dialog>

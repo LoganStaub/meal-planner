@@ -94,8 +94,8 @@
         const obj_done = document.getElementById("done");
         const obj_progress = document.getElementById("progress");
         const obj_like = document.getElementById("like-btn");
-        const obj_dialog = document.getElementById("recipe-details");
-        const obj_profile = document.getElementById("profile");
+        // The shared profile menu (partials/profile-menu.ejs, js/profile-menu.js)
+        const obj_profileMenu = document.getElementById("profile-menu");
         const obj_prevArrow = document.getElementById("prev-arrow");
         const obj_nextArrow = document.getElementById("next-arrow");
 
@@ -148,13 +148,22 @@
             obj_nextArrow.disabled = !obj_done.hidden;
         }
 
+        // true once this meal is matched to a real recipe in the database
+        function HasRealRecipe(meal) {
+            return bRecipesLoaded && meal.recipe_id != null;
+        }
+
         function RenderLike() {
             const meal = meals[nCurrent];
             obj_like.setAttribute("aria-pressed", String(Boolean(meal.liked)));
-            // a sample meal that isn't in the database yet can't be liked
+            // a sample meal that isn't in the database yet can't be liked or planned
             const bMissing = bRecipesLoaded && meal.recipe_id == null;
+            const sMissing = bMissing ? "This recipe isn't in the database yet" : "";
             obj_like.disabled = bMissing;
-            obj_like.title = bMissing ? "This recipe isn't in the database yet" : "";
+            obj_like.title = sMissing;
+            const obj_calendar = document.getElementById("calendar-btn");
+            obj_calendar.disabled = bMissing;
+            obj_calendar.title = sMissing;
         }
 
         // The recipe's average rating from everyone, e.g. "★ 4.3 (12)".
@@ -181,7 +190,7 @@
         // moves to the next (+1) or previous (-1) meal with a slide animation.
         // nFromX is where the card was dragged to, so the animation continues from there.
         async function GoTo(nDirection, nFromX = 0) {
-            if (bAnimating || obj_dialog.open || obj_profile.open) return;
+            if (bAnimating || !obj_profileMenu.hidden || obj_plan.open) return;
 
             // from the "all caught up" screen, going back shows the last meal again
             if (!obj_done.hidden) {
@@ -323,7 +332,7 @@
         obj_like.addEventListener("click", async function() {
             const meal = meals[nCurrent];
             // wait for the real recipe id, so a like never lands on the wrong recipe
-            if (!bRecipesLoaded || meal.recipe_id == null) return;
+            if (!HasRealRecipe(meal)) return;
             const bLiked = !meal.liked;
             meal.liked = bLiked;
             RenderLike();
@@ -368,9 +377,13 @@
         }
         LoadRecipeData();
 
-        // TODO: open a date/meal slot picker and save to the calendar table
+        // ---------- Add to meal plan popup ----------
+        // The popup itself is shared with the recipe page: js/plan-dialog.js
+        const obj_plan = document.getElementById("plan-dialog");
+
         document.getElementById("calendar-btn").addEventListener("click", function() {
-            console.log("Add to calendar:", meals[nCurrent].recipe_title);
+            if (!HasRealRecipe(meals[nCurrent])) return;
+            PlanDialog.open(meals[nCurrent], { entryPoint: "home_card" });
         });
 
         document.getElementById("restart-btn").addEventListener("click", function() {
@@ -381,40 +394,17 @@
         });
 
 
-        // ---------- Recipe details popup ----------
+        // ---------- Recipe page ----------
+        // Clicking the recipe's name opens its own page (/recipes/:id,
+        // views/recipe.ejs) with the ingredients and directions.
 
         document.getElementById("open-details").addEventListener("click", function() {
-            // a swipe that started on the title shouldn't also open the popup
+            // a swipe that started on the title shouldn't also open the page
             if (bSuppressClick) return;
-
-            document.getElementById("details-title").textContent = meals[nCurrent].recipe_title;
-            obj_dialog.dataset.recipeId = meals[nCurrent].recipe_id ?? "";
-            obj_dialog.showModal();
+            // wait for the real recipe id (see LoadRecipeData), so this never opens the wrong recipe
+            if (!HasRealRecipe(meals[nCurrent])) return;
+            location.href = "/recipes/" + encodeURIComponent(meals[nCurrent].recipe_id);
         });
 
-        document.getElementById("close-details").addEventListener("click", function() {
-            obj_dialog.close();
-        });
-
-        // clicking the dimmed background closes the popup
-        obj_dialog.addEventListener("click", function(event) {
-            if (event.target === obj_dialog) obj_dialog.close();
-        });
-
-
-        // ---------- Profile and settings popup ----------
-
-        document.getElementById("open-profile").addEventListener("click", function() {
-            obj_profile.showModal();
-        });
-
-        document.getElementById("close-profile").addEventListener("click", function() {
-            obj_profile.close();
-        });
-
-        // clicking the dimmed background closes the popup
-        obj_profile.addEventListener("click", function(event) {
-            if (event.target === obj_profile) obj_profile.close();
-        });
 
         RenderMeal();

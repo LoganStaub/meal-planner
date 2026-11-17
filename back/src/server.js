@@ -15,9 +15,12 @@ import likesRouter from './routes/likes.js'
 import ratingsRouter from './routes/ratings.js'
 import pantryRouter from './routes/pantry.js'
 import accountRouter from './routes/account.js'
+import shoppingRouter, { getShoppingItems} from './routes/shopping.js'
 import authRouter, { loadUser, requireLogin } from './routes/auth.js'
 import searchRouter from './routes/search.js'
 import recipeAssistantRouter from './routes/recipeAssistant.js'
+import eventsRouter from './routes/events.js'
+import adminRouter from './routes/admin.js'
 import { AVATAR_COLORS, DEFAULT_AVATAR_COLOR } from './avatarColors.js'
 
 if (!process.env.SESSION_SECRET) {
@@ -27,7 +30,7 @@ if (!process.env.SESSION_SECRET) {
 // The per-user tables come from db/migrations. Fail with a clear message
 // instead of confusing errors on every page if they haven't been run yet.
 const { rows: missingTables } = await pool.query(
-  `select name from unnest(array['user_pantry', 'user_liked_recipes', 'user_recipe_ratings', 'recipe_rating_stats']) as name
+  `select name from unnest(array['user_pantry', 'user_liked_recipes', 'events', 'user_recipe_ratings', 'recipe_rating_stats']) as name
    where to_regclass('public.' || name) is null`
 )
 if (missingTables.length > 0) {
@@ -36,7 +39,7 @@ if (missingTables.length > 0) {
   )
 }
 
-// users.avatar_color comes from migration 008
+// users.avatar_color comes from migration 011
 const { rows: avatarColumn } = await pool.query(
   `select 1 from information_schema.columns where table_name = 'users' and column_name = 'avatar_color'`
 )
@@ -125,9 +128,16 @@ app.use('/api/me/likes', likesRouter)
 app.use('/api/me/ratings', ratingsRouter)
 app.use('/api/me/pantry', pantryRouter)
 app.use('/api/me/account', accountRouter)
+app.use('/api/me/shopping', shoppingRouter)
 
-// Search page's "Add your own recipe" assistant: /api/recipe-assistant/...
+// Recipes page's "Add your own recipe" assistant: /api/recipe-assistant/...
 app.use('/api', recipeAssistantRouter)
+
+// POST /api/events: pages log what users do, for the OKRs. See routes/events.js.
+app.use('/api', eventsRouter)
+
+// Admin dashboard with the OKR numbers: /admin and /admin/okrs. See routes/admin.js.
+app.use(adminRouter)
 
 // Render the home page from its EJS view.
 app.get(['/home', '/index.html'], (req, res) => {
@@ -139,7 +149,7 @@ app.get(['/calendar', '/calendar.html'], (req, res) => {
   res.render('calendar', { active: 'calendar' })
 })
 
-// Render the search page (/search?q=&filter=&date=&slot=). See routes/search.js.
+// Render the Recipes page (/recipes?q=&filter=&date=&slot=; old /search links redirect). See routes/search.js.
 app.use(searchRouter)
 
 // Render the recipes this user has liked. inPantry / toBuy count each
@@ -206,17 +216,10 @@ app.get(['/pantry', '/pantry.html', '/pantry.ejs'], async (req, res) => {
   })
 })
 
-// Shopping list page. Sample data for now; later this will come from the
-// calendar, recipe_ingredients and pantry tables.
-app.get(['/shopping', '/shopping.html'], (req, res) => {
-  const items = [
-    { name: 'Broccolini', forRecipe: 'Sesame miso salmon', amount: '250g' },
-    { name: 'Salmon fillets', forRecipe: 'Sesame miso salmon', amount: '2' },
-    { name: 'Zucchini', forRecipe: 'Creamy lemon orzo', amount: '2' },
-    { name: 'Fresh parsley', forRecipe: 'Shakshuka + orzo', amount: '1 bunch' },
-    { name: 'Lemons', forRecipe: 'Flatbread + orzo', amount: '3' },
-  ]
-
+// Shopping list page: ingredients for this week's calendar that the pantry
+// doesn't cover. See routes/shopping.js.
+app.get(['/shopping', '/shopping.html'], async (req, res) => {
+  const items = await getShoppingItems(req.user.user_id)
   res.render('shopping', { items, active: 'shopping' })
 })
 
@@ -239,5 +242,5 @@ app.use((err, req, res, next) => {
 })
 
 app.listen(PORT, () => {
-  console.log(`✅ Meal Planner running at http://localhost:${PORT}`)
+  console.log(`✅ Preply running at http://localhost:${PORT}`)
 })

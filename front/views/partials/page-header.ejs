@@ -1,0 +1,19 @@
+<%#
+  The top bar on every page: the page title in the middle and the account
+  circle in the top-right corner. Styles: /css/page-header.css (the only
+  place the bar and the circle are styled, so every page matches).
+
+    include('partials/page-header', { pageTitle: 'Pantry' })
+
+  The circle opens the shared profile menu, so a page using this also needs
+  partials/profile-menu.ejs, js/profile-menu.js and css/profile-menu.css.
+%>
+<header class="page-header">
+  <%# The logo, on phones and tablets only: computers show it in the sidebar %>
+  <a class="page-header-logo" href="/home" aria-label="Preply home"><img src="/images/logo.svg" alt="" width="36" height="36"></a>
+  <h1 class="page-header-title"><%= pageTitle %></h1>
+  <button type="button" class="account-button profile-trigger" id="profile-trigger"
+    aria-controls="profile-menu" aria-expanded="false"
+    aria-label="<%= currentUser.display_name %>: profile and settings"
+    title="<%= currentUser.display_name %>" data-account="avatar" style="<%= currentUser.avatar_style %>"><% if (currentUser.profile_pic) { %><img src="<%= currentUser.profile_pic %>" alt=""><% } else { %><%= currentUser.initials %><% } %></button>
+</header>

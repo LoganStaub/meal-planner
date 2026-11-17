@@ -7,18 +7,18 @@ const PRIMARY_SLOTS = [1, 2, 3];
 const EXTRA_SLOTS = [4, 5];
 
 // Links out to teammates' pages. Change the URLs here if theirs change.
-// Search adds the recipe, then redirects back to /calendar?date=YYYY-MM-DD
-// Search starts on that meal's filter (e.g. Breakfast) unless filter is
+// The Recipes page adds the recipe, then redirects back to /calendar?date=YYYY-MM-DD
+// It starts on that meal's filter (e.g. Breakfast) unless filter is
 // sent empty; the general + button does that so it shows every recipe.
 function searchUrl(date, slot, { unfiltered = false } = {}) {
     const params = new URLSearchParams({ date });
     if (slot) params.set("slot", slot);
     if (unfiltered) params.set("filter", "");
-    return `/search?${params}`;
+    return `/recipes?${params}`;
 }
 
 function recipeUrl(recipeId) {
-    return `/recipe?id=${encodeURIComponent(recipeId)}`;
+    return `/recipes/${encodeURIComponent(recipeId)}`;
 }
 
 // Heading for a day with meals (and while loading)
@@ -69,7 +69,7 @@ function parseDateKey(value) {
     return isRealDay ? date : null;
 }
 
-// /calendar?date=YYYY-MM-DD opens on that day (search redirects here after saving)
+// /calendar?date=YYYY-MM-DD opens on that day (the Recipes page redirects here after saving)
 const selectedDate = parseDateKey(new URLSearchParams(location.search).get("date")) || new Date();
 
 // Meals for the visible week, keyed by "YYYY-MM-DD"
@@ -326,9 +326,9 @@ function renderSelectedDay() {
     const extras = meals.filter((m) => !PRIMARY_SLOTS.includes(m.meal_slot));
     mealList.replaceChildren(primary, createExtrasGroup(dateKey, extras));
 
-    // + goes to the first empty main meal, or just the day (search then
+    // + goes to the first empty main meal, or just the day (the Recipes page then
     // asks which meal) once breakfast, lunch and dinner all have something
-    // Both are general "add something" links, so search opens unfiltered
+    // Both are general "add something" links, so the Recipes page opens unfiltered
     addMealLink.href = searchUrl(dateKey, firstEmptySlot, { unfiltered: true });
     addMealLink.setAttribute("aria-label", firstEmptySlot
         ? `Add ${MEAL_SLOTS[firstEmptySlot].toLowerCase()}`
@@ -410,8 +410,19 @@ function renderCalendar() {
 // Re-renders right away, then fetches only if the week changed
 // (or the last load for this week failed)
 function showSelectedDate() {
+    keepDateInAddress();
     renderCalendar();
     loadWeek();
+}
+
+// Puts the selected day in the address (/calendar?date=YYYY-MM-DD), so
+// coming back from a recipe, refreshing or sharing the link returns to this
+// day instead of today. replaceState, so picking days doesn't fill up the
+// browser's back history.
+function keepDateInAddress() {
+    const url = new URL(location.href);
+    url.searchParams.set("date", getLocalDateKey(selectedDate));
+    history.replaceState(null, "", url);
 }
 
 document.getElementById("previous-week").addEventListener("click", () => {
@@ -516,7 +527,7 @@ function renderMonth({ focus = false } = {}) {
 
 function openMonthPicker() {
     monthFocus = new Date(selectedDate);
-    // Meals may have changed since last time (removed here, added on search)
+    // Meals may have changed since last time (removed here, added on the Recipes page)
     loadedMonthStart = null;
     monthPicker.showModal();
     renderMonth({ focus: true });
@@ -577,6 +588,16 @@ document.getElementById("close-month").addEventListener("click", () => monthPick
 // Clicking the dimmed backdrop closes it, like the popups on the home page
 monthPicker.addEventListener("click", (event) => {
     if (event.target === monthPicker) monthPicker.close();
+});
+
+// Every + / Add link here goes to the Recipes page for a day (searchUrl).
+// Following one starts adding to the calendar, for the OKR numbers
+// (js/events.js); the Recipes page logs how it ends (js/search.js).
+// The sidebar's plain /recipes link has no date, so it doesn't count.
+document.addEventListener("click", (event) => {
+    if (event.target.closest?.('a[href^="/recipes?date="]')) {
+        window.logEvent?.("add_to_calendar_started", { entry_point: "calendar" });
+    }
 });
 
 showSelectedDate();

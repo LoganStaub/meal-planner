@@ -1,5 +1,5 @@
 -- =====================================================================
--- 009: recipe ratings (1-5 stars)
+-- 012: recipe ratings (1-5 stars)
 --
 -- HOW TO RUN:  npm run db:migrate   (from back/)
 --
