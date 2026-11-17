@@ -374,27 +374,49 @@ button {
     width: 52px;
     height: 52px;
     border-radius: 50%;
+    /* Dark fill, white ring and shadow so they stand out on light and dark
+       photos alike */
     color: white;
-    background-color: rgba(255, 255, 255, 0.18);
-    border: 1px solid rgba(255, 255, 255, 0.4);
+    background-color: rgba(20, 16, 14, 0.62);
+    border: 2px solid rgba(255, 255, 255, 0.85);
+    box-shadow: 0 4px 14px rgba(0, 0, 0, 0.35);
     backdrop-filter: blur(10px);
     -webkit-backdrop-filter: blur(10px);
     cursor: pointer;
-    transition: background-color 0.2s ease, opacity 0.2s ease;
+    transition: background-color 0.2s ease, opacity 0.2s ease, transform 0.15s ease;
+}
+
+.arrow-btn .icon {
+    width: 26px;
+    height: 26px;
+    stroke-width: 2.6;
 }
 
 .arrow-btn:hover {
-    background-color: rgba(255, 255, 255, 0.3);
+    background-color: var(--accent);
+    border-color: white;
+}
+
+.arrow-btn:active {
+    transform: scale(0.94);
 }
 
 .arrow-btn:disabled {
-    opacity: 0.35;
+    opacity: 0.4;
     cursor: default;
 }
 
+.arrow-btn:disabled:hover {
+    background-color: rgba(20, 16, 14, 0.62);
+}
+
+.arrow-btn:disabled:active {
+    transform: none;
+}
+
 .arrow-btn:focus-visible {
-    outline: 2px solid white;
-    outline-offset: 2px;
+    outline: 3px solid var(--accent);
+    outline-offset: 3px;
 }
 
 /* ---------- "All caught up" screen after the 5th meal ---------- */
