@@ -19,6 +19,7 @@
   <symbol id="ph" viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="16" rx="2"/><circle cx="9" cy="10" r="1.8"/><path d="M21 16l-5-5-8 9"/></symbol>
   <symbol id="heart" viewBox="0 0 24 24"><path d="M12 21s-7.5-4.6-9.6-9.2C.9 8.4 3 5 6.4 5c2 0 3.6 1.1 4.6 2.7C12 6.1 13.6 5 15.6 5 19 5 21.1 8.4 19.6 11.8 19.5 11.8 12 21 12 21z"/></symbol>
   <symbol id="check" viewBox="0 0 24 24"><path d="M5 12l5 5L20 7"/></symbol>
+  <symbol id="star" viewBox="0 0 24 24"><path d="M12 2.8l2.8 5.8 6.3.9-4.6 4.4 1.1 6.3L12 17.2l-5.6 3 1.1-6.3-4.6-4.4 6.3-.9z"/></symbol>
 </svg>
 
 <div class="app">
@@ -68,6 +69,15 @@
         <div class="tags"><span class="time"><%= r.time %> min</span><span class="diet"><%= r.tag %></span></div>
         <h3><%= r.title %></h3>
         <p><%= r.description %></p>
+        <%# Stars: this user's own rating (private). Summary: the recipe's anonymous average. See js/liked.js. %>
+        <div class="rating" data-recipe-id="<%= r.recipe_id %>" data-my-rating="<%= r.myRating || 0 %>">
+          <div class="stars" role="radiogroup" aria-label="Your rating for <%= r.title %>">
+            <% for (let n = 1; n <= 5; n++) { %>
+            <button type="button" class="star<%= (r.myRating || 0) >= n ? ' on' : '' %>" role="radio" aria-checked="<%= r.myRating === n %>" aria-label="<%= n %> star<%= n > 1 ? 's' : '' %>" data-value="<%= n %>"><svg viewBox="0 0 24 24"><use href="#star"/></svg></button>
+            <% } %>
+          </div>
+          <span class="rating-summary" aria-live="polite"><% if (r.ratingCount > 0) { %><%= r.ratingAverage.toFixed(1) %> · <%= r.ratingCount %> rating<%= r.ratingCount === 1 ? '' : 's' %><% } else { %>No ratings yet<% } %></span>
+        </div>
       </div>
       <div class="card-foot">
         <span class="pantry"><svg viewBox="0 0 24 24"><use href="#check"/></svg><%= r.inPantry %> in pantry</span>
@@ -81,5 +91,6 @@
 <%- include('partials/mobile-nav') %>
 <%- include('partials/profile-menu') %>
 <script src="/js/profile-menu.js" defer></script>
+<script src="/js/liked.js" defer></script>
 </body>
 </html>

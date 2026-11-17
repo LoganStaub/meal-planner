@@ -226,6 +226,22 @@ button {
     margin: 0 6px;
 }
 
+/* A sample meal that isn't in the database yet can't be liked */
+.like-btn:disabled {
+    opacity: 0.45;
+    cursor: not-allowed;
+}
+
+/* The recipe's average star rating, e.g. "★ 4.3 (12)" */
+.meta-rating {
+    font-weight: 600;
+    color: var(--text);
+}
+
+.meta-rating .star {
+    color: var(--accent);
+}
+
 /* Title + description: clicking opens the recipe details popup */
 .summary {
     display: block;

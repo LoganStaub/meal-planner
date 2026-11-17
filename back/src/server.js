@@ -12,6 +12,7 @@ import recipesRouter from './routes/recipes.js'
 import lookupsRouter from './routes/lookups.js'
 import calendarRouter from './routes/calendar.js'
 import likesRouter from './routes/likes.js'
+import ratingsRouter from './routes/ratings.js'
 import pantryRouter from './routes/pantry.js'
 import accountRouter from './routes/account.js'
 import authRouter, { loadUser, requireLogin } from './routes/auth.js'
@@ -26,7 +27,7 @@ if (!process.env.SESSION_SECRET) {
 // The per-user tables come from db/migrations. Fail with a clear message
 // instead of confusing errors on every page if they haven't been run yet.
 const { rows: missingTables } = await pool.query(
-  `select name from unnest(array['user_pantry', 'user_liked_recipes']) as name
+  `select name from unnest(array['user_pantry', 'user_liked_recipes', 'user_recipe_ratings', 'recipe_rating_stats']) as name
    where to_regclass('public.' || name) is null`
 )
 if (missingTables.length > 0) {
@@ -121,6 +122,7 @@ app.use('/api', lookupsRouter)
 // The logged-in user's own data
 app.use('/api/me/calendar', calendarRouter)
 app.use('/api/me/likes', likesRouter)
+app.use('/api/me/ratings', ratingsRouter)
 app.use('/api/me/pantry', pantryRouter)
 app.use('/api/me/account', accountRouter)
 
@@ -141,7 +143,9 @@ app.get(['/calendar', '/calendar.html'], (req, res) => {
 app.use(searchRouter)
 
 // Render the recipes this user has liked. inPantry / toBuy count each
-// recipe's ingredients against this user's pantry.
+// recipe's ingredients against this user's pantry. ratingAverage /
+// ratingCount are the recipe's anonymous totals; myRating is only this
+// user's own rating (see routes/ratings.js).
 app.get(['/liked', '/liked.html'], async (req, res) => {
   const { rows } = await pool.query(
     `select r.recipe_id,
@@ -149,6 +153,9 @@ app.get(['/liked', '/liked.html'], async (req, res) => {
             coalesce(r.prep_time, 0)::int as time,
             coalesce(rc.recipe_class_desc, 'Recipe') as tag,
             coalesce(r.instructions, 'A recipe saved to your collection.') as description,
+            rs.rating_avg::float as "ratingAverage",
+            coalesce(rs.rating_count, 0) as "ratingCount",
+            ur.rating as "myRating",
             count(ri.ingredient_id) filter (
               where up.pantry_amount_id in (0, 1)
             )::int as "inPantry",
@@ -158,10 +165,12 @@ app.get(['/liked', '/liked.html'], async (req, res) => {
      from user_liked_recipes ul
      join recipes r on r.recipe_id = ul.recipe_id
      left join recipe_classes rc on rc.recipe_class_id = r.recipe_class_id
+     left join recipe_rating_stats rs on rs.recipe_id = r.recipe_id
+     left join user_recipe_ratings ur on ur.recipe_id = r.recipe_id and ur.user_id = ul.user_id
      left join recipe_ingredients ri on ri.recipe_id = r.recipe_id
      left join user_pantry up on up.ingredient_id = ri.ingredient_id and up.user_id = ul.user_id
      where ul.user_id = $1
-     group by r.recipe_id, rc.recipe_class_desc
+     group by r.recipe_id, rc.recipe_class_desc, rs.rating_avg, rs.rating_count, ur.rating
      order by r.recipe_title`,
     [req.user.user_id]
   )

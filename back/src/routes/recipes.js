@@ -7,15 +7,22 @@ const router = Router()
 
 // GET /api/recipes  -> all recipes, with their class name joined in.
 // liked is true when the logged-in user has liked the recipe.
+// rating_avg / rating_count are the recipe's anonymous totals; my_rating is
+// only the logged-in user's own rating (null if they haven't rated it).
 router.get('/', async (req, res) => {
   const { rows } = await pool.query(
     `select r.recipe_id, r.recipe_title, r.cost, r.prep_time, rc.recipe_class_desc,
             exists (
               select 1 from user_liked_recipes ul
               where ul.recipe_id = r.recipe_id and ul.user_id = $1
-            ) as liked
+            ) as liked,
+            rs.rating_avg::float as rating_avg,
+            coalesce(rs.rating_count, 0) as rating_count,
+            ur.rating as my_rating
      from recipes r
      left join recipe_classes rc on rc.recipe_class_id = r.recipe_class_id
+     left join recipe_rating_stats rs on rs.recipe_id = r.recipe_id
+     left join user_recipe_ratings ur on ur.recipe_id = r.recipe_id and ur.user_id = $1
      order by r.recipe_title`,
     [req.user.user_id]
   )
@@ -29,8 +36,14 @@ router.get('/:id', async (req, res) => {
     `select r.*, exists (
               select 1 from user_liked_recipes ul
               where ul.recipe_id = r.recipe_id and ul.user_id = $2
-            ) as liked
-     from recipes r where r.recipe_id = $1`,
+            ) as liked,
+            rs.rating_avg::float as rating_avg,
+            coalesce(rs.rating_count, 0) as rating_count,
+            ur.rating as my_rating
+     from recipes r
+     left join recipe_rating_stats rs on rs.recipe_id = r.recipe_id
+     left join user_recipe_ratings ur on ur.recipe_id = r.recipe_id and ur.user_id = $2
+     where r.recipe_id = $1`,
     [req.params.id, req.user.user_id]
   )
   if (recipe.rows.length === 0) {

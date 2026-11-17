@@ -20,7 +20,9 @@
         showPicksTimeOfDay();
 
         // Placeholder meals until this page loads from GET /api/recipes.
-        // recipe_id, recipe_title, prep_time and recipe_class_desc match the database.
+        // recipe_title, prep_time and recipe_class_desc match the database.
+        // recipe_id is only a guess: LoadRecipeData() swaps in the real id by
+        // matching the title (npm run db:seed-recipes adds these 5 recipes).
         // description, servings, image_url and the pantry fields don't exist in the schema yet.
         const SAMPLE_MEALS = [
             {
@@ -82,6 +84,8 @@
 
         const meals = SAMPLE_MEALS.slice(0, MAX_MEALS);
         let nCurrent = 0;
+        // true once LoadRecipeData() has the real ids, likes and ratings
+        let bRecipesLoaded = false;
         let bAnimating = false;
 
         const obj_stage = document.getElementById("stage");
@@ -128,6 +132,7 @@
             document.getElementById("meal-buy").textContent = meal.to_buy > 0 ? `+${meal.to_buy} to buy` : "";
 
             RenderLike();
+            RenderRating();
             RenderProgress(nCurrent + 1);
         }
 
@@ -144,8 +149,32 @@
         }
 
         function RenderLike() {
-            const bLiked = Boolean(meals[nCurrent].liked);
-            obj_like.setAttribute("aria-pressed", String(bLiked));
+            const meal = meals[nCurrent];
+            obj_like.setAttribute("aria-pressed", String(Boolean(meal.liked)));
+            // a sample meal that isn't in the database yet can't be liked
+            const bMissing = bRecipesLoaded && meal.recipe_id == null;
+            obj_like.disabled = bMissing;
+            obj_like.title = bMissing ? "This recipe isn't in the database yet" : "";
+        }
+
+        // The recipe's average rating from everyone, e.g. "★ 4.3 (12)".
+        // Hidden until GET /api/recipes answers, so it doesn't flash "No ratings yet".
+        function RenderRating() {
+            const meal = meals[nCurrent];
+            const obj_wrap = document.getElementById("meal-rating-wrap");
+            const obj_rating = document.getElementById("meal-rating");
+            obj_wrap.hidden = !bRecipesLoaded;
+            if (!bRecipesLoaded) return;
+
+            if (meal.rating_count > 0) {
+                const average = meal.rating_avg.toFixed(1);
+                const ratings = `${meal.rating_count} rating${meal.rating_count === 1 ? "" : "s"}`;
+                obj_rating.innerHTML = `<span class="star" aria-hidden="true">★</span> ${average} (${meal.rating_count})`;
+                obj_rating.setAttribute("aria-label", `Rated ${average} out of 5 from ${ratings}`);
+            } else {
+                obj_rating.textContent = "No ratings yet";
+                obj_rating.removeAttribute("aria-label");
+            }
         }
 
 
@@ -293,6 +322,8 @@
         // The button flips right away, and flips back if saving fails.
         obj_like.addEventListener("click", async function() {
             const meal = meals[nCurrent];
+            // wait for the real recipe id, so a like never lands on the wrong recipe
+            if (!bRecipesLoaded || meal.recipe_id == null) return;
             const bLiked = !meal.liked;
             meal.liked = bLiked;
             RenderLike();
@@ -309,21 +340,33 @@
             }
         });
 
-        // marks the meals this user has already liked
-        async function LoadLikes() {
+        // Finds each meal's real recipe by title, then takes its id, whether this
+        // user liked it, and its average rating from GET /api/recipes. A meal
+        // that isn't in the database gets recipe_id null and "No ratings yet".
+        async function LoadRecipeData() {
             try {
-                const response = await fetch("/api/me/likes");
+                const response = await fetch("/api/recipes");
                 if (!response.ok) throw new Error(`Request failed (${response.status})`);
-                const likedIds = new Set(await response.json());
-                meals.forEach(function(meal) {
-                    meal.liked = likedIds.has(meal.recipe_id);
+                const recipesByTitle = new Map();
+                (await response.json()).forEach(function(recipe) {
+                    recipesByTitle.set(recipe.recipe_title.trim().toLowerCase(), recipe);
                 });
+
+                meals.forEach(function(meal) {
+                    const recipe = recipesByTitle.get(meal.recipe_title.trim().toLowerCase());
+                    meal.recipe_id = recipe ? recipe.recipe_id : null;
+                    meal.liked = recipe ? recipe.liked : false;
+                    meal.rating_avg = recipe ? recipe.rating_avg : null;
+                    meal.rating_count = recipe ? recipe.rating_count : 0;
+                });
+                bRecipesLoaded = true;
                 RenderLike();
+                RenderRating();
             } catch (error) {
-                console.error("Could not load likes:", error);
+                console.error("Could not load recipe data:", error);
             }
         }
-        LoadLikes();
+        LoadRecipeData();
 
         // TODO: open a date/meal slot picker and save to the calendar table
         document.getElementById("calendar-btn").addEventListener("click", function() {
@@ -345,7 +388,7 @@
             if (bSuppressClick) return;
 
             document.getElementById("details-title").textContent = meals[nCurrent].recipe_title;
-            obj_dialog.dataset.recipeId = meals[nCurrent].recipe_id;
+            obj_dialog.dataset.recipeId = meals[nCurrent].recipe_id ?? "";
             obj_dialog.showModal();
         });
 

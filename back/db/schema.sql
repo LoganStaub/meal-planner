@@ -26,7 +26,7 @@
 
 -- Also drops the tables added by db/migrations, so db:init (which runs the
 -- migrations right after this file) rebuilds everything from scratch.
-drop table if exists schema_migrations, session, pending_signups, email_verification_tokens,
+drop table if exists schema_migrations, session, recipe_rating_stats, user_recipe_ratings, pending_signups, email_verification_tokens,
   user_pantry, user_liked_recipes,
   calendar, recipe_ingredients, ingredients, recipes,
   users, measurements, recipe_classes cascade;

@@ -42,6 +42,8 @@ extra CORS configuration. The browser never connects directly to PostgreSQL.
 | `calendar`           | `calendar_id`                        | Each user's planned dishes. `meal_slot`: 1 Breakfast, 2 Lunch, 3 Dinner, 4 Snack, 5 Dessert. A meal can hold several dishes, but not the same recipe twice |
 | `user_pantry`        | (`user_id`, `ingredient_id`)         | Each user's own pantry and how much is left               |
 | `user_liked_recipes` | (`user_id`, `recipe_id`)             | Which recipes each user liked                             |
+| `user_recipe_ratings` | (`user_id`, `recipe_id`)            | Each user's 1–5 star rating. Private: the API only returns a user's own ratings |
+| `recipe_rating_stats` | `recipe_id`                          | Each recipe's anonymous rating totals (sum, count, average), kept in sync by a trigger |
 
 Names are **snake_case** (`recipe_title`, not `RecipeTitle`).
 
@@ -105,7 +107,7 @@ Names are **snake_case** (`recipe_title`, not `RecipeTitle`).
 | ------- | -------------------------------- | ------------------------------------ | --------------------------------------------------------- |
 | Home    | `front/views/index.ejs` with `front/public/css/index.css` and `front/public/js/index.js` | <http://localhost:3000> | Design done: swipe through 5 meals, recipe popup opens. Meals and photos are placeholder data |
 | Pantry  | `front/views/pantry.ejs`, `front/public/css/pantry.css`, `front/public/js/pantry.js`, and `front/public/images/pantry-banner.jpeg` | <http://localhost:3000/pantry> or <http://localhost:3000/pantry.html> | The logged-in user's own pantry (`user_pantry`), sorted by inventory level (Plenty left to None); search locally; add with a starting inventory amount, rename, update status, and delete through `/api/me/pantry` |
-| Liked recipes | `front/views/liked.ejs`, `front/public/css/liked.css`, and `front/public/images/recipes-header.webp` | <http://localhost:3000/liked> or <http://localhost:3000/liked.html> | Lists the recipes the logged-in user liked (`user_liked_recipes`) and counts their ingredients against that user's pantry |
+| Liked recipes | `front/views/liked.ejs`, `front/public/css/liked.css`, `front/public/js/liked.js`, and `front/public/images/recipes-header.webp` | <http://localhost:3000/liked> or <http://localhost:3000/liked.html> | Lists the recipes the logged-in user liked (`user_liked_recipes`) and counts their ingredients against that user's pantry. Each card has 1–5 star rating buttons (click the same star again to remove your rating) and shows the recipe's average, e.g. "4.3 · 12 ratings". See [Recipe ratings](#recipe-ratings) |
 | Calendar | `front/views/calendar.ejs`, `front/public/css/calendar.css`, and `front/public/js/calendar.js` | <http://localhost:3000/calendar> (add `?date=YYYY-MM-DD` to open a day) | Week view of the logged-in user's meal plan, loaded from `/api/me/calendar`. Breakfast, Lunch and Dinner each list their dishes ("+ Add another" for more), with a Snacks & desserts group below; remove one dish at a time. Run `npm run db:seed` for test data |
 | Search | `front/views/search.ejs`, `front/public/css/search.css` (on top of `calendar.css`), `front/public/js/search.js`, and `back/src/routes/search.js` | <http://localhost:3000/search> (`?q=chicken&filter=dinner`) | Searches recipe names and ingredients; filters for meal type, Quick Meals (prep ≤ 30 min) and High Protein (≥ 25g, read from the `macros` text). Thresholds are constants at the top of `routes/search.js`. From a calendar + button (`?date=YYYY-MM-DD&slot=1-5`) it starts on that meal's filter and shows an "Adding to…" banner with an Add to calendar button (X keeps searching without adding) |
 | Shopping | `front/views/shopping.ejs` | <http://localhost:3000/shopping> | Design done with sample items; not connected to the calendar or pantry yet |
@@ -135,8 +137,8 @@ All routes return JSON and need a logged-in user (they answer `401` otherwise). 
 | POST   | `/api/ingredients` | Admin: add one: `{ ingredient_name, pantry_amount_id? }` |
 | PATCH  | `/api/ingredients/:id` | Admin: change `ingredient_name`, `pantry_amount_id`, and/or `measure_amount_id` |
 | DELETE | `/api/ingredients/:id` | Admin: delete one (fails with 400 if a recipe uses it) |
-| GET    | `/api/recipes` | All recipes with their class name |
-| GET    | `/api/recipes/:id` | One recipe with its ordered ingredient list |
+| GET    | `/api/recipes` | All recipes with their class name, plus `rating_avg`, `rating_count` and your own `my_rating` (`null` if you haven't rated it) |
+| GET    | `/api/recipes/:id` | One recipe with its ordered ingredient list, plus the same rating fields |
 | POST   | `/api/recipes` | Admin: add one: `{ recipe_title, recipe_class_id?, cost?, prep_time?, macros?, instructions? }` |
 | GET    | `/api/recipe-classes` | Breakfast, Lunch, … |
 | GET    | `/api/measurements` | Cup, Tablespoon, … |
@@ -151,6 +153,9 @@ All routes return JSON and need a logged-in user (they answer `401` otherwise). 
 | GET    | `/api/me/likes` | Ids of the recipes you liked |
 | PUT    | `/api/me/likes/:recipeId` | Like a recipe (`204`) |
 | DELETE | `/api/me/likes/:recipeId` | Unlike it (`204`) |
+| GET    | `/api/me/ratings` | Your own ratings: `{ "<recipe_id>": rating, … }` |
+| PUT    | `/api/me/ratings/:recipeId` | Rate a recipe: `{ rating }` (a whole number 1–5). Rating again changes it. Returns `{ recipe_id, my_rating, average, count }`. `400` for a bad rating, `404` if the recipe doesn't exist |
+| DELETE | `/api/me/ratings/:recipeId` | Remove your rating. Returns the same shape with `my_rating: null` |
 | GET    | `/api/me/pantry` | Your pantry items |
 | POST   | `/api/me/pantry` | Add one: `{ ingredient_name, pantry_amount_id? }` (`201`) |
 | PATCH  | `/api/me/pantry/:ingredientId` | Change `ingredient_name` and/or `pantry_amount_id` |
@@ -230,11 +235,39 @@ Rate limits are per IP address and kept in memory, so they reset when the server
 | Forgot password | 5 requests per 15 minutes |
 | Signup | 10 per hour |
 
+### Recipe ratings
+
+Users rate recipes from 1 to 5 stars. Each person's rating is private; everyone only sees a recipe's average and how many ratings it has.
+
+| Table | What it holds | Who sees it |
+| ----- | ------------- | ----------- |
+| `user_recipe_ratings` | One row per user per recipe: `rating` (1–5), `rated_at`, `updated_at` | Only that user (through `/api/me/ratings`) |
+| `recipe_rating_stats` | One row per recipe: `rating_sum`, `rating_count`, and `rating_avg` (worked out by Postgres from the other two) | Everyone, as "4.3 · 12 ratings" |
+
+**How the two stay in sync:** a trigger on `user_recipe_ratings` (`recipe_rating_stats_sync`, in migration `009`) updates `recipe_rating_stats` in the same transaction as every change, so route code never touches the totals:
+
+- New rating: adds it to `rating_sum` and adds 1 to `rating_count`
+- Changed rating (e.g. 4 → 2): subtracts the old value and adds the new one. The count stays the same
+- Removed rating, deleted user or deleted recipe: subtracts it and takes 1 off the count
+
+The totals store a sum and count rather than an average, so they never drift from rounding. If they're ever edited by hand, the "Rebuild" block at the bottom of `009_recipe_ratings.sql` recalculates them from `user_recipe_ratings`.
+
+**Things to know:**
+
+- Ratings don't depend on likes. The API accepts a rating for any recipe, and unliking a recipe keeps its rating. Right now the stars only appear on the Liked page; Search results and the calendar are the next places to add them.
+- Never return other users' rows from `user_recipe_ratings`. Show `recipe_rating_stats` instead.
+- To show ratings in a new query, join the totals, and your own rating if you need it:
+  ```sql
+  left join recipe_rating_stats rs on rs.recipe_id = r.recipe_id
+  left join user_recipe_ratings ur on ur.recipe_id = r.recipe_id and ur.user_id = $1
+  ```
+- Code: `back/src/routes/ratings.js` (API), `front/public/js/liked.js` (stars), `isRating` in `back/src/validators.js`.
+
 ### Changing the database
 
 Don't edit tables only in pgAdmin, because teammates won't know. Instead:
 
-1. Add a new numbered file to `back/db/migrations/` (next is `007_...sql`). Write it so it's safe to run more than once (`if not exists`, or check first like `006` does).
+1. Add a new numbered file to `back/db/migrations/` (next is `010_...sql`). Write it so it's safe to run more than once (`if not exists`, or check first like `006` does).
 2. Update `back/db/schema.sql` so brand-new setups get the change too.
 3. Run `npm run db:migrate` to apply it, and commit both files.
 
@@ -246,3 +279,5 @@ Teammates then run `npm run db:migrate` after pulling. It only runs the files th
 | `002_email_verification.sql`, `003_pending_signups.sql`, `004_password_reset.sql` | Email verification and reset tables. No longer used; `005` removes them |
 | `005_drop_unused_auth_tables.sql` | Drops `pending_signups`, `session` and `password_reset_tokens` (that data lives in Redis now) |
 | `006_calendar_multiple_dishes.sql` | `calendar` gets a `calendar_id` key, so a meal can hold several dishes; adds Snack (4) and Dessert (5) slots. Guide: [`calendar_multiple_dishes.md`](back/db/calendar_multiple_dishes.md) |
+| `008_avatar_color.sql` | `users.avatar_color`, the color behind a user's initials |
+| `009_recipe_ratings.sql` | `user_recipe_ratings` (each user's private rating) and `recipe_rating_stats` (each recipe's totals), plus the trigger that keeps them in sync. See [Recipe ratings](#recipe-ratings) |

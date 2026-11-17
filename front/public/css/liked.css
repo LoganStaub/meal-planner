@@ -116,6 +116,16 @@ body {
 .tags .diet { color: var(--liked-muted); }
 .card h3 { margin: 0 0 6px; font-size: 16px; font-weight: 700; line-height: 1.25; }
 .card p { margin: 0; color: var(--liked-muted); font-size: 13px; line-height: 1.45; }
+/* Star rating: your own rating (stars) + the recipe's average (summary) */
+.rating { display: flex; flex-wrap: wrap; align-items: center; gap: 4px 10px; margin-top: 10px; }
+.stars { display: flex; }
+.star { display: grid; place-items: center; width: 30px; height: 30px; padding: 0; border: 0; border-radius: 8px; background: none; color: var(--liked-line); cursor: pointer; }
+.star svg { width: 20px; height: 20px; fill: currentColor; stroke: none; }
+.star.on { color: var(--liked-accent); }
+.star:hover, .star:focus-visible { background: var(--liked-accent-soft); }
+.star:focus-visible { outline: 2px solid var(--liked-accent); outline-offset: 1px; }
+.rating.saving .star { cursor: progress; }
+.rating-summary { color: var(--liked-muted); font-size: 12px; font-weight: 600; }
 .card-foot { display: flex; justify-content: space-between; gap: 10px; align-items: center; padding: 11px 16px; border-top: 1px solid var(--liked-line); font-size: 11px; font-weight: 600; }
 .pantry { display: flex; align-items: center; gap: 5px; color: var(--liked-green); }
 .pantry svg { width: 13px; height: 13px; fill: none; stroke: currentColor; stroke-width: 3; }
