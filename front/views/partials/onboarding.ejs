@@ -1,0 +1,24 @@
+<%#
+  The first-visit tour. Included by partials/profile-menu.ejs, so it is on
+  every logged-in page. Script: js/onboarding.js, styles: css/onboarding.css.
+
+  The welcome popup is only rendered while users.onboarding_status is null
+  (never offered yet, see db/migrations/013_onboarding.sql). The tour itself
+  is built by onboarding.js, and can be replayed from the profile menu.
+%>
+<link rel="stylesheet" href="/css/onboarding.css">
+
+<% if (!currentUser.onboarding_status) { %>
+<dialog class="onboarding-welcome" id="onboarding-welcome" aria-labelledby="onboarding-welcome-title" aria-describedby="onboarding-welcome-text">
+  <img class="onboarding-welcome-logo" src="/images/logo.svg" alt="" width="48" height="48">
+  <h2 id="onboarding-welcome-title">Welcome to Preply<%= currentUser.first_name ? `, ${currentUser.first_name.trim()}` : '' %></h2>
+  <p id="onboarding-welcome-text">Want a quick tour? In about a minute we'll show you what each page does and how they work together.</p>
+  <div class="onboarding-welcome-actions">
+    <button type="button" class="onboarding-btn onboarding-btn-primary" id="onboarding-start">Show me around</button>
+    <button type="button" class="onboarding-btn" id="onboarding-skip">No thanks, I'll explore</button>
+  </div>
+  <p class="onboarding-welcome-note">You can take the tour any time from your profile menu.</p>
+</dialog>
+<% } %>
+
+<script src="/js/onboarding.js" defer></script>

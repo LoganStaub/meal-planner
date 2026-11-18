@@ -15,6 +15,9 @@ export const CLIENT_EVENTS = new Set([
   'add_to_calendar_started',
   'add_to_calendar_cancelled',
   'add_to_calendar_error',
+  // The first-visit tour (js/onboarding.js). onboarding_skipped / _started /
+  // _completed are logged by the server (routes/onboarding.js).
+  'onboarding_step_viewed',
 ])
 
 // Never throws and never needs awaiting: a failed log is printed and

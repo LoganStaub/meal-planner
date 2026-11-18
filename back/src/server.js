@@ -21,6 +21,7 @@ import searchRouter from './routes/search.js'
 import recipeAssistantRouter from './routes/recipeAssistant.js'
 import eventsRouter from './routes/events.js'
 import adminRouter from './routes/admin.js'
+import onboardingRouter from './routes/onboarding.js'
 import { AVATAR_COLORS, DEFAULT_AVATAR_COLOR } from './avatarColors.js'
 
 if (!process.env.SESSION_SECRET) {
@@ -39,12 +40,17 @@ if (missingTables.length > 0) {
   )
 }
 
-// users.avatar_color comes from migration 011
-const { rows: avatarColumn } = await pool.query(
-  `select 1 from information_schema.columns where table_name = 'users' and column_name = 'avatar_color'`
+// users.avatar_color comes from migration 011, users.onboarding_status from 013
+const { rows: missingColumns } = await pool.query(
+  `select name from unnest(array['avatar_color', 'onboarding_status']) as name
+   where not exists (
+     select 1 from information_schema.columns where table_name = 'users' and column_name = name
+   )`
 )
-if (avatarColumn.length === 0) {
-  throw new Error('Missing column users.avatar_color. Run: npm run db:migrate')
+if (missingColumns.length > 0) {
+  throw new Error(
+    `Missing columns: ${missingColumns.map((row) => `users.${row.name}`).join(', ')}. Run: npm run db:migrate`
+  )
 }
 
 const app = express()
@@ -129,6 +135,7 @@ app.use('/api/me/ratings', ratingsRouter)
 app.use('/api/me/pantry', pantryRouter)
 app.use('/api/me/account', accountRouter)
 app.use('/api/me/shopping', shoppingRouter)
+app.use('/api/me/onboarding', onboardingRouter)
 
 // Recipes page's "Add your own recipe" assistant: /api/recipe-assistant/...
 app.use('/api', recipeAssistantRouter)

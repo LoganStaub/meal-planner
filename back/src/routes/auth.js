@@ -88,7 +88,7 @@ export async function loadUser(req, res, next) {
   if (!userId) return next()
 
   const { rows } = await pool.query(
-    'select user_id, first_name, last_name, email, phone, profile_pic, avatar_color, role from users where user_id = $1',
+    'select user_id, first_name, last_name, email, phone, profile_pic, avatar_color, role, onboarding_status from users where user_id = $1',
     [userId]
   )
   const user = rows[0]

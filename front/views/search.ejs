@@ -47,7 +47,7 @@
                     <h2>Find a recipe</h2>
                     <div class="search-heading-actions">
                         <%# Opens the "Add your own recipe" popup near the bottom of this file (js/recipe-add.js) %>
-                        <button type="button" class="recipe-add-open" id="recipe-add-open" aria-haspopup="dialog">
+                        <button type="button" class="recipe-add-open" id="recipe-add-open" aria-haspopup="dialog" data-tour="recipes-add">
                             <svg class="icon"><use href="#icon-sparkles"/></svg>
                             Add a recipe with AI
                         </button>
@@ -94,7 +94,7 @@
                     <p id="page-error-message"></p>
                 </div>
 
-                <form class="search-form" action="/recipes" method="get" role="search">
+                <form class="search-form" action="/recipes" method="get" role="search" data-tour="recipes-search">
                     <label class="visually-hidden" for="search-input">Search recipes by name or ingredient</label>
                     <svg class="icon search-form-icon"><use href="#icon-search"/></svg>
                     <input class="search-input" id="search-input" type="search" name="q" value="<%= q %>" placeholder="Search by recipe or ingredient" maxlength="100" autocomplete="off">
