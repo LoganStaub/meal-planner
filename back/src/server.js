@@ -24,6 +24,7 @@ import adminRouter from './routes/admin.js'
 import onboardingRouter from './routes/onboarding.js'
 import { AVATAR_COLORS, DEFAULT_AVATAR_COLOR } from './avatarColors.js'
 import { APP_TIME_ZONE, rateColumns } from './canRate.js'
+import dailyPicksRouter from './routes/dailyPicks.js'
 
 if (!process.env.SESSION_SECRET) {
   throw new Error('Missing SESSION_SECRET. Add it to .env (see .env.example).')
@@ -137,6 +138,7 @@ app.use('/api/me/pantry', pantryRouter)
 app.use('/api/me/account', accountRouter)
 app.use('/api/me/shopping', shoppingRouter)
 app.use('/api/me/onboarding', onboardingRouter)
+app.use('/api/me/daily-picks', dailyPicksRouter)
 
 // Recipes page's "Add your own recipe" assistant: /api/recipe-assistant/...
 app.use('/api', recipeAssistantRouter)

@@ -1,7 +1,4 @@
 
-        // The home page only ever shows this many meals at a time
-        const MAX_MEALS = 5;
-
         // "Tonight's picks" changes with the time of day, using the visitor's
         // own clock (the server might be in another time zone)
         function picksTimeOfDay(date = new Date()) {
@@ -19,64 +16,13 @@
         }
         showPicksTimeOfDay();
 
-        // Placeholder meals until this page loads from GET /api/recipes.
-        // recipe_title, prep_time and recipe_class_desc match the database.
-        // recipe_id is only a guess: LoadRecipeData() swaps in the real id by
-        // matching the title (npm run db:seed-recipes adds these 5 recipes).
-        // description, servings and image_url don't exist in the schema yet.
-        // The "In pantry" line comes from the real recipe and this user's pantry
-        // (in_pantry, to_buy, ingredient_count from GET /api/recipes).
-        const SAMPLE_MEALS = [
-            {
-                recipe_id: 1,
-                recipe_title: "Smoky chicken & red onion flatbread",
-                description: "Crisp-edged flatbread with roasted chicken, sweet red onion and melted mozzarella, finished with fresh herbs.",
-                prep_time: 35,
-                recipe_class_desc: "Dinner",
-                servings: 4,
-                image_url: "https://images.unsplash.com/photo-1565299624946-b28f40a0ae38?w=1200&q=80&auto=format&fit=crop",
-            },
-            {
-                recipe_id: 2,
-                recipe_title: "Basil pesto farfalle with cherry tomatoes",
-                description: "Bow-tie pasta tossed in bright basil pesto with burst cherry tomatoes and a handful of greens.",
-                prep_time: 20,
-                recipe_class_desc: "Lunch",
-                servings: 2,
-                image_url: "https://images.unsplash.com/photo-1473093295043-cdd812d0e601?w=1200&q=80&auto=format&fit=crop",
-            },
-            {
-                recipe_id: 3,
-                recipe_title: "Salmon poke bowl",
-                description: "Seared salmon over rice with cucumber, corn, red cabbage and a soft-boiled egg.",
-                prep_time: 25,
-                recipe_class_desc: "Dinner",
-                servings: 2,
-                image_url: "https://images.unsplash.com/photo-1546069901-ba9599a7e63c?w=1200&q=80&auto=format&fit=crop",
-            },
-            {
-                recipe_id: 4,
-                recipe_title: "Rainbow chickpea Buddha bowl",
-                description: "Roasted sweet potato, crispy chickpeas, avocado and crunchy veggies with a lemon-tahini drizzle.",
-                prep_time: 30,
-                recipe_class_desc: "Vegan",
-                servings: 2,
-                image_url: "https://images.unsplash.com/photo-1512621776951-a57141f2eefd?w=1200&q=80&auto=format&fit=crop",
-            },
-            {
-                recipe_id: 5,
-                recipe_title: "Brioche French toast with berries",
-                description: "Thick-cut brioche soaked in vanilla custard, pan-fried golden and topped with banana and blueberries.",
-                prep_time: 15,
-                recipe_class_desc: "Breakfast",
-                servings: 2,
-                image_url: "https://images.unsplash.com/photo-1484723091739-30a097e8f929?w=1200&q=80&auto=format&fit=crop",
-            }
-        ];
-
-        const meals = SAMPLE_MEALS.slice(0, MAX_MEALS);
+        // The day's picks come from GET /api/me/daily-picks (routes/dailyPicks.js):
+        // 5 recipes that change at midnight, each with this user's like state,
+        // rating and pantry info already included. LoadDailyPicks() at the bottom
+        // of this file fills the list in.
+        let meals = [];
         let nCurrent = 0;
-        // true once LoadRecipeData() has the real ids, likes and ratings
+        // true once LoadDailyPicks() has the picks
         let bRecipesLoaded = false;
         let bAnimating = false;
 
@@ -93,16 +39,20 @@
 
         const bReducedMotion = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
 
+        // the card stays hidden until the picks arrive, so it never shows empty
+        obj_slide.style.visibility = "hidden";
 
-        // one progress bar segment per meal
-        meals.forEach(function() {
-            obj_progress.appendChild(document.createElement("span"));
-        });
 
-        // start downloading every photo now so swiping doesn't wait on them
-        meals.forEach(function(meal) {
-            new Image().src = meal.image_url;
-        });
+        // Called once the picks have loaded: one progress bar segment per meal,
+        // and start downloading every photo now so swiping doesn't wait on them
+        function SetUpMeals() {
+            obj_progress.replaceChildren();
+            meals.forEach(function(meal) {
+                obj_progress.appendChild(document.createElement("span"));
+                if (meal.image_url) new Image().src = meal.image_url;
+            });
+            document.getElementById("done-count").textContent = meals.length;
+        }
 
         // if a photo can't load, hide it and let the slide's gradient background show
         obj_photo.addEventListener("error", function() { obj_photo.classList.add("broken"); });
@@ -113,11 +63,17 @@
         function RenderMeal() {
             const meal = meals[nCurrent];
 
-            obj_photo.src = meal.image_url;
+            // a recipe with no photo yet shows the slide's gradient background
+            if (meal.image_url) {
+                obj_photo.src = meal.image_url;
+                obj_photo.classList.remove("broken");
+            } else {
+                obj_photo.removeAttribute("src");
+                obj_photo.classList.add("broken");
+            }
             obj_photo.alt = meal.recipe_title;
             document.getElementById("meal-time").textContent = `${meal.prep_time} min`;
             document.getElementById("meal-tag").textContent = meal.recipe_class_desc;
-            document.getElementById("meal-servings").textContent = `${meal.servings} servings`;
             document.getElementById("meal-title").textContent = meal.recipe_title;
             document.getElementById("meal-desc").textContent = meal.description;
 
@@ -140,7 +96,7 @@
             obj_nextArrow.disabled = !obj_done.hidden;
         }
 
-        // true once this meal is matched to a real recipe in the database
+        // true once the picks have loaded and this meal is a real recipe in the database
         function HasRealRecipe(meal) {
             return bRecipesLoaded && meal.recipe_id != null;
         }
@@ -148,7 +104,7 @@
         function RenderLike() {
             const meal = meals[nCurrent];
             obj_like.setAttribute("aria-pressed", String(Boolean(meal.liked)));
-            // a sample meal that isn't in the database yet can't be liked or planned
+            // a meal that isn't in the database can't be liked or planned
             const bMissing = bRecipesLoaded && meal.recipe_id == null;
             const sMissing = bMissing ? "This recipe isn't in the database yet" : "";
             obj_like.disabled = bMissing;
@@ -159,8 +115,8 @@
         }
 
         // What this user already has for the recipe, from their own pantry, and
-        // how many ingredients they'd need to buy. Hidden until GET /api/recipes
-        // answers, and for recipes with no ingredients listed.
+        // how many ingredients they'd need to buy. Hidden for recipes with no
+        // ingredients listed.
         function RenderPantry() {
             const meal = meals[nCurrent];
             const obj_pill = document.getElementById("meal-pantry-pill");
@@ -177,7 +133,7 @@
         }
 
         // The recipe's average rating from everyone, e.g. "★ 4.3 (12)".
-        // Hidden until GET /api/recipes answers, so it doesn't flash "No ratings yet".
+        // Hidden until the picks load, so it doesn't flash "No ratings yet".
         function RenderRating() {
             const meal = meals[nCurrent];
             const obj_wrap = document.getElementById("meal-rating-wrap");
@@ -200,6 +156,7 @@
         // moves to the next (+1) or previous (-1) meal with a slide animation.
         // nFromX is where the card was dragged to, so the animation continues from there.
         async function GoTo(nDirection, nFromX = 0) {
+            if (meals.length === 0) return;
             if (bAnimating || !obj_profileMenu.hidden || obj_plan.open) return;
 
             // from the "all caught up" screen, going back shows the last meal again
@@ -408,9 +365,12 @@
             window.logEvent("discover_viewed", { meals: meals.length, waited_for_tour: bWaited });
         }
 
-        if (!IsTourShowing()) {
-            LogDiscoverViewed(false);
-        } else {
+        // Called once the picks have loaded, so the logged meal count is right
+        function StartDiscoverClock() {
+            if (!IsTourShowing()) {
+                LogDiscoverViewed(false);
+                return;
+            }
             // the popup closing and the tour being removed both change the DOM
             const objTourWatcher = new MutationObserver(function() {
                 if (IsTourShowing()) return;
@@ -420,37 +380,43 @@
             objTourWatcher.observe(document.body, { childList: true, subtree: true, attributes: true, attributeFilter: ["open"] });
         }
 
-        // Finds each meal's real recipe by title, then takes its id, whether this
-        // user liked it, and its average rating from GET /api/recipes. A meal
-        // that isn't in the database gets recipe_id null and "No ratings yet".
-        async function LoadRecipeData() {
-            try {
-                const response = await fetch("/api/recipes");
-                if (!response.ok) throw new Error(`Request failed (${response.status})`);
-                const recipesByTitle = new Map();
-                (await response.json()).forEach(function(recipe) {
-                    recipesByTitle.set(recipe.recipe_title.trim().toLowerCase(), recipe);
-                });
-
-                meals.forEach(function(meal) {
-                    const recipe = recipesByTitle.get(meal.recipe_title.trim().toLowerCase());
-                    meal.recipe_id = recipe ? recipe.recipe_id : null;
-                    meal.liked = recipe ? recipe.liked : false;
-                    meal.rating_avg = recipe ? recipe.rating_avg : null;
-                    meal.rating_count = recipe ? recipe.rating_count : 0;
-                    meal.ingredient_count = recipe ? recipe.ingredient_count : 0;
-                    meal.in_pantry = recipe ? recipe.in_pantry : [];
-                    meal.to_buy = recipe ? recipe.to_buy : 0;
-                });
-                bRecipesLoaded = true;
-                RenderLike();
-                RenderPantry();
-                RenderRating();
-            } catch (error) {
-                console.error("Could not load recipe data:", error);
-            }
+        // Replaces the card with a message, using the "all caught up" screen
+        function ShowMessage(sTitle, sText) {
+            obj_slide.style.display = "none";
+            document.getElementById("restart-btn").hidden = true;
+            obj_done.querySelector("h2").textContent = sTitle;
+            obj_done.querySelector("p").textContent = sText;
+            document.getElementById("picks-count").textContent = "";
+            obj_done.hidden = false;
+            obj_prevArrow.disabled = true;
+            obj_nextArrow.disabled = true;
         }
-        LoadRecipeData();
+
+        // Gets today's picks from GET /api/me/daily-picks, then shows the first one.
+        // Each pick already has its id, whether this user liked it, its rating
+        // and the pantry numbers.
+        async function LoadDailyPicks() {
+            try {
+                const response = await fetch("/api/me/daily-picks");
+                if (!response.ok) throw new Error(`Request failed (${response.status})`);
+                meals = await response.json();
+            } catch (error) {
+                console.error("Could not load today's picks:", error);
+                ShowMessage("Couldn't load today's picks", "Refresh the page to try again.");
+                return;
+            }
+
+            bRecipesLoaded = true;
+            if (meals.length === 0) {
+                ShowMessage("No picks today", "You've already saved every recipe we have. Check back when new ones are added.");
+                return;
+            }
+
+            SetUpMeals();
+            RenderMeal();
+            obj_slide.style.visibility = "";
+            StartDiscoverClock();
+        }
 
         // ---------- Add to meal plan popup ----------
         // The popup itself is shared with the recipe page: js/plan-dialog.js
@@ -477,7 +443,7 @@
         function OpenRecipe() {
             // a swipe that started on the card shouldn't also open the page
             if (bSuppressClick) return;
-            // wait for the real recipe id (see LoadRecipeData), so this never opens the wrong recipe
+            // wait for the picks to load, so this never opens the wrong recipe
             if (!HasRealRecipe(meals[nCurrent])) return;
             location.href = "/recipes/" + encodeURIComponent(meals[nCurrent].recipe_id);
         }
@@ -486,4 +452,4 @@
         document.getElementById("meal-pantry-pill").addEventListener("click", OpenRecipe);
 
 
-        RenderMeal();
+        LoadDailyPicks();
