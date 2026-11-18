@@ -387,8 +387,29 @@
             nThanksTimer = setTimeout(function() { obj_savePrompt.hidden = true; }, 1600);
         });
 
-        // the start of the OKR 1 clock: the first time a new user sees this feed
-        window.logEvent("discover_viewed", { meals: meals.length });
+        // The start of the OKR 1 clock: the first time a new user sees this feed.
+        // Not while the first-visit welcome popup or tour (js/onboarding.js) is
+        // on screen, so the tour doesn't eat into the 3 minutes. If the tour
+        // takes them to another page, the clock starts on their next visit here.
+        function IsTourShowing() {
+            return Boolean(document.querySelector("#onboarding-welcome[open], .tour"));
+        }
+
+        function LogDiscoverViewed(bWaited) {
+            window.logEvent("discover_viewed", { meals: meals.length, waited_for_tour: bWaited });
+        }
+
+        if (!IsTourShowing()) {
+            LogDiscoverViewed(false);
+        } else {
+            // the popup closing and the tour being removed both change the DOM
+            const objTourWatcher = new MutationObserver(function() {
+                if (IsTourShowing()) return;
+                objTourWatcher.disconnect();
+                LogDiscoverViewed(true);
+            });
+            objTourWatcher.observe(document.body, { childList: true, subtree: true, attributes: true, attributeFilter: ["open"] });
+        }
 
         // Finds each meal's real recipe by title, then takes its id, whether this
         // user liked it, and its average rating from GET /api/recipes. A meal

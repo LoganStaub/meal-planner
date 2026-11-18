@@ -281,7 +281,9 @@ button {
 .card-actions {
     display: grid;
     /* Icon-only side buttons stay square-ish; the middle button gets the rest */
-    grid-template-columns: 64px 1fr 64px;
+    /* minmax(0, ...) lets the middle button shrink instead of pushing the
+       heart (Save) off the edge of the card on narrow phones */
+    grid-template-columns: 64px minmax(0, 1fr) 64px;
     gap: 12px;
     margin-top: 14px;
 }
@@ -331,10 +333,30 @@ button {
     white-space: nowrap;
 }
 
-/* Narrow phones: shrink the label so "Add to calendar" fits on one line */
-@media (max-width: 380px) {
+/* Narrow phones: shrink the label so "Add to meal plan" fits on one line */
+@media (max-width: 430px) {
     .card-actions .primary-btn {
         font-size: 1rem;
+    }
+}
+
+/* Very narrow phones: narrower side buttons, no calendar icon, and the
+   label may wrap onto two lines */
+@media (max-width: 380px) {
+    .card-actions {
+        grid-template-columns: 52px minmax(0, 1fr) 52px;
+        gap: 10px;
+    }
+
+    .card-actions .primary-btn {
+        padding: 0 8px;
+        line-height: 1.15;
+        text-align: center;
+        white-space: normal;
+    }
+
+    .card-actions .primary-btn .icon {
+        display: none;
     }
 }
 
