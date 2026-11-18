@@ -15,7 +15,8 @@
     "db:seed-recipes": "node scripts/seedRecipes.js",
     "db:seed-classics": "node scripts/seedClassicRecipes.js",
     "db:migrate": "node scripts/migrate.js",
-    "user:role": "node scripts/setRole.js"
+    "user:role": "node scripts/setRole.js",
+    "user:password": "node scripts/setPassword.js"
   },
   "dependencies": {
     "@anthropic-ai/sdk": "^1.8.0",
