@@ -11,6 +11,7 @@
 <%# recipe-page.css has this page's colors and layout; plan-dialog.css styles the Add to meal plan popup %>
 <link rel="stylesheet" href="/css/recipe-page.css">
 <link rel="stylesheet" href="/css/plan-dialog.css">
+<link rel="stylesheet" href="/css/star-rating.css">
 <link rel="stylesheet" href="/css/page-card.css">
 <link rel="stylesheet" href="/css/profile-menu.css">
 <link rel="stylesheet" href="/css/page-header.css">
@@ -29,7 +30,7 @@
 
 <%# One recipe on its own page (GET /recipes/:id in back/src/routes/search.js,
     shaped by back/src/recipeView.js). js/recipe-page.js runs Like and
-    Add to meal plan. %>
+    Add to meal plan; js/star-rating.js runs the stars. %>
 <div class="recipe-page page-card">
   <a class="recipe-back" href="<%= back.href %>">
     <svg class="icon" aria-hidden="true"><use href="#icon-chevron-left"/></svg>
@@ -58,6 +59,10 @@
           <% recipe.facts.forEach(function (fact) { %><li><%= fact %></li><% }); %>
         </ul>
         <% } %>
+        <div class="recipe-rating">
+          <span class="recipe-rating-label">Your rating</span>
+          <%- include('partials/star-rating', { recipeId: recipe.recipe_id, title: recipe.title, myRating: recipe.rating.myRating, average: recipe.rating.average, count: recipe.rating.count, canRate: recipe.rating.canRate, rateFrom: recipe.rating.rateFrom }) %>
+        </div>
         <div class="recipe-actions">
           <button type="button" class="recipe-btn recipe-primary" id="recipe-plan">
             <svg class="icon" aria-hidden="true"><use href="#icon-calendar-plus"/></svg>
@@ -139,6 +144,7 @@
 <% if (recipe) { %>
 <script src="/js/plan-dialog.js" defer></script>
 <script src="/js/recipe-page.js" defer></script>
+<script src="/js/star-rating.js" defer></script>
 <% } %>
 </body>
 </html>

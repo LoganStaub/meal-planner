@@ -2,6 +2,7 @@
 import { Router } from 'express'
 import { pool } from '../db.js'
 import { requireAdmin } from './auth.js'
+import { APP_TIME_ZONE, rateColumns } from '../canRate.js'
 
 const router = Router()
 
@@ -55,6 +56,7 @@ router.get('/', async (req, res) => {
 //   added_by: first name of the user who added it with the AI assistant
 //   rating_avg / rating_count: the recipe's anonymous totals; my_rating: only
 //     this user's own rating (null if they haven't rated it)
+//   can_rate / rate_from: whether they can rate it yet (canRate.js)
 //   recipe_ingredients[].pantry_amount_id: this user's own pantry: 0 plenty,
 //     1 running low, 2 none, and null when it isn't in their pantry at all
 export async function getRecipe(recipeId, userId) {
@@ -66,14 +68,15 @@ export async function getRecipe(recipeId, userId) {
             ) as liked,
             rs.rating_avg::float as rating_avg,
             coalesce(rs.rating_count, 0) as rating_count,
-            ur.rating as my_rating
+            ur.rating as my_rating,
+            ${rateColumns('$2', 'r.recipe_id', '$3')}
      from recipes r
      left join recipe_classes rc on rc.recipe_class_id = r.recipe_class_id
      left join users u on u.user_id = r.created_by
      left join recipe_rating_stats rs on rs.recipe_id = r.recipe_id
      left join user_recipe_ratings ur on ur.recipe_id = r.recipe_id and ur.user_id = $2
      where r.recipe_id = $1`,
-    [recipeId, userId]
+    [recipeId, userId, APP_TIME_ZONE]
   )
   if (recipe.rows.length === 0) return null
 

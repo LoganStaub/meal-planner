@@ -1,0 +1,27 @@
+<%# Star rating for one recipe: the stars are this user's own rating (private),
+    the summary is the recipe's anonymous average. Clicking a star saves it;
+    clicking the one you picked removes it (js/star-rating.js, css/star-rating.css).
+    Only someone who has made the recipe can rate it: it has to have been on
+    their meal plan for today or earlier (back/src/canRate.js). Until then the
+    stars are locked and a hint says when they can rate.
+    Pass: recipeId, title, myRating (1-5 or null), average (number or null), count,
+          canRate (boolean), rateFrom ('YYYY-MM-DD' of the next planned day, or null) %>
+<%
+  const nMine = myRating || 0;
+  const bLocked = !canRate;
+  let sHint = '';
+  if (bLocked) {
+    sHint = rateFrom
+      ? 'You can rate this on ' + new Date(rateFrom + 'T12:00:00Z').toLocaleDateString('en-US', { weekday: 'short', month: 'short', day: 'numeric', timeZone: 'UTC' })
+      : 'Add it to your meal plan to rate it';
+  }
+%>
+<div class="rating<%= bLocked ? ' locked' : '' %>" data-recipe-id="<%= recipeId %>" data-my-rating="<%= nMine %>">
+  <div class="stars" role="radiogroup" aria-label="Your rating for <%= title %>"<%= bLocked ? ' aria-disabled=true' : '' %>>
+    <% for (let n = 1; n <= 5; n++) { %>
+    <button type="button" class="star<%= nMine >= n ? ' on' : '' %>" role="radio" aria-checked="<%= nMine === n %>" aria-label="<%= n %> star<%= n > 1 ? 's' : '' %>" data-value="<%= n %>"<%= bLocked ? ' disabled' : '' %>><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 2.8l2.8 5.8 6.3.9-4.6 4.4 1.1 6.3L12 17.2l-5.6 3 1.1-6.3-4.6-4.4 6.3-.9z"/></svg></button>
+    <% } %>
+  </div>
+  <span class="rating-summary" aria-live="polite"><% if (count > 0) { %><%= average.toFixed(1) %> · <%= count %> rating<%= count === 1 ? '' : 's' %><% } else { %>No ratings yet<% } %></span>
+  <span class="rating-hint" role="status"<%= bLocked ? '' : ' hidden' %>><%= sHint %></span>
+</div>

@@ -23,6 +23,7 @@ import eventsRouter from './routes/events.js'
 import adminRouter from './routes/admin.js'
 import onboardingRouter from './routes/onboarding.js'
 import { AVATAR_COLORS, DEFAULT_AVATAR_COLOR } from './avatarColors.js'
+import { APP_TIME_ZONE, rateColumns } from './canRate.js'
 
 if (!process.env.SESSION_SECRET) {
   throw new Error('Missing SESSION_SECRET. Add it to .env (see .env.example).')
@@ -159,20 +160,22 @@ app.get(['/calendar', '/calendar.html'], (req, res) => {
 // Render the Recipes page (/recipes?q=&filter=&date=&slot=; old /search links redirect). See routes/search.js.
 app.use(searchRouter)
 
-// Render the recipes this user has liked. inPantry / toBuy count each
+// Render the recipes this user has liked, as small cards that open the
+// recipe page (/recipes/:id). inPantry / toBuy count each
 // recipe's ingredients against this user's pantry. ratingAverage /
 // ratingCount are the recipe's anonymous totals; myRating is only this
-// user's own rating (see routes/ratings.js).
+// user's own rating (see routes/ratings.js). can_rate / rate_from: whether
+// they've made it yet, so they can rate it (canRate.js).
 app.get(['/liked', '/liked.html'], async (req, res) => {
   const { rows } = await pool.query(
     `select r.recipe_id,
             r.recipe_title as title,
-            coalesce(r.prep_time, 0)::int as time,
+            r.prep_time::int as time,
             coalesce(rc.recipe_class_desc, 'Recipe') as tag,
-            coalesce(r.instructions, 'A recipe saved to your collection.') as description,
             rs.rating_avg::float as "ratingAverage",
             coalesce(rs.rating_count, 0) as "ratingCount",
             ur.rating as "myRating",
+            ${rateColumns('$1', 'r.recipe_id', '$2')},
             count(ri.ingredient_id) filter (
               where up.pantry_amount_id in (0, 1)
             )::int as "inPantry",
@@ -189,7 +192,7 @@ app.get(['/liked', '/liked.html'], async (req, res) => {
      where ul.user_id = $1
      group by r.recipe_id, rc.recipe_class_desc, rs.rating_avg, rs.rating_count, ur.rating
      order by r.recipe_title`,
-    [req.user.user_id]
+    [req.user.user_id, APP_TIME_ZONE]
   )
 
   res.render('liked', {
