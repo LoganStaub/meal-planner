@@ -212,6 +212,17 @@
 }
 
 /* Use our own clear (x) link instead of the browser's */
+/* Short placeholder so it fits next to the Search button on phones; if it
+   still doesn't, it ends in "…" instead of being cut mid-word */
+.search-input {
+    text-overflow: ellipsis;
+}
+
+.search-input::placeholder {
+    color: var(--text-muted);
+    opacity: 1;
+}
+
 .search-input::-webkit-search-cancel-button {
     -webkit-appearance: none;
 }
