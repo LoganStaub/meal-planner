@@ -175,6 +175,7 @@ app.get(['/liked', '/liked.html'], async (req, res) => {
   const { rows } = await pool.query(
     `select r.recipe_id,
             r.recipe_title as title,
+            r.image_path as image,
             r.prep_time::int as time,
             coalesce(rc.recipe_class_desc, 'Recipe') as tag,
             rs.rating_avg::float as "ratingAverage",
