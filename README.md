@@ -118,6 +118,11 @@ Names are **snake_case** (`recipe_title`, not `RecipeTitle`).
     ```bash
     npm run user:role -- you@example.com admin
     ```
+11. **Someone forgot their password?** There's no "Forgot password?" link, because the app doesn't send email. Set a new one for them:
+    ```bash
+    npm run user:password -- them@example.com
+    ```
+    It prints a random temporary password once and logs them out everywhere. Send it to them privately and ask them to change it from the profile menu (**Change password**).
 
 > Opening the pages by double-clicking them doesn't work. Pages have to be loaded from the server, which checks who's logged in and handles their `/api` calls.
 
@@ -247,12 +252,12 @@ Everything is in `back/src/routes/auth.js`. Every page and `/api` route needs a 
 | -------------------------- | ------------------------------------------------------------------------------------------------------------------------------------ |
 | `/signup`                | Creates the account and logs the user in right away. No email verification.                                                          |
 | `/login`                 | Opening a page while logged out (e.g. `/calendar`) goes to `/login?next=/calendar` and back there after logging in.              |
-| `/forgot-password`       | Emails a one-time reset link that expires in 1 hour. Always shows the same message, so it doesn't reveal which emails have accounts. |
+| `/forgot-password`       | **Not linked anywhere right now** (the login page's link was removed because no email service is set up; use `npm run user:password` instead). Still works by URL: emails a one-time reset link that expires in 1 hour. Always shows the same message, so it doesn't reveal which emails have accounts. |
 | `/reset-password?token=` | Sets the new password, logs out every device, then logs this one in.                                                                 |
 | `/account/password`      | Change password while logged in (linked from the profile menu). Logs out other devices.                                              |
 | `POST /logout`           | Logs out this browser (the profile menu's Log out button).                                                                           |
 
-Passwords must be 8 to 72 characters (bcrypt ignores anything past 72 bytes). Without `SMTP_HOST` in `.env`, emails (password resets) are printed in the server console instead of sent.
+Passwords must be 8 to 72 characters (bcrypt ignores anything past 72 bytes). **Forgotten passwords:** an admin runs `npm run user:password -- them@example.com` (`back/scripts/setPassword.js`), which sets a random temporary password, prints it once, logs that user out on every device and cancels any reset link. To bring back the login page's "Forgot password?" link, set up the `SMTP_…` settings and put the link back in `front/views/login.ejs`. Without `SMTP_HOST` in `.env`, emails (password resets) are printed in the server console instead of sent.
 
 #### What's stored in Redis
 

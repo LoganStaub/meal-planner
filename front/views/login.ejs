@@ -45,7 +45,8 @@
                 <div class="field">
                     <div class="field-label-row">
                         <label for="password">Password</label>
-                        <a class="field-link" href="/forgot-password">Forgot password?</a>
+                        <%# No "Forgot password?" link: the app doesn't send email yet. An admin
+                            sets a new one with npm run user:password (see the README). %>
                     </div>
                     <input id="password" name="password" type="password" autocomplete="current-password" required>
                 </div>

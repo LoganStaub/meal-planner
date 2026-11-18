@@ -10,7 +10,7 @@ import { sendPasswordResetEmail } from '../email.js'
 
 const router = Router()
 
-const SALT_ROUNDS = 12
+export const SALT_ROUNDS = 12
 const MIN_PASSWORD_LENGTH = 8
 // bcrypt ignores everything after the first 72 bytes, so longer passwords
 // would be silently cut short. Reject them instead.
@@ -24,7 +24,7 @@ const RESEND_COOLDOWN_SECONDS = 60
 export const DUMMY_HASH = await bcrypt.hash(randomBytes(16).toString('hex'), SALT_ROUNDS)
 
 // Returns an error message, or undefined if the new password is fine.
-function passwordError(password, confirmPassword) {
+export function passwordError(password, confirmPassword) {
   if (password.length < MIN_PASSWORD_LENGTH) return `Password must be at least ${MIN_PASSWORD_LENGTH} characters.`
   if (Buffer.byteLength(password, 'utf8') > MAX_PASSWORD_BYTES) return `Password must be at most ${MAX_PASSWORD_BYTES} characters.`
   if (password !== confirmPassword) return 'Passwords do not match.'
