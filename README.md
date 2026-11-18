@@ -188,6 +188,8 @@ All routes return JSON and need a logged-in user (they answer `401` otherwise). 
 | PUT    | `/api/me/ratings/:recipeId` | Rate a recipe: `{ rating }` (a whole number 1–5). Rating again changes it. Returns `{ recipe_id, my_rating, average, count }`. `400` for a bad rating, `404` if the recipe doesn't exist |
 | DELETE | `/api/me/ratings/:recipeId` | Remove your rating. Returns the same shape with `my_rating: null` |
 | POST   | `/api/me/onboarding` | Save how the first-visit tour went: `{ status }`, one of `skipped`, `started`, `completed` (`204`). See [Onboarding tour](#onboarding-tour) |
+| GET    | `/api/me/onboarding/dinner?date=YYYY-MM-DD` | For the tour: `{ planned, suggestions }`, that day's dinner (or `null`) and up to 8 suggested dinner recipes |
+| POST   | `/api/me/onboarding/dinner` | For the tour: add `{ date, recipe_id }` as that day's dinner (`201`). `409` if the day already has one. Not counted in the OKRs |
 | GET    | `/api/me/pantry` | Your pantry items |
 | POST   | `/api/me/pantry` | Add one: `{ ingredient_name, pantry_amount_id? }` (`201`) |
 | PATCH  | `/api/me/pantry/:ingredientId` | Change `ingredient_name` and/or `pantry_amount_id` |
@@ -300,7 +302,9 @@ The totals store a sum and count rather than an average, so they never drift fro
 
 ### Onboarding tour
 
-The first time someone uses the app, a welcome popup offers a one-minute tour: **Show me around** or **No thanks**. The tour goes through Home, Recipes, Meal Plan, Pantry, Shopping, Liked and the profile menu, highlighting one thing on each page. **Take the tour** in the profile menu replays it any time.
+The first time someone uses the app, a welcome popup offers a one-minute tour: **Show me around** or **No thanks**. The tour goes through Home, Recipes, Meal Plan, Pantry, Shopping, Liked and the profile menu, highlighting one thing on each page. **Take the tour** in the profile menu replays it any time. However the tour ends, it drops the user off on Home.
+
+**First dinner.** On the Meal Plan step, if tonight has no dinner yet, the tour offers a real dinner recipe (liked ones first, then quick ones; **Swap** shows another). Nothing is saved until the user taps **Add to my plan**; it then becomes a normal calendar row they can remove like any other, so the Shopping step shows a real list instead of an empty one. These adds log `onboarding_dinner_planned`, **not** `add_to_calendar_*`, so they stay out of the OKR numbers. The last card encourages the user to plan a meal on their own.
 
 The popup is offered once per account. `users.onboarding_status` (migration `013`) records what happened:
 
