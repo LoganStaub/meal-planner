@@ -1,7 +1,9 @@
-// Star ratings on the Liked page.
+// Star ratings (partials/star-rating.ejs) on the Liked page and the recipe page.
 // Clicking a star saves this user's rating (PUT /api/me/ratings/:id).
 // Clicking the star you already picked removes your rating (DELETE).
 // The summary shows the recipe's anonymous average from the server.
+// Locked stars (the recipe hasn't been on the meal plan yet) don't react;
+// the server refuses those ratings too (403, back/src/canRate.js).
 
 function renderStars(obj_rating, nRating) {
   obj_rating.dataset.myRating = String(nRating);
@@ -17,12 +19,20 @@ function renderSummary(obj_rating, average, count) {
     count > 0 ? `${average.toFixed(1)} · ${count} rating${count === 1 ? "" : "s"}` : "No ratings yet";
 }
 
+function lockStars(obj_rating) {
+  obj_rating.classList.add("locked");
+  obj_rating.querySelectorAll(".star").forEach(function (obj_star) { obj_star.disabled = true; });
+  const obj_hint = obj_rating.querySelector(".rating-hint");
+  obj_hint.textContent = "Add it to your meal plan to rate it";
+  obj_hint.hidden = false;
+}
+
 document.querySelectorAll(".rating").forEach(function (obj_rating) {
   const recipeId = obj_rating.dataset.recipeId;
 
   obj_rating.addEventListener("click", async function (event) {
     const obj_star = event.target.closest(".star");
-    if (!obj_star || obj_rating.classList.contains("saving")) return;
+    if (!obj_star || obj_rating.classList.contains("saving") || obj_rating.classList.contains("locked")) return;
 
     const nPrevious = Number(obj_rating.dataset.myRating);
     const nClicked = Number(obj_star.dataset.value);
@@ -38,6 +48,12 @@ document.querySelectorAll(".rating").forEach(function (obj_rating) {
         headers: { "Content-Type": "application/json" },
         body: bRemove ? undefined : JSON.stringify({ rating: nClicked }),
       });
+      // e.g. the planned meal was removed in another tab: lock the stars
+      if (response.status === 403) {
+        renderStars(obj_rating, nPrevious);
+        lockStars(obj_rating);
+        return;
+      }
       if (!response.ok) throw new Error(`Request failed (${response.status})`);
       const result = await response.json();
       renderStars(obj_rating, result.my_rating || 0);

@@ -4,9 +4,14 @@
 // to that same user. Everyone else only sees the recipe's anonymous totals
 // (recipe_rating_stats), which a database trigger keeps in sync. See
 // db/migrations/012_recipe_ratings.sql.
+//
+// Only someone who has made the recipe can rate it: it has to have been on
+// their meal plan for today or earlier (see canRate.js). Removing your own
+// rating is always allowed.
 import { Router } from 'express'
 import { pool } from '../db.js'
 import { isPositiveInt, isRating } from '../validators.js'
+import { canRate } from '../canRate.js'
 
 const router = Router()
 
@@ -34,6 +39,7 @@ router.get('/', async (req, res) => {
 // PUT /api/me/ratings/:recipeId  { rating: 1-5 }
 //   -> { recipe_id, my_rating, average, count }
 // Rating the same recipe again changes the rating; it never counts twice.
+// 403 if the recipe hasn't been on this user's meal plan yet (canRate.js).
 router.put('/:recipeId', async (req, res) => {
   const { recipeId } = req.params
   const rating = req.body?.rating
@@ -42,6 +48,14 @@ router.put('/:recipeId', async (req, res) => {
   }
   if (!isRating(rating)) {
     return res.status(400).json({ error: 'rating must be a whole number from 1 to 5' })
+  }
+
+  const exists = await pool.query('select 1 from recipes where recipe_id = $1', [recipeId])
+  if (exists.rowCount === 0) return res.status(404).json({ error: 'Recipe not found' })
+  if (!(await canRate(req.user.user_id, recipeId))) {
+    return res.status(403).json({
+      error: 'You can rate a recipe once it has been on your meal plan (from the day it is planned)',
+    })
   }
 
   const { rowCount } = await pool.query(

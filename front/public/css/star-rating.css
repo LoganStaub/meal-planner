@@ -1,0 +1,20 @@
+/* Star rating (partials/star-rating.ejs, js/star-rating.js), used on the
+   Liked page and the recipe page. Stars: your own rating. Summary: the
+   recipe's anonymous average. */
+.rating { position: relative; display: flex; flex-wrap: wrap; align-items: center; gap: 4px 10px; }
+.stars { display: flex; }
+.star { display: grid; place-items: center; width: 30px; height: 30px; padding: 0; border: 0; border-radius: 8px; background: none; color: #D9DEE6; cursor: pointer; }
+.star svg { width: 20px; height: 20px; fill: currentColor; stroke: none; }
+.star.on { color: #D4552A; }
+.star:hover, .star:focus-visible { background: #FCDCCD; }
+.star:focus-visible { outline: 2px solid #D4552A; outline-offset: 1px; }
+.rating.saving .star { cursor: progress; }
+.rating-summary { color: #5D6675; font-size: 12px; font-weight: 600; }
+
+/* Not made yet (not on their meal plan for today or earlier): locked */
+.rating.locked .star { cursor: not-allowed; }
+.rating.locked .star:not(.on) { color: #E7EAEE; }
+.rating.locked .star.on { color: #E9A58C; }
+.rating.locked .star:hover { background: none; }
+.rating-hint { flex-basis: 100%; color: #5D6675; font-size: 12px; font-style: italic; }
+.rating-hint[hidden] { display: none; }

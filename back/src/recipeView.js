@@ -89,6 +89,14 @@ export function describeRecipe(recipe) {
     title: recipe.recipe_title,
     mealType: recipe.recipe_class_desc,
     liked: Boolean(recipe.liked),
+    // Stars: myRating is only this user's own; average/count are anonymous totals
+    rating: {
+      myRating: recipe.my_rating ?? null,
+      average: recipe.rating_avg ?? null,
+      count: Number(recipe.rating_count ?? 0),
+      canRate: Boolean(recipe.can_rate),
+      rateFrom: recipe.rate_from ?? null,
+    },
     addedBy: recipe.added_by,
     facts,
     macroTiles,

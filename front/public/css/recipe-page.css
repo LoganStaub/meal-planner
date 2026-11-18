@@ -120,6 +120,23 @@ button { font: inherit; color: inherit; }
     font-weight: 600;
 }
 
+/* Your stars and the recipe's average (css/star-rating.css) */
+.recipe-rating {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 4px 12px;
+    margin-top: 16px;
+}
+.recipe-rating-label {
+    color: var(--text-muted);
+    font-size: 0.88rem;
+    font-weight: 600;
+}
+.recipe-rating .star { width: 34px; height: 34px; }
+.recipe-rating .star svg { width: 24px; height: 24px; }
+.recipe-rating .rating-summary { font-size: 0.88rem; }
+
 .recipe-actions {
     display: flex;
     flex-wrap: wrap;
