@@ -23,6 +23,8 @@ export const CLIENT_EVENTS = new Set([
   // the server (src/routes/likes.js), not the page.
   'discover_viewed',       // the Home swipe feed loaded
   'save_intent_answered',  // { recipe_id, answer: 'yes' | 'no' } "Would you make this?"
+  // OKR 2's meal_fit_prompt_shown / _rated / _dismissed are logged by the
+  // server only (src/routes/mealFit.js), so the once-a-week rule holds.
 ])
 
 // Never throws and never needs awaiting: a failed log is printed and

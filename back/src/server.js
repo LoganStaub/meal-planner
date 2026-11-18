@@ -22,6 +22,7 @@ import recipeAssistantRouter from './routes/recipeAssistant.js'
 import eventsRouter from './routes/events.js'
 import adminRouter from './routes/admin.js'
 import onboardingRouter from './routes/onboarding.js'
+import mealFitRouter from './routes/mealFit.js'
 import { AVATAR_COLORS, DEFAULT_AVATAR_COLOR } from './avatarColors.js'
 import { APP_TIME_ZONE, rateColumns } from './canRate.js'
 import dailyPicksRouter from './routes/dailyPicks.js'
@@ -139,6 +140,8 @@ app.use('/api/me/account', accountRouter)
 app.use('/api/me/shopping', shoppingRouter)
 app.use('/api/me/onboarding', onboardingRouter)
 app.use('/api/me/daily-picks', dailyPicksRouter)
+// OKR 2's weekly "found meals I'd make?" rating on Home. See routes/mealFit.js.
+app.use('/api/me/meal-fit', mealFitRouter)
 
 // Recipes page's "Add your own recipe" assistant: /api/recipe-assistant/...
 app.use('/api', recipeAssistantRouter)

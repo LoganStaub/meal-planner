@@ -157,7 +157,7 @@
         // nFromX is where the card was dragged to, so the animation continues from there.
         async function GoTo(nDirection, nFromX = 0) {
             if (meals.length === 0) return;
-            if (bAnimating || !obj_profileMenu.hidden || obj_plan.open) return;
+            if (bAnimating || !obj_profileMenu.hidden || obj_plan.open || obj_mealFit.open) return;
 
             // from the "all caught up" screen, going back shows the last meal again
             if (!obj_done.hidden) {
@@ -184,6 +184,7 @@
                 obj_slide.style.transform = "";
                 obj_slide.style.opacity = "";
                 bAnimating = false;
+                MaybeAskMealFit();
                 return;
             }
 
@@ -425,6 +426,98 @@
         document.getElementById("calendar-btn").addEventListener("click", function() {
             if (!HasRealRecipe(meals[nCurrent])) return;
             PlanDialog.open(meals[nCurrent], { entryPoint: "home_card" });
+        });
+
+        // ---------- "Did you find meals you'd actually make?" (OKR 2) ----------
+        // After the user swipes past the 5th meal, ask them to rate today's picks
+        // 1-5 stars. The server decides if it's due (at most once every 7 days per
+        // user, whatever they answer) and logs the answer: back/src/routes/mealFit.js.
+        const obj_mealFit = document.getElementById("meal-fit");
+        const obj_mealFitForm = document.getElementById("meal-fit-form");
+        const obj_mealFitStars = document.getElementById("meal-fit-stars");
+        const obj_mealFitSubmit = document.getElementById("meal-fit-submit");
+        const obj_mealFitError = document.getElementById("meal-fit-error");
+        const aMealFitStarLabels = [...obj_mealFitStars.querySelectorAll(".meal-fit-star")];
+        // only ask the server once per page load ("See them again" doesn't re-ask)
+        let bMealFitChecked = false;
+        // true once the rating is saved, so closing the popup isn't logged as "not now"
+        let bMealFitAnswered = false;
+        let nMealFitPicked = 0;
+
+        // waits a moment so "You're all caught up" shows first
+        function MaybeAskMealFit() {
+            if (bMealFitChecked) return;
+            setTimeout(async function() {
+                // swiped back to a meal, or the tour is on screen: try again next time
+                if (bMealFitChecked || obj_done.hidden || IsTourShowing() || obj_plan.open) return;
+                bMealFitChecked = true;
+                try {
+                    const response = await fetch("/api/me/meal-fit/prompt", { method: "POST" });
+                    if (!response.ok) throw new Error(`Request failed (${response.status})`);
+                    if ((await response.json()).show) obj_mealFit.showModal();
+                } catch (error) {
+                    console.error("Could not check the rating prompt:", error);
+                }
+            }, 700);
+        }
+
+        // fills the stars up to nStars (the one hovered, or the one picked)
+        function LightStars(nStars) {
+            aMealFitStarLabels.forEach(function(obj_label) {
+                obj_label.classList.toggle("lit", Number(obj_label.dataset.stars) <= nStars);
+            });
+        }
+
+        obj_mealFitStars.addEventListener("change", function(event) {
+            nMealFitPicked = Number(event.target.value);
+            obj_mealFitSubmit.disabled = false;
+            obj_mealFitError.hidden = true;
+            LightStars(nMealFitPicked);
+        });
+        obj_mealFitStars.addEventListener("mouseover", function(event) {
+            const obj_label = event.target.closest(".meal-fit-star");
+            if (obj_label) LightStars(Number(obj_label.dataset.stars));
+        });
+        obj_mealFitStars.addEventListener("mouseleave", function() { LightStars(nMealFitPicked); });
+
+        obj_mealFitForm.addEventListener("submit", async function(event) {
+            event.preventDefault();
+            if (!nMealFitPicked) return;
+            obj_mealFitSubmit.disabled = true;
+            obj_mealFitError.hidden = true;
+            try {
+                const response = await fetch("/api/me/meal-fit/answer", {
+                    method: "POST",
+                    headers: { "Content-Type": "application/json" },
+                    body: JSON.stringify({ rating: nMealFitPicked }),
+                });
+                // 409: already answered (e.g. in another tab), so nothing left to do
+                if (!response.ok && response.status !== 409) throw new Error(`Request failed (${response.status})`);
+                bMealFitAnswered = true;
+                document.getElementById("meal-fit-body").hidden = true;
+                document.getElementById("meal-fit-thanks").hidden = false;
+                setTimeout(function() { obj_mealFit.close(); }, 1600);
+            } catch (error) {
+                console.error("Could not save the rating:", error);
+                obj_mealFitError.textContent = "Couldn't save your rating. Please try again.";
+                obj_mealFitError.hidden = false;
+                obj_mealFitSubmit.disabled = false;
+            }
+        });
+
+        // X, Not now and Escape all close it; without a rating that's logged as dismissed
+        function CloseMealFit() { obj_mealFit.close(); }
+        document.getElementById("meal-fit-close").addEventListener("click", CloseMealFit);
+        document.getElementById("meal-fit-later").addEventListener("click", CloseMealFit);
+        obj_mealFit.addEventListener("close", function() {
+            if (bMealFitAnswered) return;
+            bMealFitAnswered = true;
+            fetch("/api/me/meal-fit/answer", {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({ dismissed: true }),
+                keepalive: true,
+            }).catch(function(error) { console.error("Could not save the dismissal:", error); });
         });
 
         document.getElementById("restart-btn").addEventListener("click", function() {

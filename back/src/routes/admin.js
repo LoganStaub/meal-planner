@@ -37,6 +37,7 @@ const MIN_USERS = 10
 const readQuery = (name) => readFile(new URL(`../../db/queries/${name}`, import.meta.url), 'utf8')
 const discoverSaveSql = await readQuery('okr1_discover_save.sql')
 const followThroughSql = await readQuery('okr1_follow_through.sql')
+const mealFitSql = await readQuery('okr2_meal_fit.sql')
 const firstTrySql = await readQuery('okr3_first_try.sql')
 const threeDayPlanSql = await readQuery('okr4_three_day_plan.sql')
 
@@ -136,6 +137,66 @@ async function discoverSave() {
   }
 }
 
+// OKR 2: users rate "I found meals I'd actually make" 4+ out of 5 on average.
+// Asked on Home after the 5th meal, at most once a week per user
+// (src/routes/mealFit.js). Query: db/queries/okr2_meal_fit.sql
+async function mealFitRating() {
+  const target = 4
+  const { rows } = await pool.query(mealFitSql)
+  const total = rows.find((row) => row.is_total)
+  const weeks = rows.filter((row) => !row.is_total).slice(0, 8)
+  const average = total.average == null ? '—' : `${total.average.toFixed(2)} / 5`
+
+  let status
+  if (total.ratings < MIN_USERS) status = { tone: 'muted', text: 'Not enough data' }
+  else if (total.average >= target) status = { tone: 'good', text: 'Passing' }
+  else status = { tone: 'bad', text: 'Failing' }
+
+  const weekLabel = (week) =>
+    new Date(`${week}T00:00:00Z`).toLocaleDateString('en-US', { month: 'short', day: 'numeric', timeZone: 'UTC' })
+
+  return {
+    description: "Users rate “I found meals I'd actually make” at 4 or higher out of 5 on average. Asked after swiping through all 5 meals on Home, at most once a week per user.",
+    target: `average of ${target} or higher out of 5`,
+    status,
+    headline: { value: average, caption: `average rating · target ${target}+` },
+    stats: [
+      { label: 'Average rating', value: average, note: `Target ${target} or higher` },
+      { label: 'Ratings', value: String(total.ratings), note: `From ${total.raters} user${total.raters === 1 ? '' : 's'}` },
+      { label: 'Rated 4 or 5', value: share(total.four_plus, total.ratings), note: `${total.four_plus} of ${total.ratings} ratings` },
+      {
+        label: 'Response rate',
+        value: share(total.ratings, total.prompts),
+        note: `${total.prompts} prompts shown · ${total.dismissed} closed without rating`,
+      },
+    ],
+    note: total.ratings >= MIN_USERS
+      ? null
+      : `Not enough data yet: ${total.ratings} of the ${MIN_USERS} ratings needed for a reliable average.`,
+    breakdown: {
+      title: 'By week (most recent 8)',
+      columns: ['Week of', 'Ratings', 'Average', 'Rated 4 or 5', 'Prompts shown'],
+      rows: weeks.map((row) => [
+        weekLabel(row.week),
+        row.ratings,
+        row.average == null ? '—' : row.average.toFixed(2),
+        share(row.four_plus, row.ratings),
+        row.prompts,
+      ]),
+    },
+    followUp: {
+      title: 'Rating spread',
+      description: 'How many ratings gave each number of stars, all time.',
+      stats: [5, 4, 3, 2, 1].map((stars) => ({
+        label: `${stars} star${stars === 1 ? '' : 's'}`,
+        value: String(total[`stars_${stars}`]),
+        note: share(total[`stars_${stars}`], total.ratings),
+      })),
+    },
+    footnote: 'Counts every user, not only new ones. Each rating counts once, and a user can rate at most once every 7 days, so frequent users can\'t swamp the average. Closing the popup still uses up that week\'s prompt.',
+  }
+}
+
 // OKR 3: new users add a recipe to their calendar on the first try.
 // Query: db/queries/okr3_first_try.sql
 async function addToCalendarFirstTry() {
@@ -205,7 +266,7 @@ async function threeDayPlan() {
 // a placeholder's title and add a load() when yours is tracked.
 const OKRS = [
   { number: 1, title: "Save a recipe you'd try within 3 minutes", load: discoverSave },
-  { number: 2, title: 'Not set up yet' },
+  { number: 2, title: "Found meals I'd actually make (4+ of 5)", load: mealFitRating },
   { number: 3, title: 'Add to calendar on the first try', load: addToCalendarFirstTry },
   { number: 4, title: 'Plan 3 days within 5 minutes', load: threeDayPlan },
 ]

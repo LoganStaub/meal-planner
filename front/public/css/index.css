@@ -832,3 +832,144 @@ button {
     }
 }
 
+
+
+/* ---------- "Did you find meals you'd actually make?" (OKR 2) ----------
+   Shown after the 5th meal, at most once a week (js/index.js).
+   Uses the .details popup from plan-dialog.css for its corners and backdrop. */
+.details.meal-fit {
+    max-width: 420px;
+}
+
+@media (max-width: 639px) {
+    .details.meal-fit {
+        max-width: 100%;
+    }
+}
+
+.meal-fit-form {
+    margin: 0;
+}
+
+.meal-fit-body {
+    padding: 18px 22px 24px;
+}
+
+.meal-fit-stars {
+    display: flex;
+    justify-content: center;
+    gap: 6px;
+    margin: 0;
+    padding: 0;
+    border: none;
+}
+
+.meal-fit-legend {
+    width: 100%;
+    margin: 0 0 12px;
+    padding: 0;
+    color: var(--text-muted);
+    text-align: center;
+}
+
+/* the radio buttons stay usable from the keyboard, only the stars show */
+.meal-fit-radio {
+    position: absolute;
+    opacity: 0;
+    pointer-events: none;
+}
+
+.meal-fit-star {
+    display: grid;
+    place-items: center;
+    width: 52px;
+    height: 52px;
+    border-radius: 14px;
+    font-size: 2.3rem;
+    line-height: 1;
+    color: #D9D4CF;
+    cursor: pointer;
+    transition: color 0.15s ease, transform 0.15s ease;
+}
+
+.meal-fit-star:hover {
+    transform: scale(1.08);
+}
+
+/* js/index.js adds .lit to every star up to the one hovered or picked */
+.meal-fit-star.lit {
+    color: #F2A93B;
+}
+
+.meal-fit-radio:focus-visible + .meal-fit-star {
+    outline: 2px solid var(--accent);
+    outline-offset: 2px;
+}
+
+.meal-fit-scale {
+    display: flex;
+    justify-content: space-between;
+    max-width: 290px;
+    margin: 6px auto 0;
+    font-size: 0.85rem;
+    color: var(--text-muted);
+}
+
+.meal-fit-error {
+    margin: 12px 0 0;
+    color: #B3261E;
+    text-align: center;
+}
+
+.meal-fit-actions {
+    display: flex;
+    gap: 10px;
+    margin-top: 22px;
+}
+
+.meal-fit-actions .primary-btn {
+    flex: 1;
+    height: 50px;
+    font-size: 1rem;
+}
+
+.meal-fit-actions .primary-btn:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+}
+
+.meal-fit-later {
+    padding: 0 18px;
+    border: none;
+    border-radius: 16px;
+    background-color: #F1EEEB;
+    color: var(--text-muted);
+    font: inherit;
+    font-weight: 600;
+    cursor: pointer;
+}
+
+.meal-fit-later:hover {
+    background-color: #E6E1DD;
+}
+
+.meal-fit-later:focus-visible {
+    outline: 2px solid var(--accent);
+    outline-offset: 2px;
+}
+
+.meal-fit-thanks {
+    margin: 0;
+    padding: 18px 22px 28px;
+    font-weight: 600;
+    text-align: center;
+}
+
+.visually-hidden {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    overflow: hidden;
+    clip: rect(0 0 0 0);
+    white-space: nowrap;
+}
