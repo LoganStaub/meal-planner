@@ -59,6 +59,15 @@
                         <span class="pantry-buy" id="meal-buy"></span>
                     </div>
 
+                    <%# Shown after saving (liking) a recipe, for OKR 1: index.js logs the answer as save_intent_answered %>
+                    <div class="save-prompt" id="save-prompt" role="status" hidden>
+                        <p class="save-prompt-text" id="save-prompt-text">Saved to <a href="/liked">Liked recipes</a>. Would you actually make this?</p>
+                        <div class="save-prompt-actions" id="save-prompt-actions">
+                            <button type="button" class="save-prompt-btn yes" data-answer="yes">Yes, I'd make it</button>
+                            <button type="button" class="save-prompt-btn" data-answer="no">Not really</button>
+                        </div>
+                    </div>
+
                     <div class="card-actions">
                         <button type="button" class="action-btn" id="next-btn" aria-label="Next meal">
                             <svg class="icon"><use href="#icon-x"/></svg>
@@ -67,7 +76,7 @@
                             <svg class="icon"><use href="#icon-calendar-plus"/></svg>
                             <span>Add to meal plan</span>
                         </button>
-                        <button type="button" class="action-btn like-btn" id="like-btn" aria-label="Like" aria-pressed="false">
+                        <button type="button" class="action-btn like-btn" id="like-btn" aria-label="Save recipe" title="Save to your liked recipes" aria-pressed="false">
                             <svg class="icon"><use href="#icon-heart"/></svg>
                         </button>
                     </div>
