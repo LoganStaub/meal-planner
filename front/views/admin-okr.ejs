@@ -68,6 +68,23 @@
     </section>
     <% } %>
 
+    <% if (okr.followUp) { %>
+    <%# An extra measure shown under the breakdown (e.g. OKR 1's follow-through); not part of pass/fail %>
+    <section class="okr-breakdown" aria-labelledby="follow-up-title">
+      <h2 id="follow-up-title"><%= okr.followUp.title %></h2>
+      <% if (okr.followUp.description) { %><p class="okr-footnote"><%= okr.followUp.description %></p><% } %>
+      <div class="admin-metrics">
+        <% okr.followUp.stats.forEach(function (m) { %>
+        <article class="metric">
+          <p class="metric-label"><%= m.label %></p>
+          <p class="metric-value<%= m.value === '—' ? ' is-empty' : '' %>"><%= m.value %></p>
+          <% if (m.note) { %><p class="metric-note"><%= m.note %></p><% } %>
+        </article>
+        <% }); %>
+      </div>
+    </section>
+    <% } %>
+
     <% if (okr.footnote) { %><p class="okr-footnote"><%= okr.footnote %></p><% } %>
   </main>
 </div>

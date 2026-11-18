@@ -2,8 +2,13 @@
 import { Router } from 'express'
 import { pool } from '../db.js'
 import { isPositiveInt } from '../validators.js'
+import { logEvent } from '../events.js'
 
 const router = Router()
+
+// Where a like came from, sent as ?source= (anything else is logged as 'other').
+// OKR 1 counts only saves from the Home swipe feed ('discover').
+const SAVE_SOURCES = new Set(['discover', 'recipe_page'])
 
 // GET /api/me/likes  -> [recipe_id, ...]
 router.get('/', async (req, res) => {
@@ -14,7 +19,9 @@ router.get('/', async (req, res) => {
   res.json(rows.map((row) => row.recipe_id))
 })
 
-// PUT /api/me/likes/:recipeId  -> 204 (liking twice is fine)
+// PUT /api/me/likes/:recipeId?source=discover  -> 204 (liking twice is fine)
+// A like that's really new is logged as recipe_saved, here on the server so
+// the OKR can trust it.
 router.put('/:recipeId', async (req, res) => {
   const { recipeId } = req.params
   if (!isPositiveInt(recipeId)) {
@@ -31,6 +38,10 @@ router.put('/:recipeId', async (req, res) => {
     // Nothing inserted: either it was already liked, or the recipe doesn't exist
     const { rows } = await pool.query('select 1 from recipes where recipe_id = $1', [recipeId])
     if (rows.length === 0) return res.status(404).json({ error: 'Recipe not found' })
+  } else {
+    const source = SAVE_SOURCES.has(req.query.source) ? req.query.source : 'other'
+    // awaited (it never throws) so the page's save_intent_answered can't be logged first
+    await logEvent(req.user.user_id, 'recipe_saved', { recipe_id: Number(recipeId), source })
   }
   res.status(204).end()
 })

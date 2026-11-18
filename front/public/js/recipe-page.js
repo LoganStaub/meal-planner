@@ -38,7 +38,7 @@
         const liked = likeButton.getAttribute("aria-pressed") !== "true";
         showLike(liked);
         try {
-            const response = await fetch(`/api/me/likes/${encodeURIComponent(recipe.recipe_id)}`, {
+            const response = await fetch(`/api/me/likes/${encodeURIComponent(recipe.recipe_id)}?source=recipe_page`, {
                 method: liked ? "PUT" : "DELETE",
             });
             if (response.status === 401) {

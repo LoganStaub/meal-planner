@@ -133,6 +133,7 @@
 
             RenderLike();
             RenderRating();
+            RenderSavePrompt();
             RenderProgress(nCurrent + 1);
         }
 
@@ -265,7 +266,7 @@
         obj_stage.addEventListener("pointerdown", function(event) {
             if (event.button !== 0 || bAnimating || !obj_done.hidden) return;
             // the action buttons and header are for tapping, not dragging
-            if (event.target.closest(".card-actions, .app-header, .stage-arrows")) return;
+            if (event.target.closest(".card-actions, .save-prompt, .app-header, .stage-arrows")) return;
 
             objDrag = { nId: event.pointerId, nStartX: event.clientX, nStartY: event.clientY, nDx: 0, bMoved: false };
         });
@@ -338,16 +339,77 @@
             RenderLike();
 
             try {
-                const response = await fetch(`/api/me/likes/${encodeURIComponent(meal.recipe_id)}`, {
+                // ?source=discover: the server logs the save as recipe_saved for OKR 1
+                const sQuery = bLiked ? "?source=discover" : "";
+                const response = await fetch(`/api/me/likes/${encodeURIComponent(meal.recipe_id)}${sQuery}`, {
                     method: bLiked ? "PUT" : "DELETE"
                 });
                 if (!response.ok) throw new Error(`Request failed (${response.status})`);
+                // ask "Would you actually make this?" once per recipe, only after
+                // the save went through, so the answer is logged after recipe_saved
+                meal.bAskIntent = bLiked && !meal.sIntentAnswer;
+                if (meals[nCurrent] === meal) RenderSavePrompt();
             } catch (error) {
                 console.error("Could not save like:", error);
                 meal.liked = !bLiked;
                 if (meals[nCurrent] === meal) RenderLike();
             }
         });
+
+        // ---------- "Would you actually make this?" (OKR 1) ----------
+        // Shown on a meal right after it's saved, and again if the user swipes
+        // away and comes back without answering. The answer is logged as
+        // save_intent_answered; db/queries/okr1_discover_save.sql counts it.
+        const obj_savePrompt = document.getElementById("save-prompt");
+        const obj_savePromptText = document.getElementById("save-prompt-text");
+        const obj_savePromptActions = document.getElementById("save-prompt-actions");
+        const sSavePromptHtml = obj_savePromptText.innerHTML;
+        let nThanksTimer = null;
+
+        function RenderSavePrompt() {
+            clearTimeout(nThanksTimer);
+            const meal = meals[nCurrent];
+            obj_savePromptText.innerHTML = sSavePromptHtml;
+            obj_savePromptActions.hidden = false;
+            obj_savePrompt.hidden = !(meal.bAskIntent && meal.liked);
+        }
+
+        obj_savePromptActions.addEventListener("click", function(event) {
+            const obj_button = event.target.closest("[data-answer]");
+            if (!obj_button) return;
+            const meal = meals[nCurrent];
+            meal.sIntentAnswer = obj_button.dataset.answer;
+            meal.bAskIntent = false;
+            window.logEvent("save_intent_answered", { recipe_id: meal.recipe_id, answer: meal.sIntentAnswer });
+
+            obj_savePromptActions.hidden = true;
+            obj_savePromptText.textContent = "Thanks! It's in your Liked recipes.";
+            nThanksTimer = setTimeout(function() { obj_savePrompt.hidden = true; }, 1600);
+        });
+
+        // The start of the OKR 1 clock: the first time a new user sees this feed.
+        // Not while the first-visit welcome popup or tour (js/onboarding.js) is
+        // on screen, so the tour doesn't eat into the 3 minutes. If the tour
+        // takes them to another page, the clock starts on their next visit here.
+        function IsTourShowing() {
+            return Boolean(document.querySelector("#onboarding-welcome[open], .tour"));
+        }
+
+        function LogDiscoverViewed(bWaited) {
+            window.logEvent("discover_viewed", { meals: meals.length, waited_for_tour: bWaited });
+        }
+
+        if (!IsTourShowing()) {
+            LogDiscoverViewed(false);
+        } else {
+            // the popup closing and the tour being removed both change the DOM
+            const objTourWatcher = new MutationObserver(function() {
+                if (IsTourShowing()) return;
+                objTourWatcher.disconnect();
+                LogDiscoverViewed(true);
+            });
+            objTourWatcher.observe(document.body, { childList: true, subtree: true, attributes: true, attributeFilter: ["open"] });
+        }
 
         // Finds each meal's real recipe by title, then takes its id, whether this
         // user liked it, and its average rating from GET /api/recipes. A meal

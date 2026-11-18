@@ -14,6 +14,7 @@
 //     stats: [{ label, value, note? }],
 //     note?,                                            // e.g. "not enough data"
 //     breakdown?: { title, columns: [...], rows: [[...], ...] },
+//     followUp?: { title, description?, stats: [...] },  // extra measure, not pass/fail
 //     footnote? }
 // An OKR without load() shows on the dashboard as "Not tracked yet".
 import { Router } from 'express'
@@ -34,6 +35,8 @@ if (Number.isNaN(Date.parse(OKR_TRACKING_START))) {
 const MIN_USERS = 10
 
 const readQuery = (name) => readFile(new URL(`../../db/queries/${name}`, import.meta.url), 'utf8')
+const discoverSaveSql = await readQuery('okr1_discover_save.sql')
+const followThroughSql = await readQuery('okr1_follow_through.sql')
 const firstTrySql = await readQuery('okr3_first_try.sql')
 const threeDayPlanSql = await readQuery('okr4_three_day_plan.sql')
 
@@ -49,6 +52,14 @@ function formatSeconds(seconds) {
   if (seconds == null) return '—'
   const total = Math.round(seconds)
   return total < 60 ? `${total}s` : `${Math.floor(total / 60)}m ${total % 60}s`
+}
+
+// 90 -> "1m 30s", 7200 -> "2h", 259200 -> "3.0 days"
+function formatDuration(seconds) {
+  if (seconds == null) return '—'
+  if (seconds < 3600) return formatSeconds(seconds)
+  if (seconds < 48 * 3600) return `${Math.round(seconds / 3600)}h`
+  return `${(seconds / 86400).toFixed(1)} days`
 }
 
 const formatRate = (rate) => (rate == null ? '—' : `${rate}%`)
@@ -71,6 +82,59 @@ function notEnoughDataNote(eligible) {
 const share = (count, total) => (total ? `${Math.round((1000 * count) / total) / 10}%` : '—')
 
 const trackingStartLabel = new Date(OKR_TRACKING_START).toLocaleDateString('en-US', { dateStyle: 'medium' })
+
+// OKR 1: new users save a recipe they say they'd make, within 3 minutes of
+// first opening the Home swipe feed. Query: db/queries/okr1_discover_save.sql
+async function discoverSave() {
+  const target = 80
+  const [{ rows: [total] }, { rows: [follow] }] = await Promise.all([
+    pool.query(discoverSaveSql, [OKR_TRACKING_START]),
+    pool.query(followThroughSql, [OKR_TRACKING_START]),
+  ])
+
+  return {
+    description: "New users find and save a recipe they say they'd want to try, within 3 minutes of first opening the Discover (Home) feed.",
+    target: `${target}% (8 of 10) within 3 minutes`,
+    status: passFailStatus(total, target),
+    headline: { value: formatRate(total.pass_rate), caption: `pass rate · target ${target}%` },
+    stats: [
+      { label: 'Pass rate', value: formatRate(total.pass_rate), note: `Target ${target}%` },
+      { label: 'Passed', value: `${total.passes} / ${total.eligible}`, note: `${total.fails} failed` },
+      { label: 'In progress', value: String(total.in_progress), note: 'Opened the feed under 3 minutes ago; not in the pass rate' },
+      { label: 'Median time to save', value: formatSeconds(total.median_seconds), note: 'For users who passed' },
+    ],
+    note: notEnoughDataNote(total.eligible),
+    breakdown: {
+      title: 'Outcomes',
+      columns: ['Outcome', 'Users', 'Share of eligible'],
+      rows: [
+        ["Passed (saved in time, would make it)", total.passes, share(total.passes, total.eligible)],
+        ["Saved in time, but wouldn't make it", total.said_no, share(total.said_no, total.eligible)],
+        ['Saved in time, never answered', total.no_answer, share(total.no_answer, total.eligible)],
+        ['Too slow (saved after 3 minutes)', total.too_slow, share(total.too_slow, total.eligible)],
+        ['Never saved from the feed', total.never_saved, share(total.never_saved, total.eligible)],
+      ],
+    },
+    // Query: db/queries/okr1_follow_through.sql
+    followUp: {
+      title: 'Follow-through',
+      description: "Saying yes is only what users say. Of the recipes they said they'd make, how many did they add to their meal plan within 7 days? Not part of the pass rate.",
+      stats: [
+        {
+          label: 'Follow-through rate',
+          value: formatRate(follow.follow_through_rate),
+          note: follow.window_closed
+            ? `${follow.planned_closed} of ${follow.window_closed} yeses from 7+ days ago`
+            : 'Shows once a yes is 7 days old',
+        },
+        { label: 'Planned so far', value: `${follow.planned} / ${follow.said_yes}`, note: "Of every recipe users said they'd make" },
+        { label: 'Waiting', value: String(follow.waiting), note: 'Said yes under 7 days ago, not planned yet' },
+        { label: 'Median time to plan', value: formatDuration(follow.median_seconds), note: 'From saying yes to adding it to the meal plan' },
+      ],
+    },
+    footnote: `Counts users who signed up on or after ${trackingStartLabel} and have opened the Home feed, timed from their first visit. "Would make it" is their answer to the prompt shown after saving. Only saves from the Home feed count, and unliking later doesn't undo a pass.`,
+  }
+}
 
 // OKR 3: new users add a recipe to their calendar on the first try.
 // Query: db/queries/okr3_first_try.sql
@@ -140,7 +204,7 @@ async function threeDayPlan() {
 // All four OKRs, in the order the dashboard shows them. Teammates: replace
 // a placeholder's title and add a load() when yours is tracked.
 const OKRS = [
-  { number: 1, title: 'Not set up yet' },
+  { number: 1, title: "Save a recipe you'd try within 3 minutes", load: discoverSave },
   { number: 2, title: 'Not set up yet' },
   { number: 3, title: 'Add to calendar on the first try', load: addToCalendarFirstTry },
   { number: 4, title: 'Plan 3 days within 5 minutes', load: threeDayPlan },
