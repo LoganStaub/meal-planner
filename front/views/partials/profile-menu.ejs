@@ -47,13 +47,16 @@
         <svg class="profile-menu-chevron" viewBox="0 0 24 24" aria-hidden="true"><path d="m9 18 6-6-6-6"/></svg>
       </button>
     </li>
+    <%# Admins only. /admin itself also checks (back/src/routes/admin.js), so hiding the link isn't the only protection. %>
+    <% if (currentUser.is_admin) { %>
     <li>
       <a class="profile-menu-row" href="/admin">
         <span class="profile-menu-icon" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M3 3v18h18"/><path d="m7 15 4-4 3 3 5-6"/></svg></span>
-        <span class="profile-menu-copy"><strong>Admin dashboard</strong><small><%= currentUser.is_admin ? 'OKR metrics' : 'Admins only' %></small></span>
+        <span class="profile-menu-copy"><strong>Admin dashboard</strong><small>OKR metrics</small></span>
         <svg class="profile-menu-chevron" viewBox="0 0 24 24" aria-hidden="true"><path d="m9 18 6-6-6-6"/></svg>
       </a>
     </li>
+    <% } %>
   </ul>
 
   <form class="profile-menu-logout" method="post" action="/logout">
