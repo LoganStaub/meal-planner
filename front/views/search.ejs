@@ -135,6 +135,7 @@
                     <li class="recipe-card">
                         <div class="recipe-thumb">
                             <svg class="placeholder"><use href="#icon-image"/></svg>
+                            <% if (r.image) { %><img class="recipe-photo" src="<%= r.image %>" alt="" loading="lazy" onerror="this.remove()"><% } %>
                         </div>
                         <div class="recipe-body">
                             <div class="recipe-tags">
@@ -163,108 +164,4 @@
         <nav class="nav" aria-label="Main">
             <p class="nav-brand"><img class="brand-logo" src="/images/logo.svg" alt="" width="28" height="28">Preply<span>.</span></p>
             <ul>
-                <li><a class="nav-link" href="/calendar"><span class="nav-icon"><svg class="icon"><use href="#icon-calendar"/></svg></span>Meal Plan</a></li>
-                <li><a class="nav-link" href="/shopping"><span class="nav-icon"><svg class="icon"><use href="#icon-list"/></svg></span>Shopping</a></li>
-                <li class="nav-home"><a class="nav-link" href="/"><span class="nav-icon"><svg class="icon"><use href="#icon-home"/></svg></span>Home</a></li>
-                <li><a class="nav-link" href="/recipes" aria-current="page"><span class="nav-icon"><svg class="icon"><use href="#icon-recipes"/></svg></span>Recipes</a></li>
-                <li><a class="nav-link" href="/pantry"><span class="nav-icon"><svg class="icon"><use href="#icon-basket"/></svg></span>Pantry</a></li>
-            </ul>
-        </nav>
-    </div>
-
-    <% if (plan) { %>
-    <%# Same popup style as the calendar's "Remove this meal?" (calendar.css) %>
-    <dialog class="confirm-dialog" id="confirm-duplicate" aria-labelledby="confirm-duplicate-title" aria-describedby="confirm-duplicate-text">
-        <form method="dialog">
-            <div class="confirm-icon" aria-hidden="true">
-                <svg class="icon"><use href="#icon-calendar"/></svg>
-            </div>
-            <h2 id="confirm-duplicate-title"></h2>
-            <p id="confirm-duplicate-text"></p>
-            <div class="confirm-actions">
-                <button type="submit" value="cancel" id="confirm-duplicate-cancel" autofocus>Cancel</button>
-                <button type="submit" value="add" class="confirm-danger" id="confirm-duplicate-add">Add anyway</button>
-            </div>
-        </form>
-    </dialog>
-    <% } %>
-
-    <%# "Add your own recipe": write it, the AI checks it, review, save.
-        js/recipe-add.js shows one .recipe-add-step at a time. %>
-    <dialog class="recipe-add" id="recipe-add" aria-labelledby="recipe-add-heading">
-        <div class="recipe-add-body">
-            <div class="recipe-add-header">
-                <div>
-                    <h2 id="recipe-add-heading">Add a recipe with AI</h2>
-                    <p class="recipe-add-remaining" id="recipe-add-remaining" role="status" hidden></p>
-                </div>
-                <button type="button" class="recipe-add-close" data-close aria-label="Close">
-                    <svg class="icon"><use href="#icon-x"/></svg>
-                </button>
-            </div>
-
-            <form class="recipe-add-step" id="recipe-add-write">
-                <p><label for="recipe-add-text">Type or paste your recipe: its name, the ingredients and the steps. Our AI assistant checks it and fills in details such as cook time, cost and macros.</label></p>
-                <textarea id="recipe-add-text" required minlength="40" placeholder="Garlic butter pasta&#10;&#10;200g spaghetti, 3 cloves garlic, 2 tbsp butter, parmesan&#10;&#10;Boil the pasta. Melt the butter and fry the garlic for a minute. Toss the pasta in the butter and top with parmesan."></textarea>
-                <p class="recipe-add-counter" id="recipe-add-counter" aria-hidden="true"></p>
-                <p class="recipe-add-error" id="recipe-add-error" role="alert" hidden></p>
-                <div class="recipe-add-actions">
-                    <button type="button" data-close>Cancel</button>
-                    <button type="submit" class="recipe-add-primary" id="recipe-add-check">Check recipe</button>
-                </div>
-            </form>
-
-            <div class="recipe-add-step recipe-add-status" id="recipe-add-checking" role="status" hidden>
-                <div class="recipe-add-spinner" aria-hidden="true"></div>
-                <h3>The AI assistant is checking your recipe…</h3>
-                <p>This usually takes 10 to 30 seconds.</p>
-            </div>
-
-            <div class="recipe-add-step" id="recipe-add-review" hidden>
-                <p>Here is how the AI assistant prepared your recipe. Some details are estimates, so check it over and fix anything that's off before you save it. To change the steps, go back to your text, which uses another check.</p>
-                <div class="recipe-add-preview" id="recipe-add-preview"></div>
-                <p class="recipe-add-error" id="recipe-add-review-error" role="alert" hidden></p>
-                <div class="recipe-add-actions">
-                    <button type="button" id="recipe-add-edit">Edit my text</button>
-                    <button type="button" class="recipe-add-primary" id="recipe-add-save">Save recipe</button>
-                </div>
-            </div>
-
-            <div class="recipe-add-step recipe-add-status" id="recipe-add-done" hidden>
-                <h3>Recipe added</h3>
-                <p id="recipe-add-done-text"></p>
-                <div class="recipe-add-actions">
-                    <button type="button" data-close>Close</button>
-                    <a class="recipe-add-primary" id="recipe-add-done-link" href="/recipes">See it in Recipes</a>
-                </div>
-            </div>
-
-            <%# The login expired while the popup was open. The link's address
-                comes from the server's 401 response. %>
-            <div class="recipe-add-step recipe-add-status" id="recipe-add-login" hidden>
-                <h3>Log in to add a recipe</h3>
-                <p>You need an account so we can keep track of the recipes you add.</p>
-                <div class="recipe-add-actions">
-                    <button type="button" data-close>Cancel</button>
-                    <a class="recipe-add-primary" id="recipe-add-login-link" href="/login">Log in</a>
-                </div>
-            </div>
-
-            <%# The wall: 3 recipes a day (back/src/recipeAddLimit.js) %>
-            <div class="recipe-add-step recipe-add-status" id="recipe-add-wall" role="alert" hidden>
-                <h3>That's all for today</h3>
-                <p id="recipe-add-wall-text"></p>
-                <div class="recipe-add-actions">
-                    <button type="button" class="recipe-add-primary" data-close>OK</button>
-                </div>
-            </div>
-        </div>
-    </dialog>
-
-    <%- include('partials/profile-menu') %>
-    <script src="/js/events.js" defer></script>
-    <script src="/js/profile-menu.js" defer></script>
-    <script src="/js/recipe-add.js" defer></script>
-    <% if (plan) { %><script src="/js/search.js" defer></script><% } %>
-</body>
-</html>
+                <li><a class="nav-link" href="/calendar"><span

@@ -105,6 +105,7 @@ async function searchRecipes({ q, filter }) {
     `select r.recipe_id,
             r.recipe_title as title,
             r.prep_time,
+            r.image_path,
             coalesce(rc.recipe_class_desc, 'Recipe') as tag,
             ${PROTEIN_GRAMS_SQL}::float as protein
      from recipes r
@@ -120,6 +121,7 @@ async function searchRecipes({ q, filter }) {
     tag: row.tag,
     time: formatPrepTime(row.prep_time),
     protein: row.protein == null ? null : Math.round(row.protein),
+    image: row.image_path,
   }))
 }
 
