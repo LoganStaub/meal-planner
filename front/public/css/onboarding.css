@@ -94,6 +94,10 @@
 
 .tour-actions { display: flex; justify-content: space-between; gap: 8px; margin-top: 14px; }
 
+/* "End the tour?" replaces the step's content in the same card */
+.tour-confirming > :not(.tour-confirm) { display: none; }
+.tour-confirm .tour-title { margin-top: 0; }
+
 @media (prefers-reduced-motion: reduce) {
   .tour-spot, .tour-dots span { transition: none; }
 }

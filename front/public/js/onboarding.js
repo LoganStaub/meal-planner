@@ -172,6 +172,14 @@
                 <p class="tour-text" id="tour-text"></p>
                 <div class="tour-dots" aria-hidden="true"></div>
                 <div class="tour-actions"></div>
+                <div class="tour-confirm" hidden>
+                    <h2 class="tour-title" id="tour-confirm-title">End the tour?</h2>
+                    <p class="tour-text">You can take it again any time from your profile menu.</p>
+                    <div class="tour-actions">
+                        <button type="button" class="onboarding-btn" data-confirm="end">End tour</button>
+                        <button type="button" class="onboarding-btn onboarding-btn-primary" data-confirm="stay">Keep going</button>
+                    </div>
+                </div>
             </section>`;
         document.body.append(root);
 
@@ -179,10 +187,12 @@
         const inerted = [...document.body.children].filter((el) => el !== root && !el.inert && el.tagName !== "SCRIPT");
         inerted.forEach((el) => { el.inert = true; });
 
-        root.querySelector(".tour-close").addEventListener("click", endTour);
+        root.querySelector(".tour-close").addEventListener("click", askToEnd);
         root.querySelector(".tour-blocker").addEventListener("click", () => root.querySelector(".tour-card").focus());
+        root.querySelector('[data-confirm="end"]').addEventListener("click", endTour);
+        root.querySelector('[data-confirm="stay"]').addEventListener("click", () => showConfirm(false));
 
-        tour = { root, spot: root.querySelector(".tour-spot"), card: root.querySelector(".tour-card"), inerted };
+        tour = { root, spot: root.querySelector(".tour-spot"), card: root.querySelector(".tour-card"), inerted, step: 0 };
         window.addEventListener("resize", place);
         window.addEventListener("scroll", place, { passive: true });
         document.addEventListener("keydown", onKey);
@@ -199,11 +209,30 @@
         tour = null;
     }
 
+    // ✕ and Escape ask first, so the tour isn't lost by accident. The last
+    // step has nothing left to see, so it just closes.
+    function askToEnd() {
+        if (STEPS[tour.step].last) endTour();
+        else showConfirm(true);
+    }
+
+    // Swaps the card between the step and "End the tour?"
+    function showConfirm(confirming) {
+        const { card } = tour;
+        card.classList.toggle("tour-confirming", confirming);
+        card.querySelector(".tour-confirm").hidden = !confirming;
+        card.setAttribute("aria-labelledby", confirming ? "tour-confirm-title" : "tour-title");
+        place();
+        if (confirming) card.querySelector('[data-confirm="stay"]').focus();
+        else card.querySelector(".tour-actions").lastElementChild.focus();
+    }
+
     function onKey(event) {
-        if (event.key === "Escape") {
-            event.preventDefault();
-            endTour();
-        }
+        if (event.key !== "Escape") return;
+        event.preventDefault();
+        // Escape on "End the tour?" means "Keep going"
+        if (tour.card.classList.contains("tour-confirming")) showConfirm(false);
+        else askToEnd();
     }
 
     function button(label, className, onClick) {
@@ -218,6 +247,10 @@
     function showStep(index) {
         const step = STEPS[index];
         if (!tour) build();
+        tour.step = index;
+        tour.card.classList.remove("tour-confirming");
+        tour.card.querySelector(".tour-confirm").hidden = true;
+        tour.card.setAttribute("aria-labelledby", "tour-title");
 
         tour.root.querySelector(".tour-progress").textContent = `${index + 1} of ${STEPS.length}`;
         tour.root.querySelector(".tour-title").textContent = step.title;
