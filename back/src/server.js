@@ -31,7 +31,7 @@ if (!process.env.SESSION_SECRET) {
 // The per-user tables come from db/migrations. Fail with a clear message
 // instead of confusing errors on every page if they haven't been run yet.
 const { rows: missingTables } = await pool.query(
-  `select name from unnest(array['user_pantry', 'user_liked_recipes', 'events', 'user_recipe_ratings', 'recipe_rating_stats']) as name
+  `select name from unnest(array['user_pantry', 'user_liked_recipes', 'events', 'user_recipe_ratings', 'recipe_rating_stats', 'user_shopping_removed']) as name
    where to_regclass('public.' || name) is null`
 )
 if (missingTables.length > 0) {

@@ -225,3 +225,42 @@
 .shop-note.error {
   color: #b3261e;
 }
+/* ---------- Edit mode: remove items (js/shopping.js) ----------
+   The Edit / Done buttons, the select bar and the "are you sure?" popup use
+   the Pantry's styles from pantry.css (.item-action, .edit-bar, .confirm-remove). */
+.shopping .shop-list-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  margin: 4px 0 10px;
+}
+
+.shopping .shop-list-head .shop-list-heading {
+  margin: 0;
+}
+
+.shopping .shop-edit-bar {
+  margin: 0 0 10px;
+}
+
+.shopping .shop-select[hidden] {
+  display: none;
+}
+
+/* While editing, the "got it" circles are swapped for select boxes and the
+   whole row can be clicked to select it */
+.shop-editing .shopping .shop-check {
+  display: none;
+}
+
+.shop-editing .shopping .shop-item {
+  cursor: pointer;
+}
+
+.shopping .shop-item.is-selected {
+  margin: 0 -16px;
+  padding-left: 16px;
+  padding-right: 16px;
+  background: #FFF8F4;
+}
