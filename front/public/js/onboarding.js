@@ -8,10 +8,17 @@
 // 2. The tour goes page by page through STEPS, highlighting one element on
 //    each step (marked with data-tour="..." in the page's view). Which step
 //    we're on is kept in sessionStorage so it carries across page loads.
+//    On the Meal Plan step, if tonight has no dinner yet, the user is offered
+//    a real dinner recipe to add (GET/POST /api/me/onboarding/dinner). It's
+//    only saved when they tap "Add to my plan", and later steps (Shopping,
+//    the last card) mention it.
 // 3. Reaching the last step saves 'completed'.
+// However it ends, the tour drops the user off on Home (endTour).
 // "Take the tour" in the profile menu replays it any time.
 (function () {
     const STORAGE_KEY = "preply-tour-step";
+    // The recipe title, once the user added tonight's dinner during this tour
+    const DINNER_KEY = "preply-tour-dinner";
 
     // page: where the step happens (path to go to, pattern to recognise it)
     // target: the data-tour="..." to highlight; none = a card in the middle
@@ -48,6 +55,8 @@
             target: "plan-week",
             title: "Meal Plan: your week",
             text: "Pick a day, then add dishes for breakfast, lunch, dinner and more. Use the arrows to plan ahead.",
+            // Offers to plan tonight's dinner (showDinner)
+            dinner: true,
         },
         {
             page: "pantry",
@@ -59,7 +68,9 @@
             page: "shopping",
             target: "shopping-list",
             title: "Shopping: built for you",
-            text: "Everything the next 7 days of your meal plan needs, minus your pantry. Tick items off as you shop and they go into your pantry.",
+            text: () => readDinner()
+                ? `Here's what ${readDinner()} needs, minus what's in your pantry. Anything else you plan for the next 7 days shows up here too. Tick items off as you shop and they go into your pantry.`
+                : "Everything the next 7 days of your meal plan needs, minus your pantry. Tick items off as you shop and they go into your pantry.",
         },
         {
             page: "liked",
@@ -76,7 +87,10 @@
         {
             page: "liked",
             title: "You're all set!",
-            text: "Start by planning a meal or two. Your shopping list will fill in by itself.",
+            // The nudge to plan one on their own (the tour's dinner doesn't count toward the OKRs)
+            text: () => readDinner()
+                ? "Tonight's dinner is sorted. Now try one on your own: open Meal Plan, pick a day and tap + to add a meal. You've got this!"
+                : "Now try planning your first meal: open Meal Plan, pick a day and tap + to add a meal. Your shopping list fills in by itself.",
             last: true,
         },
     ];
@@ -127,6 +141,29 @@
         }
     }
 
+    function readDinner() {
+        try {
+            return sessionStorage.getItem(DINNER_KEY);
+        } catch {
+            return null;
+        }
+    }
+
+    function writeDinner(title) {
+        try {
+            if (title === null) sessionStorage.removeItem(DINNER_KEY);
+            else sessionStorage.setItem(DINNER_KEY, title);
+        } catch {
+            // Ignore: see readStep
+        }
+    }
+
+    // Today as YYYY-MM-DD in the user's own time zone, like the Meal Plan page
+    function todayKey() {
+        const now = new Date();
+        return `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, "0")}-${String(now.getDate()).padStart(2, "0")}`;
+    }
+
     function currentPage() {
         return Object.keys(PAGES).find((key) => PAGES[key].match.test(location.pathname));
     }
@@ -141,19 +178,27 @@
         else location.href = page.path;
     }
 
-    function startTour() {
-        saveStatus("started");
+    // From the welcome popup, or replayed from the profile menu
+    function startTour({ firstTime = false } = {}) {
+        if (firstTime) saveStatus("started");
+        writeDinner(null);
         goTo(0);
     }
 
-    function endTour() {
+    // However the tour ends (finished or ended early), it drops the user off
+    // on Home, or on `path` when given (e.g. "Plan a meal").
+    function endTour(path = PAGES.home.path) {
         writeStep(null);
+        writeDinner(null);
         removeTour();
+        if (location.pathname !== path && !(path === PAGES.home.path && PAGES.home.match.test(location.pathname))) {
+            location.href = path;
+        }
     }
 
     // ---------- Drawing a step ----------
 
-    let tour = null; // { root, spot, card, target, observer, inerted }
+    let tour = null; // { root, spot, card, target, observer, inerted, step }
 
     function build() {
         const root = document.createElement("div");
@@ -170,6 +215,7 @@
                 </div>
                 <h2 class="tour-title" id="tour-title"></h2>
                 <p class="tour-text" id="tour-text"></p>
+                <div class="tour-extra"></div>
                 <div class="tour-dots" aria-hidden="true"></div>
                 <div class="tour-actions"></div>
                 <div class="tour-confirm" hidden>
@@ -189,7 +235,7 @@
 
         root.querySelector(".tour-close").addEventListener("click", askToEnd);
         root.querySelector(".tour-blocker").addEventListener("click", () => root.querySelector(".tour-card").focus());
-        root.querySelector('[data-confirm="end"]').addEventListener("click", endTour);
+        root.querySelector('[data-confirm="end"]').addEventListener("click", () => endTour());
         root.querySelector('[data-confirm="stay"]').addEventListener("click", () => showConfirm(false));
 
         tour = { root, spot: root.querySelector(".tour-spot"), card: root.querySelector(".tour-card"), inerted, step: 0 };
@@ -253,8 +299,8 @@
         tour.card.setAttribute("aria-labelledby", "tour-title");
 
         tour.root.querySelector(".tour-progress").textContent = `${index + 1} of ${STEPS.length}`;
-        tour.root.querySelector(".tour-title").textContent = step.title;
-        tour.root.querySelector(".tour-text").textContent = step.text;
+        setText(step.title, typeof step.text === "function" ? step.text() : step.text);
+        tour.card.querySelector(".tour-extra").replaceChildren();
         tour.root.querySelector(".tour-dots").replaceChildren(
             ...STEPS.map((_, i) => {
                 const dot = document.createElement("span");
@@ -266,11 +312,8 @@
         const actions = tour.root.querySelector(".tour-actions");
         if (step.last) {
             actions.replaceChildren(
-                button("Done", "", endTour),
-                button("Plan a meal", "onboarding-btn-primary", () => {
-                    endTour();
-                    location.href = PAGES.plan.path;
-                })
+                button("Plan a meal", "", () => endTour(PAGES.plan.path)),
+                button("Go to Home", "onboarding-btn-primary", () => endTour())
             );
         } else {
             actions.replaceChildren(
@@ -279,9 +322,22 @@
             );
         }
 
-        // The highlighted element, if it's on the page and visible
+        setTarget(step.selector || (step.target && `[data-tour="${step.target}"]`));
+
+        if (step.last) saveStatus("completed");
+        logStep(index);
+        actions.lastElementChild.focus();
+        if (step.dinner) showDinner(index);
+    }
+
+    function setText(title, text) {
+        tour.card.querySelector(".tour-title").textContent = title;
+        tour.card.querySelector(".tour-text").textContent = text;
+    }
+
+    // Highlights the element matching `selector`, if it's on the page and visible
+    function setTarget(selector) {
         tour.observer?.disconnect();
-        const selector = step.selector || (step.target && `[data-tour="${step.target}"]`);
         const target = selector ? document.querySelector(selector) : null;
         tour.target = target && target.getClientRects().length > 0 ? target : null;
         if (tour.target) {
@@ -291,10 +347,102 @@
             tour.observer.observe(tour.target);
         }
         place();
+    }
 
-        if (step.last) saveStatus("completed");
-        logStep(index);
-        actions.lastElementChild.focus();
+    // ---------- The Meal Plan step: plan tonight's dinner ----------
+
+    // The step first shows its normal text. If tonight has no dinner yet, it
+    // turns into a picker with a real recipe; if it fails to load, the normal
+    // step just stays.
+    async function showDinner(index) {
+        let data;
+        try {
+            const response = await fetch(`/api/me/onboarding/dinner?date=${todayKey()}`);
+            if (!response.ok) return;
+            data = await response.json();
+        } catch {
+            return;
+        }
+        // They may have moved on while it loaded
+        if (!tour || tour.step !== index) return;
+
+        if (data.planned) {
+            // Just added on this step (the page reloaded to show it)
+            if (readDinner() === data.planned.recipe_title) {
+                setText(
+                    "Tonight's dinner is planned ✓",
+                    `${data.planned.recipe_title} is on your Meal Plan for tonight. It's yours to keep or remove here any time. Next, see what you'll need for it.`
+                );
+                setTarget('[data-tour="plan-day"]');
+            }
+            return;
+        }
+        if (data.suggestions.length === 0) return;
+
+        let choice = 0;
+        setText("Let's plan tonight's dinner", "Here's an idea to get you started. Swap it for another, or add it to tonight.");
+
+        const box = document.createElement("div");
+        box.className = "tour-dinner";
+        box.innerHTML = `
+            <div class="tour-dinner-pick">
+                <p class="tour-dinner-label">Tonight · Dinner</p>
+                <p class="tour-dinner-name"></p>
+                <p class="tour-dinner-time"></p>
+            </div>`;
+        const name = box.querySelector(".tour-dinner-name");
+        const time = box.querySelector(".tour-dinner-time");
+        const error = document.createElement("p");
+        error.className = "tour-dinner-error";
+        error.setAttribute("role", "alert");
+        error.hidden = true;
+
+        function showChoice() {
+            const recipe = data.suggestions[choice];
+            name.textContent = recipe.recipe_title;
+            time.textContent = recipe.prep_time ? `${recipe.prep_time} min` : "";
+            time.hidden = !recipe.prep_time;
+        }
+        showChoice();
+
+        if (data.suggestions.length > 1) {
+            const swap = button("Swap", "tour-dinner-swap", () => {
+                choice = (choice + 1) % data.suggestions.length;
+                showChoice();
+            });
+            swap.setAttribute("aria-label", "Swap for another dinner");
+            box.append(swap);
+        }
+        tour.card.querySelector(".tour-extra").replaceChildren(box, error);
+
+        const add = button("Add to my plan", "onboarding-btn-primary", async () => {
+            add.disabled = true;
+            error.hidden = true;
+            const recipe = data.suggestions[choice];
+            try {
+                const response = await fetch("/api/me/onboarding/dinner", {
+                    method: "POST",
+                    headers: { "Content-Type": "application/json" },
+                    body: JSON.stringify({ date: todayKey(), recipe_id: recipe.recipe_id }),
+                });
+                // 409: tonight got a dinner some other way. Reloading shows it.
+                if (response.ok) writeDinner(recipe.recipe_title);
+                else if (response.status !== 409) throw new Error(`HTTP ${response.status}`);
+                // Reload so the Meal Plan shows the new dinner; the tour carries on here
+                location.reload();
+            } catch {
+                error.textContent = "Couldn't add it. Try again, or skip this for now.";
+                error.hidden = false;
+                add.disabled = false;
+                place();
+            }
+        });
+        tour.card.querySelector(".tour-actions").replaceChildren(
+            button("Skip this", "", () => goTo(index + 1)),
+            add
+        );
+        place();
+        add.focus();
     }
 
     // Puts the spotlight on the target and the card next to it
@@ -340,7 +488,7 @@
     replayButton?.addEventListener("click", () => {
         document.getElementById("profile-menu").hidden = true;
         document.getElementById("profile-trigger")?.setAttribute("aria-expanded", "false");
-        goTo(0);
+        startTour();
     });
 
     const savedStep = readStep();
@@ -359,7 +507,7 @@
         welcome.showModal();
         document.getElementById("onboarding-start").addEventListener("click", () => {
             welcome.close();
-            startTour();
+            startTour({ firstTime: true });
         });
         document.getElementById("onboarding-skip").addEventListener("click", () => welcome.close());
         // Closing it any way other than "Show me around" (incl. Escape) is "No thanks"
