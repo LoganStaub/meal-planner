@@ -132,6 +132,38 @@
     <%# The "Add to meal plan" popup (js/plan-dialog.js) %>
     <%- include('partials/plan-dialog') %>
 
+    <%# OKR 2: shown after swiping past the 5th meal, at most once a week per user.
+        js/index.js asks POST /api/me/meal-fit/prompt whether it's due (back/src/routes/mealFit.js). %>
+    <dialog class="details meal-fit" id="meal-fit" aria-labelledby="meal-fit-title">
+        <form class="meal-fit-form" id="meal-fit-form" method="dialog">
+            <div class="details-header">
+                <h2 id="meal-fit-title">Did you find meals you'd actually make?</h2>
+                <button type="button" class="details-close" id="meal-fit-close" aria-label="Not now">
+                    <svg class="icon"><use href="#icon-x"/></svg>
+                </button>
+            </div>
+            <div class="meal-fit-body" id="meal-fit-body">
+                <fieldset class="meal-fit-stars" id="meal-fit-stars">
+                    <legend class="meal-fit-legend">Rate today's picks from 1 to 5 stars</legend>
+                    <% for (let n = 1; n <= 5; n++) { %>
+                    <input type="radio" class="meal-fit-radio" name="meal-fit-rating" id="meal-fit-<%= n %>" value="<%= n %>">
+                    <label class="meal-fit-star" for="meal-fit-<%= n %>" data-stars="<%= n %>">
+                        <span aria-hidden="true">★</span>
+                        <span class="visually-hidden"><%= n %> star<%= n === 1 ? '' : 's' %></span>
+                    </label>
+                    <% } %>
+                </fieldset>
+                <p class="meal-fit-scale" aria-hidden="true"><span>Not really</span><span>Definitely</span></p>
+                <p class="meal-fit-error" id="meal-fit-error" role="alert" hidden></p>
+                <div class="meal-fit-actions">
+                    <button type="button" class="meal-fit-later" id="meal-fit-later">Not now</button>
+                    <button type="submit" class="action-btn primary-btn" id="meal-fit-submit" disabled>Submit</button>
+                </div>
+            </div>
+            <p class="meal-fit-thanks" id="meal-fit-thanks" role="status" hidden>Thanks! That helps us pick better meals.</p>
+        </form>
+    </dialog>
+
     <%- include('partials/profile-menu') %>
     <script src="/js/events.js" defer></script>
     <script src="/js/profile-menu.js" defer></script>

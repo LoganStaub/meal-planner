@@ -190,6 +190,8 @@ All routes return JSON and need a logged-in user (they answer `401` otherwise). 
 | POST   | `/api/me/onboarding` | Save how the first-visit tour went: `{ status }`, one of `skipped`, `started`, `completed` (`204`). See [Onboarding tour](#onboarding-tour) |
 | GET    | `/api/me/onboarding/dinner?date=YYYY-MM-DD` | For the tour: `{ planned, suggestions }`, that day's dinner (or `null`) and up to 8 suggested dinner recipes |
 | POST   | `/api/me/onboarding/dinner` | For the tour: add `{ date, recipe_id }` as that day's dinner (`201`). `409` if the day already has one. Not counted in the OKRs |
+| POST   | `/api/me/meal-fit/prompt` | OKR 2: called when Home's 5 meals run out. `{ show: true }` (and logs `meal_fit_prompt_shown`) if you haven't been asked in 7 days, otherwise `{ show: false }` |
+| POST   | `/api/me/meal-fit/answer` | OKR 2: answer that prompt with `{ rating }` (1–5) or `{ dismissed: true }` (`204`). `409` if no prompt from the last 7 days is waiting for an answer |
 | GET    | `/api/me/pantry` | Your pantry items |
 | POST   | `/api/me/pantry` | Add one: `{ ingredient_name, pantry_amount_id? }` (`201`) |
 | PATCH  | `/api/me/pantry/:ingredientId` | Change `ingredient_name` and/or `pantry_amount_id` |
