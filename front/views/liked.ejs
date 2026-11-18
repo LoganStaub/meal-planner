@@ -51,10 +51,11 @@
         link stretches over it); the stars stay clickable on top. %>
     <article class="card">
       <div class="thumb">
+        <%# The recipe's photo (recipes.image_path, same as Home and Recipes).
+            The placeholder sits underneath and shows if there's none or it fails to load. %>
+        <svg class="placeholder" aria-hidden="true"><use href="#ph"/></svg>
         <% if (r.image) { %>
-          <img src="<%= r.image %>" alt="">
-        <% } else { %>
-          <svg class="placeholder" aria-hidden="true"><use href="#ph"/></svg>
+          <img src="<%= r.image %>" alt="" loading="lazy" onerror="this.remove()">
         <% } %>
         <span class="heart" aria-hidden="true"><svg><use href="#heart"/></svg></span>
       </div>
