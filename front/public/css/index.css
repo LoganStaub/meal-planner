@@ -244,15 +244,37 @@ button {
     color: var(--text-muted);
 }
 
+/* A button: opens the recipe page (js/index.js) */
 .pantry-pill {
     display: flex;
     align-items: center;
     gap: 10px;
+    width: 100%;
     margin-top: 16px;
     padding: 10px 16px;
+    border: 1px solid transparent;
     border-radius: 999px;
     background-color: rgba(255, 255, 255, 0.85);
+    color: var(--text);
+    font: inherit;
     font-size: 0.88rem;
+    text-align: left;
+    cursor: pointer;
+    transition: background-color 0.2s ease, border-color 0.2s ease;
+}
+
+.pantry-pill:hover {
+    background-color: #FFFFFF;
+    border-color: var(--pantry-green);
+}
+
+.pantry-pill:focus-visible {
+    outline: 2px solid var(--accent);
+    outline-offset: 3px;
+}
+
+.pantry-pill[hidden] {
+    display: none;
 }
 
 .pantry-label {
@@ -271,11 +293,20 @@ button {
     white-space: nowrap;
 }
 
+.pantry-items.empty {
+    color: var(--text-muted);
+}
+
 .pantry-buy {
     margin-left: auto;
     font-weight: 600;
     color: var(--accent);
     white-space: nowrap;
+}
+
+/* Nothing to buy */
+.pantry-buy.all {
+    color: var(--pantry-green);
 }
 
 .card-actions {

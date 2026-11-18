@@ -23,7 +23,9 @@
         // recipe_title, prep_time and recipe_class_desc match the database.
         // recipe_id is only a guess: LoadRecipeData() swaps in the real id by
         // matching the title (npm run db:seed-recipes adds these 5 recipes).
-        // description, servings, image_url and the pantry fields don't exist in the schema yet.
+        // description, servings and image_url don't exist in the schema yet.
+        // The "In pantry" line comes from the real recipe and this user's pantry
+        // (in_pantry, to_buy, ingredient_count from GET /api/recipes).
         const SAMPLE_MEALS = [
             {
                 recipe_id: 1,
@@ -33,8 +35,6 @@
                 recipe_class_desc: "Dinner",
                 servings: 4,
                 image_url: "https://images.unsplash.com/photo-1565299624946-b28f40a0ae38?w=1200&q=80&auto=format&fit=crop",
-                in_pantry: ["flour", "onion", "mozzarella"],
-                to_buy: 2
             },
             {
                 recipe_id: 2,
@@ -44,8 +44,6 @@
                 recipe_class_desc: "Lunch",
                 servings: 2,
                 image_url: "https://images.unsplash.com/photo-1473093295043-cdd812d0e601?w=1200&q=80&auto=format&fit=crop",
-                in_pantry: ["pasta", "basil", "olive oil"],
-                to_buy: 1
             },
             {
                 recipe_id: 3,
@@ -55,8 +53,6 @@
                 recipe_class_desc: "Dinner",
                 servings: 2,
                 image_url: "https://images.unsplash.com/photo-1546069901-ba9599a7e63c?w=1200&q=80&auto=format&fit=crop",
-                in_pantry: ["rice", "eggs", "soy sauce"],
-                to_buy: 3
             },
             {
                 recipe_id: 4,
@@ -66,8 +62,6 @@
                 recipe_class_desc: "Vegan",
                 servings: 2,
                 image_url: "https://images.unsplash.com/photo-1512621776951-a57141f2eefd?w=1200&q=80&auto=format&fit=crop",
-                in_pantry: ["chickpeas", "sweet potato", "lemon"],
-                to_buy: 2
             },
             {
                 recipe_id: 5,
@@ -77,8 +71,6 @@
                 recipe_class_desc: "Breakfast",
                 servings: 2,
                 image_url: "https://images.unsplash.com/photo-1484723091739-30a097e8f929?w=1200&q=80&auto=format&fit=crop",
-                in_pantry: ["eggs", "milk", "cinnamon"],
-                to_buy: 2
             }
         ];
 
@@ -128,10 +120,9 @@
             document.getElementById("meal-servings").textContent = `${meal.servings} servings`;
             document.getElementById("meal-title").textContent = meal.recipe_title;
             document.getElementById("meal-desc").textContent = meal.description;
-            document.getElementById("meal-pantry").textContent = meal.in_pantry.join(", ");
-            document.getElementById("meal-buy").textContent = meal.to_buy > 0 ? `+${meal.to_buy} to buy` : "";
 
             RenderLike();
+            RenderPantry();
             RenderRating();
             RenderSavePrompt();
             RenderProgress(nCurrent + 1);
@@ -165,6 +156,24 @@
             const obj_calendar = document.getElementById("calendar-btn");
             obj_calendar.disabled = bMissing;
             obj_calendar.title = sMissing;
+        }
+
+        // What this user already has for the recipe, from their own pantry, and
+        // how many ingredients they'd need to buy. Hidden until GET /api/recipes
+        // answers, and for recipes with no ingredients listed.
+        function RenderPantry() {
+            const meal = meals[nCurrent];
+            const obj_pill = document.getElementById("meal-pantry-pill");
+            const obj_items = document.getElementById("meal-pantry");
+            const obj_buy = document.getElementById("meal-buy");
+            obj_pill.hidden = !bRecipesLoaded || !(meal.ingredient_count > 0);
+            if (obj_pill.hidden) return;
+
+            const bHaveSome = meal.in_pantry.length > 0;
+            obj_items.textContent = bHaveSome ? meal.in_pantry.join(", ") : "Nothing yet";
+            obj_items.classList.toggle("empty", !bHaveSome);
+            obj_buy.textContent = meal.to_buy > 0 ? `+${meal.to_buy} to buy` : "Have it all";
+            obj_buy.classList.toggle("all", meal.to_buy === 0);
         }
 
         // The recipe's average rating from everyone, e.g. "★ 4.3 (12)".
@@ -429,9 +438,13 @@
                     meal.liked = recipe ? recipe.liked : false;
                     meal.rating_avg = recipe ? recipe.rating_avg : null;
                     meal.rating_count = recipe ? recipe.rating_count : 0;
+                    meal.ingredient_count = recipe ? recipe.ingredient_count : 0;
+                    meal.in_pantry = recipe ? recipe.in_pantry : [];
+                    meal.to_buy = recipe ? recipe.to_buy : 0;
                 });
                 bRecipesLoaded = true;
                 RenderLike();
+                RenderPantry();
                 RenderRating();
             } catch (error) {
                 console.error("Could not load recipe data:", error);
@@ -460,13 +473,17 @@
         // Clicking the recipe's name opens its own page (/recipes/:id,
         // views/recipe.ejs) with the ingredients and directions.
 
-        document.getElementById("open-details").addEventListener("click", function() {
-            // a swipe that started on the title shouldn't also open the page
+        // The title and the "In pantry" line both open it.
+        function OpenRecipe() {
+            // a swipe that started on the card shouldn't also open the page
             if (bSuppressClick) return;
             // wait for the real recipe id (see LoadRecipeData), so this never opens the wrong recipe
             if (!HasRealRecipe(meals[nCurrent])) return;
             location.href = "/recipes/" + encodeURIComponent(meals[nCurrent].recipe_id);
-        });
+        }
+
+        document.getElementById("open-details").addEventListener("click", OpenRecipe);
+        document.getElementById("meal-pantry-pill").addEventListener("click", OpenRecipe);
 
 
         RenderMeal();

@@ -53,11 +53,13 @@
                         <p class="recipe-desc" id="meal-desc"></p>
                     </button>
 
-                    <div class="pantry-pill">
+                    <%# Filled from the recipe and this user's pantry by js/index.js (RenderPantry).
+                        Clicking it opens the recipe page, like the title. %>
+                    <button type="button" class="pantry-pill" id="meal-pantry-pill" title="See the full ingredient list" hidden>
                         <span class="pantry-label">In pantry</span>
                         <span class="pantry-items" id="meal-pantry"></span>
                         <span class="pantry-buy" id="meal-buy"></span>
-                    </div>
+                    </button>
 
                     <%# Shown after saving (liking) a recipe, for OKR 1: index.js logs the answer as save_intent_answered %>
                     <div class="save-prompt" id="save-prompt" role="status" hidden>
