@@ -187,6 +187,7 @@ All routes return JSON and need a logged-in user (they answer `401` otherwise). 
 | GET    | `/api/me/ratings` | Your own ratings: `{ "<recipe_id>": rating, … }` |
 | PUT    | `/api/me/ratings/:recipeId` | Rate a recipe: `{ rating }` (a whole number 1–5). Rating again changes it. Returns `{ recipe_id, my_rating, average, count }`. `400` for a bad rating, `404` if the recipe doesn't exist |
 | DELETE | `/api/me/ratings/:recipeId` | Remove your rating. Returns the same shape with `my_rating: null` |
+| POST   | `/api/me/onboarding` | Save how the first-visit tour went: `{ status }`, one of `skipped`, `started`, `completed` (`204`). See [Onboarding tour](#onboarding-tour) |
 | GET    | `/api/me/pantry` | Your pantry items |
 | POST   | `/api/me/pantry` | Add one: `{ ingredient_name, pantry_amount_id? }` (`201`) |
 | PATCH  | `/api/me/pantry/:ingredientId` | Change `ingredient_name` and/or `pantry_amount_id` |
@@ -297,11 +298,32 @@ The totals store a sum and count rather than an average, so they never drift fro
   ```
 - Code: `back/src/routes/ratings.js` (API), `front/public/js/liked.js` (stars), `isRating` in `back/src/validators.js`.
 
+### Onboarding tour
+
+The first time someone uses the app, a welcome popup offers a one-minute tour: **Show me around** or **No thanks**. The tour goes through Home, Recipes, Meal Plan, Pantry, Shopping, Liked and the profile menu, highlighting one thing on each page. **Take the tour** in the profile menu replays it any time.
+
+The popup is offered once per account. `users.onboarding_status` (migration `013`) records what happened:
+
+| Status | Meaning |
+| ------ | ------- |
+| `null` | Not offered yet. The popup shows on their next page load |
+| `skipped` | Said No thanks (or closed the popup) |
+| `started` | Began the tour but left partway |
+| `completed` | Reached the last step, on their first go or a replay |
+
+Any status other than `null` means the popup won't show again. `onboarding_updated_at` is when it last changed. The events table also gets `onboarding_skipped` / `_started` / `_completed` and one `onboarding_step_viewed` per step, so drop-off can be measured later.
+
+**Things to know:**
+
+- To see the popup again while testing: `update users set onboarding_status = null, onboarding_updated_at = null where email = 'you@example.com';`
+- The steps and their text are the `STEPS` list at the top of `front/public/js/onboarding.js`. Each one highlights an element marked `data-tour="..."` in that page's view. If you rename or remove one of those elements, keep the `data-tour` attribute, or the step falls back to a card in the middle of the screen.
+- Code: `front/views/partials/onboarding.ejs` (included by `profile-menu.ejs`, so every logged-in page has it), `front/public/js/onboarding.js`, `front/public/css/onboarding.css`, `back/src/routes/onboarding.js`.
+
 ### Changing the database
 
 Don't edit tables only in pgAdmin, because teammates won't know. Instead:
 
-1. Add a new numbered file to `back/db/migrations/` (next is `013_...sql`). Write it so it's safe to run more than once (`if not exists`, or check first like `006` does).
+1. Add a new numbered file to `back/db/migrations/` (next is `014_...sql`). Write it so it's safe to run more than once (`if not exists`, or check first like `006` does).
 2. Update `back/db/schema.sql` so brand-new setups get the change too.
 3. Run `npm run db:migrate` to apply it, and commit both files.
 
@@ -319,3 +341,4 @@ Teammates then run `npm run db:migrate` after pulling. It only runs the files th
 | `010_okr_first_calendar_starts.sql` | A shared database function for "a new user's first add to calendar", used by OKRs 3 and 4 |
 | `011_avatar_color.sql` | `users.avatar_color`, the color behind a user's initials |
 | `012_recipe_ratings.sql` | `user_recipe_ratings` (each user's private rating) and `recipe_rating_stats` (each recipe's totals), plus the trigger that keeps them in sync. See [Recipe ratings](#recipe-ratings) |
+| `013_onboarding.sql` | `users.onboarding_status` and `onboarding_updated_at`, so the first-visit tour is only offered once. See [Onboarding tour](#onboarding-tour) |

@@ -12,6 +12,10 @@ import { pool } from './db.js'
 // happened (like add_to_calendar_completed) are logged by the server only,
 // so they can't be faked from the browser. Add new names here.
 export const CLIENT_EVENTS = new Set([
+  // The first-visit tour (js/onboarding.js). onboarding_skipped / _started /
+  // _completed are logged by the server (routes/onboarding.js).
+  'onboarding_step_viewed',
+
   'add_to_calendar_started',
   'add_to_calendar_cancelled',
   'add_to_calendar_error',

@@ -35,6 +35,8 @@
 
         <main class="content">
             <div class="calendar-content">
+                <%# The tour highlights the week switcher and the days together (js/onboarding.js) %>
+                <div data-tour="plan-week">
                 <section class="week-switcher" aria-label="Choose week">
                     <button type="button" class="week-arrow" id="previous-week" aria-label="Previous week">
                         <svg class="icon"><use href="#icon-chevron-left"/></svg>
@@ -54,6 +56,7 @@
                 </section>
 
                 <section class="week-days" id="week-days" aria-label="Days of the week"></section>
+                </div>
 
                 <div class="page-error" id="page-error" role="alert" hidden>
                     <p id="page-error-message"></p>

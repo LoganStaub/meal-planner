@@ -1,0 +1,103 @@
+/* ---------- First-visit tour (partials/onboarding.ejs, js/onboarding.js) ---------- */
+
+.onboarding-btn {
+  padding: 10px 16px;
+  color: #1f2430;
+  background: #f7f4f1;
+  border: 1px solid #e6e1dc;
+  border-radius: 999px;
+  font: inherit;
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+}
+.onboarding-btn:hover { background: #efe9e3; }
+.onboarding-btn-primary { color: #fff; background: #D4552A; border-color: transparent; }
+.onboarding-btn-primary:hover { background: #BC4720; }
+.onboarding-btn:focus-visible, .tour-close:focus-visible { outline: 2px solid #D4552A; outline-offset: 2px; }
+
+/* The welcome popup */
+.onboarding-welcome {
+  width: min(420px, calc(100vw - 32px));
+  box-sizing: border-box;
+  padding: 28px 24px 20px;
+  color: #1f2430;
+  background: #fff;
+  border: 1px solid #d9dee6;
+  border-radius: 20px;
+  box-shadow: 0 18px 50px rgba(31, 35, 40, .25);
+  font-family: "DM Sans", system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+  text-align: center;
+}
+.onboarding-welcome::backdrop { background: rgba(31, 36, 48, .5); }
+.onboarding-welcome-logo { display: block; margin: 0 auto 12px; }
+.onboarding-welcome h2 { margin: 0 0 8px; font-size: 22px; font-weight: 700; }
+.onboarding-welcome p { margin: 0; color: #5d6675; font-size: 15px; line-height: 1.45; }
+.onboarding-welcome-actions { display: grid; gap: 8px; margin-top: 20px; }
+.onboarding-welcome-actions .onboarding-btn { padding: 12px 16px; font-size: 15px; }
+.onboarding-welcome .onboarding-welcome-note { margin-top: 14px; font-size: 12px; }
+
+/* The tour */
+.tour {
+  position: fixed;
+  inset: 0;
+  z-index: 1000;
+  font-family: "DM Sans", system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+}
+/* Catches clicks on the page. Clear while the spotlight does the dimming. */
+.tour-blocker { position: absolute; inset: 0; }
+.tour-centered .tour-blocker { background: rgba(31, 36, 48, .5); }
+
+.tour-spot {
+  position: fixed;
+  border-radius: 16px;
+  box-shadow: 0 0 0 3px #D4552A, 0 0 0 200vmax rgba(31, 36, 48, .5);
+  pointer-events: none;
+  transition: left .2s, top .2s, width .2s, height .2s;
+}
+
+.tour-card {
+  position: fixed;
+  width: min(340px, calc(100vw - 24px));
+  box-sizing: border-box;
+  padding: 16px 18px 16px;
+  color: #1f2430;
+  background: #fff;
+  border-radius: 18px;
+  box-shadow: 0 18px 50px rgba(31, 35, 40, .3);
+  outline: none;
+}
+.tour-centered .tour-card { left: 50% !important; top: 50% !important; transform: translate(-50%, -50%); }
+
+.tour-card-top { display: flex; align-items: center; justify-content: space-between; }
+.tour-progress { margin: 0; color: #D4552A; font-size: 12px; font-weight: 700; letter-spacing: .04em; text-transform: uppercase; }
+.tour-close {
+  display: grid;
+  width: 30px;
+  height: 30px;
+  place-items: center;
+  margin: -4px -6px 0 0;
+  padding: 0;
+  color: #5d6675;
+  background: #f7f4f1;
+  border: 0;
+  border-radius: 50%;
+  cursor: pointer;
+}
+.tour-close svg { width: 16px; height: 16px; fill: none; stroke: currentColor; stroke-width: 2; stroke-linecap: round; }
+.tour-title { margin: 6px 0 6px; font-size: 18px; font-weight: 700; }
+.tour-text { margin: 0; color: #4a5260; font-size: 14px; line-height: 1.5; }
+
+.tour-dots { display: flex; gap: 5px; margin-top: 14px; }
+.tour-dots span { width: 6px; height: 6px; background: #e6e1dc; border-radius: 3px; transition: width .2s; }
+.tour-dots span.on { width: 18px; background: #D4552A; }
+
+.tour-actions { display: flex; justify-content: space-between; gap: 8px; margin-top: 14px; }
+
+/* "End the tour?" replaces the step's content in the same card */
+.tour-confirming > :not(.tour-confirm) { display: none; }
+.tour-confirm .tour-title { margin-top: 0; }
+
+@media (prefers-reduced-motion: reduce) {
+  .tour-spot, .tour-dots span { transition: none; }
+}
