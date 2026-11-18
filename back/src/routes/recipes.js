@@ -9,6 +9,12 @@ const router = Router()
 // liked is true when the logged-in user has liked the recipe.
 // rating_avg / rating_count are the recipe's anonymous totals; my_rating is
 // only the logged-in user's own rating (null if they haven't rated it).
+// The pantry fields compare the recipe with this user's own pantry, the same
+// way the recipe page does (recipeView.js): plenty or running low counts as
+// "in pantry"; none, or not in the pantry at all, counts as "to buy".
+//   ingredient_count: how many ingredients the recipe lists
+//   in_pantry: names of the ones they have, in recipe order
+//   to_buy: how many they'd need to buy
 router.get('/', async (req, res) => {
   const { rows } = await pool.query(
     `select r.recipe_id, r.recipe_title, r.cost, r.prep_time, rc.recipe_class_desc,
@@ -18,11 +24,25 @@ router.get('/', async (req, res) => {
             ) as liked,
             rs.rating_avg::float as rating_avg,
             coalesce(rs.rating_count, 0) as rating_count,
-            ur.rating as my_rating
+            ur.rating as my_rating,
+            pantry.ingredient_count, pantry.in_pantry, pantry.to_buy
      from recipes r
      left join recipe_classes rc on rc.recipe_class_id = r.recipe_class_id
      left join recipe_rating_stats rs on rs.recipe_id = r.recipe_id
      left join user_recipe_ratings ur on ur.recipe_id = r.recipe_id and ur.user_id = $1
+     cross join lateral (
+       select count(*)::int as ingredient_count,
+              coalesce(
+                array_agg(i.ingredient_name order by ri.recipe_seq_number)
+                  filter (where up.pantry_amount_id in (0, 1)),
+                '{}'
+              ) as in_pantry,
+              (count(*) filter (where up.pantry_amount_id is null or up.pantry_amount_id = 2))::int as to_buy
+       from recipe_ingredients ri
+       join ingredients i on i.ingredient_id = ri.ingredient_id
+       left join user_pantry up on up.ingredient_id = ri.ingredient_id and up.user_id = $1
+       where ri.recipe_id = r.recipe_id
+     ) pantry
      order by r.recipe_title`,
     [req.user.user_id]
   )
