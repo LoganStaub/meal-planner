@@ -4,7 +4,8 @@
 // next week, minus what their pantry already has plenty of. An ingredient shows
 // up if it isn't in the pantry at all, or is marked "running low" (1) or
 // "none" (2). Amounts are text like "1/2" or "to taste", so they are listed
-// per recipe instead of being added together.
+// per recipe instead of being added together. Items the user removed from the
+// list (POST /remove) are left out.
 import { Router } from 'express'
 import { pool } from '../db.js'
 import { isPositiveInt } from '../validators.js'
@@ -52,6 +53,11 @@ export async function getShoppingItems(userId) {
        and c.date between (now() at time zone $2::text)::date
                       and (now() at time zone $2::text)::date + $3::int
        and (up.pantry_amount_id is null or up.pantry_amount_id in (1, 2))
+       -- Removed from the list for this planned dish (POST /remove below)
+       and not exists (
+         select 1 from user_shopping_removed sr
+         where sr.calendar_id = c.calendar_id and sr.ingredient_id = ri.ingredient_id
+       )
      group by i.ingredient_id, i.ingredient_name, r.recipe_id, r.recipe_title, ri.amount, m.measurement_desc
      order by lower(i.ingredient_name), r.recipe_title`,
     [userId, TIME_ZONE, DAYS_AHEAD]
@@ -106,6 +112,35 @@ router.put('/:ingredientId/got', async (req, res) => {
      on conflict (user_id, ingredient_id)
      do update set pantry_amount_id = excluded.pantry_amount_id`,
     [req.user.user_id, ingredientId, req.body.got ? 0 : 2]
+  )
+  res.status(204).end()
+})
+
+// POST /api/me/shopping/remove  { ingredient_ids: [3, 8, ...] }  -> 204
+// Takes items off the list (the page asks "are you sure?" first). Saved per
+// planned dish in user_shopping_removed (db/migrations/014_shopping_removed.sql),
+// for every dish in the list's 7 days that needs the ingredient. Planning
+// another dish that needs it later brings the item back for that dish.
+// The pantry isn't touched.
+const MAX_REMOVE = 200
+
+router.post('/remove', async (req, res) => {
+  const ids = req.body?.ingredient_ids
+  if (!Array.isArray(ids) || ids.length === 0 || ids.length > MAX_REMOVE || !ids.every(isPositiveInt)) {
+    return res.status(400).json({ error: `Expected { ingredient_ids: [...] } with 1 to ${MAX_REMOVE} ingredient ids` })
+  }
+
+  await pool.query(
+    `insert into user_shopping_removed (calendar_id, ingredient_id, user_id)
+     select c.calendar_id, ri.ingredient_id, c.user_id
+     from calendar c
+     join recipe_ingredients ri on ri.recipe_id = c.recipe_id
+     where c.user_id = $1
+       and c.date between (now() at time zone $2::text)::date
+                      and (now() at time zone $2::text)::date + $3::int
+       and ri.ingredient_id = any($4::int[])
+     on conflict (calendar_id, ingredient_id) do nothing`,
+    [req.user.user_id, TIME_ZONE, DAYS_AHEAD, ids.map(Number)]
   )
   res.status(204).end()
 })
