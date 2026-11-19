@@ -1,0 +1,89 @@
+<!doctype html>
+<html lang="en">
+<head>
+<%- include('partials/head', { title: 'Maintain recipes', styles: ['admin', 'admin-manage', 'page-card', 'profile-menu', 'page-header', 'site-nav'] }) %>
+</head>
+<body class="has-site-nav">
+
+<%- include('partials/page-header', { pageTitle: 'Maintain recipes' }) %>
+
+<%# Maintain Recipes: js/admin-recipes.js fills the table from /api/admin/recipes %>
+<div class="admin page-card" id="manage-page">
+  <header class="admin-top">
+    <div>
+      <p class="admin-eyebrow">Admin dashboard</p>
+      <h1>Maintain recipes</h1>
+      <p class="admin-lede">Add, edit and delete the recipes everyone sees in Preply.</p>
+    </div>
+    <a class="admin-back" href="/admin">
+      <svg viewBox="0 0 24 24" aria-hidden="true"><path d="m15 18-6-6 6-6"/></svg>
+      Back to admin
+    </a>
+  </header>
+
+  <main>
+    <div class="manage-toolbar">
+      <button class="manage-btn" id="manage-add" type="button">Add recipe</button>
+      <input type="search" id="manage-filter" placeholder="Search by recipe name" aria-label="Search recipes">
+      <span class="manage-count" id="manage-count" role="status"></span>
+    </div>
+
+    <p class="manage-status" id="manage-status" role="status" hidden></p>
+
+    <div class="manage-table-wrap">
+      <table class="manage-table">
+        <thead>
+          <tr><th><span class="visually-hidden">Photo</span></th><th>Recipe</th><th>Meal type</th><th>Prep time</th><th>Cost</th><th><span class="visually-hidden">Actions</span></th></tr>
+        </thead>
+        <tbody id="manage-rows"></tbody>
+      </table>
+      <p class="manage-empty" id="manage-empty" hidden>No recipes found.</p>
+    </div>
+  </main>
+</div>
+
+<%# Add / edit popup (one form for both) %>
+<dialog class="manage-dialog" id="recipe-dialog" aria-labelledby="recipe-dialog-title">
+  <form id="recipe-form">
+    <h2 id="recipe-dialog-title">Add recipe</h2>
+    <div class="manage-fields">
+      <label class="full">Recipe title<input name="recipe_title" required maxlength="200" autocomplete="off"></label>
+      <label>Meal type
+        <select name="recipe_class_id" id="recipe-class"><option value="">None</option></select>
+      </label>
+      <label>Prep time (minutes)<input name="prep_time" type="number" min="0" step="any"></label>
+      <label>Cost ($)<input name="cost" type="number" min="0" step="any"></label>
+      <label>Macros<input name="macros" maxlength="200" placeholder="Cal: 560, P: 30g, C: 41g, F: 31g"></label>
+      <label class="full">Instructions<textarea name="instructions"></textarea></label>
+      <label class="full">Photo path
+        <input name="image_path" maxlength="300" placeholder="/images/recipes/lasagna.jpg">
+        <small>Must start with /images/. The photo file has to be in front/public/images/recipes.</small>
+      </label>
+    </div>
+    <p class="manage-error" id="recipe-error" role="alert" hidden></p>
+    <div class="manage-dialog-actions">
+      <button class="manage-btn secondary" type="button" data-close>Cancel</button>
+      <button class="manage-btn" type="submit" id="recipe-save">Save</button>
+    </div>
+  </form>
+</dialog>
+
+<%# Delete confirmation %>
+<dialog class="manage-dialog" id="delete-dialog" aria-labelledby="delete-dialog-title">
+  <form method="dialog" id="delete-form">
+    <h2 id="delete-dialog-title">Delete this recipe?</h2>
+    <p id="delete-text"></p>
+    <p class="manage-error" id="delete-error" role="alert" hidden></p>
+    <div class="manage-dialog-actions">
+      <button class="manage-btn secondary" type="button" data-close>Cancel</button>
+      <button class="manage-btn danger" type="button" id="delete-confirm">Delete</button>
+    </div>
+  </form>
+</dialog>
+
+<%- include('partials/site-nav') %>
+<%- include('partials/profile-menu') %>
+<script src="<%= asset('/js/profile-menu.js') %>" defer></script>
+<script src="<%= asset('/js/admin-recipes.js') %>" defer></script>
+</body>
+</html>

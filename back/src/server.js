@@ -22,6 +22,8 @@ import searchRouter from './routes/search.js'
 import recipeAssistantRouter from './routes/recipeAssistant.js'
 import eventsRouter from './routes/events.js'
 import adminRouter from './routes/admin.js'
+import adminUsersRouter from './routes/adminUsers.js'
+import adminRecipesRouter from './routes/adminRecipes.js'
 import onboardingRouter from './routes/onboarding.js'
 import mealFitRouter from './routes/mealFit.js'
 import { AVATAR_COLORS, DEFAULT_AVATAR_COLOR } from './avatarColors.js'
@@ -160,6 +162,11 @@ app.use('/api', eventsRouter)
 
 // Admin dashboard with the OKR numbers: /admin and /admin/okrs. See routes/admin.js.
 app.use(adminRouter)
+
+// Maintain Users / Maintain Recipes: the admin-only create, read, update and
+// delete APIs. See routes/adminUsers.js and routes/adminRecipes.js.
+app.use('/api/admin/users', adminUsersRouter)
+app.use('/api/admin/recipes', adminRecipesRouter)
 
 // Render the home page from its EJS view.
 app.get(['/home', '/index.html'], (req, res) => {

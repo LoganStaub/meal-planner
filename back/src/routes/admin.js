@@ -296,4 +296,11 @@ router.get('/admin/okrs/:number', async (req, res) => {
   res.render('admin-okr', { okr: await loadOkr(okr) })
 })
 
+// Maintain Users and Maintain Recipes pages. They load their data from
+// /api/admin/users and /api/admin/recipes (routes/adminUsers.js and
+// routes/adminRecipes.js).
+router.get('/admin/users', (req, res) => res.render('admin-users'))
+router.get('/admin/recipes', (req, res) => res.render('admin-recipes'))
+
+
 export default router

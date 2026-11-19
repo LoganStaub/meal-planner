@@ -1,0 +1,530 @@
+/* The recipe window and the "Add to calendar" popup
+   (views/partials/recipe-details.ejs, js/recipe-details.js).
+   Shared by the Home and Recipes pages; load it after the page's main
+   stylesheet (index.css or calendar.css), which provides the colors. */
+
+/* ---------- Recipe details popup ----------
+   Phones: slides up from the bottom. Computers: centered. */
+.details {
+    width: min(560px, calc(100% - 32px));
+    max-height: 85vh;
+    padding: 0;
+    border: none;
+    border-radius: 26px;
+    color: var(--text);
+    background-color: var(--surface);
+    box-shadow: 0 24px 60px rgba(0, 0, 0, 0.25);
+}
+
+.details::backdrop {
+    background-color: rgba(20, 16, 14, 0.45);
+    backdrop-filter: blur(4px);
+    -webkit-backdrop-filter: blur(4px);
+}
+
+@media (max-width: 639px) {
+    .details {
+        width: 100%;
+        max-width: 100%;
+        max-height: 88dvh;
+        margin: auto 0 0;
+        border-radius: 26px 26px 0 0;
+        padding-bottom: env(safe-area-inset-bottom);
+    }
+}
+
+.details-header {
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    gap: 16px;
+    padding: 22px 22px 0;
+}
+
+.details-header h2 {
+    margin: 0;
+    font-size: 1.4rem;
+    font-weight: 600;
+    line-height: 1.25;
+}
+
+.details-close {
+    display: grid;
+    place-items: center;
+    width: 40px;
+    height: 40px;
+    flex-shrink: 0;
+    border-radius: 50%;
+    border: none;
+    background-color: #F1EEEB;
+    color: var(--text-muted);
+    cursor: pointer;
+}
+
+.details-close:hover {
+    background-color: #E6E1DD;
+}
+
+.details-body {
+    min-height: 220px;
+    padding: 16px 22px 26px;
+    color: var(--text-muted);
+}
+
+/* ---------- Add to calendar popup ----------
+   Uses the .details popup above for its size, corners and backdrop. */
+.plan {
+    max-width: 460px;
+}
+
+@media (max-width: 639px) {
+    .plan {
+        max-width: 100%;
+    }
+}
+
+.plan-form {
+    margin: 0;
+}
+
+.plan-recipe {
+    margin: 4px 0 0;
+    color: var(--text-muted);
+    line-height: 1.35;
+}
+
+.plan-body {
+    padding: 18px 22px 24px;
+}
+
+.plan-label {
+    display: block;
+    margin: 0 0 8px;
+    padding: 0;
+    font-weight: 600;
+}
+
+.plan-date {
+    width: 100%;
+    min-height: 46px;
+    padding: 0 14px;
+    border: 1px solid #D0D8E2;
+    border-radius: 14px;
+    background-color: var(--surface);
+    color: var(--text);
+    font: inherit;
+}
+
+/* One row of chips; wraps on narrow phones */
+.plan-meals {
+    margin: 18px 0 0;
+    padding: 0;
+    border: none;
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+}
+
+.plan-meals legend {
+    width: 100%;
+}
+
+.plan-meal {
+    position: relative;
+    cursor: pointer;
+}
+
+.plan-meal input {
+    position: absolute;
+    opacity: 0;
+    pointer-events: none;
+}
+
+.plan-meal span {
+    display: inline-flex;
+    align-items: center;
+    min-height: 40px;
+    padding: 0 16px;
+    border: 1px solid #D0D8E2;
+    border-radius: 999px;
+    background-color: var(--surface);
+    font-weight: 600;
+    transition: background-color 0.2s ease, border-color 0.2s ease, color 0.2s ease;
+}
+
+.plan-meal:hover span {
+    border-color: var(--accent);
+}
+
+.plan-meal input:checked + span {
+    border-color: var(--accent);
+    background-color: var(--accent);
+    color: white;
+}
+
+.plan-meal input:focus-visible + span,
+.plan-date:focus-visible,
+.plan-btn:focus-visible {
+    outline: 2px solid var(--accent);
+    outline-offset: 2px;
+}
+
+.plan-message {
+    margin: 16px 0 0;
+    padding: 10px 14px;
+    border: 1px solid #F1B9A5;
+    border-radius: 14px;
+    background-color: #FDEEE8;
+    color: #8A2E12;
+    font-weight: 600;
+    line-height: 1.4;
+}
+
+.plan-actions {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 10px;
+    margin-top: 22px;
+}
+
+.plan-btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    min-height: 46px;
+    padding: 0 16px;
+    border: 1px solid #D0D8E2;
+    border-radius: 16px;
+    background-color: var(--surface);
+    color: var(--text);
+    font: inherit;
+    font-weight: 600;
+    text-decoration: none;
+    cursor: pointer;
+    transition: background-color 0.2s ease, border-color 0.2s ease;
+}
+
+.plan-btn:hover {
+    background-color: #F1EEEB;
+}
+
+.plan-btn.plan-primary {
+    border-color: var(--accent);
+    background-color: var(--accent);
+    color: white;
+}
+
+.plan-btn.plan-primary:hover {
+    border-color: var(--accent-hover);
+    background-color: var(--accent-hover);
+}
+
+.plan-btn:disabled {
+    opacity: 0.6;
+    cursor: default;
+}
+
+.plan-done {
+    text-align: center;
+}
+
+.plan-done p {
+    margin: 0;
+    color: var(--text-muted);
+    line-height: 1.45;
+}
+
+.plan-done strong {
+    color: var(--text);
+}
+
+.plan-done-icon {
+    display: grid;
+    place-items: center;
+    width: 52px;
+    height: 52px;
+    margin: 0 auto 14px;
+    border-radius: 50%;
+    background-color: var(--accent-soft);
+    color: var(--accent);
+}
+
+.plan [hidden] {
+    display: none;
+}
+
+/* ---------- Recipe window ----------
+   Header on top, a body that scrolls, and the buttons always in view. */
+.recipe-window[open] {
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+}
+
+.recipe-window .details-header {
+    padding-bottom: 14px;
+}
+
+.recipe-window .details-header h2 {
+    overflow-wrap: anywhere;
+}
+
+.recipe-window .details-body {
+    flex: 1;
+    min-height: 0;
+    overflow-y: auto;
+    padding: 2px 22px 20px;
+    color: var(--text);
+}
+
+.recipe-window .details-close:focus-visible,
+.rw-btn:focus-visible {
+    outline: 2px solid var(--accent);
+    outline-offset: 2px;
+}
+
+/* Loading, or the recipe couldn't be loaded */
+.rw-status {
+    margin: 0;
+    padding: 48px 8px;
+    color: var(--text-muted);
+    text-align: center;
+    line-height: 1.45;
+}
+
+.rw-status .plan-btn {
+    margin-top: 14px;
+}
+
+.rw-photo {
+    display: block;
+    width: 100%;
+    height: 180px;
+    margin-bottom: 14px;
+    border-radius: 18px;
+    object-fit: cover;
+}
+
+.rw-description {
+    margin: 0 0 12px;
+    color: var(--text-muted);
+    line-height: 1.45;
+}
+
+/* Time, meal type, servings, cost */
+.rw-facts {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px;
+    margin: 0;
+    padding: 0;
+    list-style: none;
+}
+
+.rw-facts li {
+    padding: 4px 12px;
+    border-radius: 999px;
+    background-color: #F1EEEB;
+    font-size: 0.88rem;
+    font-weight: 600;
+}
+
+.rw-section-heading {
+    display: flex;
+    align-items: baseline;
+    justify-content: space-between;
+    gap: 12px;
+    margin: 22px 0 10px;
+}
+
+.rw-section-heading h3 {
+    margin: 0;
+    font-size: 1.05rem;
+    font-weight: 700;
+}
+
+.rw-section-heading span {
+    color: var(--text-muted);
+    font-size: 0.88rem;
+}
+
+/* Calories, protein, carbs, fat */
+.rw-macros {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 8px;
+    margin: 0;
+}
+
+.rw-macros div {
+    padding: 10px 6px;
+    border: 1px solid #E3DED8;
+    border-radius: 16px;
+    text-align: center;
+}
+
+.rw-macros strong {
+    display: block;
+    font-size: 1.15rem;
+    font-weight: 700;
+}
+
+.rw-macros span {
+    display: block;
+    margin-top: 2px;
+    color: var(--text-muted);
+    font-size: 0.8rem;
+}
+
+.rw-plain {
+    margin: 0;
+    color: var(--text-muted);
+    line-height: 1.45;
+}
+
+.rw-ingredients {
+    margin: 0;
+    padding: 0;
+    list-style: none;
+}
+
+.rw-ingredients li {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 8px 0;
+    border-top: 1px solid #EFEAE5;
+    line-height: 1.35;
+}
+
+.rw-ingredients li:first-child {
+    border-top: none;
+}
+
+.rw-amount {
+    flex: none;
+    width: 4.6em;
+    color: var(--text-muted);
+}
+
+.rw-name {
+    flex: 1;
+    min-width: 0;
+    overflow-wrap: anywhere;
+}
+
+/* Whether this user has the ingredient (their pantry) */
+.rw-pantry {
+    flex: none;
+    padding: 2px 10px;
+    border-radius: 999px;
+    font-size: 0.78rem;
+    font-weight: 600;
+    white-space: nowrap;
+}
+
+.rw-pantry.have {
+    background-color: #E4EFDD;
+    color: #2F5A20;
+}
+
+.rw-pantry.low {
+    background-color: #FBEBC8;
+    color: #7A5200;
+}
+
+.rw-pantry.buy {
+    background-color: var(--accent-soft);
+    color: #8A2E12;
+}
+
+.rw-steps {
+    margin: 0;
+    padding-left: 1.4em;
+}
+
+.rw-steps li {
+    padding: 4px 0;
+    line-height: 1.5;
+    overflow-wrap: anywhere;
+}
+
+.rw-added-by {
+    margin: 18px 0 0;
+    color: var(--text-muted);
+    font-size: 0.88rem;
+}
+
+/* Add to calendar + Like, like the buttons on the home page card */
+.rw-actions {
+    display: grid;
+    grid-template-columns: 1fr auto;
+    gap: 10px;
+    padding: 14px 22px 18px;
+    border-top: 1px solid #EFEAE5;
+    background-color: var(--surface);
+}
+
+.rw-btn {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    height: 52px;
+    padding: 0 18px;
+    border: 1px solid #D0D8E2;
+    border-radius: 18px;
+    background-color: var(--surface);
+    color: var(--text-muted);
+    font: inherit;
+    font-weight: 600;
+    white-space: nowrap;
+    cursor: pointer;
+    transition: background-color 0.2s ease, transform 0.15s ease;
+}
+
+.rw-btn:hover {
+    background-color: #F1EEEB;
+}
+
+.rw-btn:active {
+    transform: scale(0.97);
+}
+
+.rw-primary {
+    border-color: transparent;
+    background-color: var(--accent);
+    color: white;
+    font-size: 1.05rem;
+    font-weight: 700;
+}
+
+.rw-primary:hover {
+    background-color: var(--accent-hover);
+}
+
+/* Liked: the heart fills in with the accent color */
+.rw-like[aria-pressed="true"] {
+    border-color: var(--accent);
+    color: var(--accent);
+}
+
+.rw-like[aria-pressed="true"] .icon {
+    fill: currentColor;
+}
+
+.recipe-window [hidden] {
+    display: none;
+}
+
+@media (max-width: 380px) {
+    .rw-macros {
+        grid-template-columns: repeat(2, 1fr);
+    }
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .rw-btn {
+        transition: none;
+    }
+}

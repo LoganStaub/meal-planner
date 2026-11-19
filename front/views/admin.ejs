@@ -1,7 +1,7 @@
 <!doctype html>
 <html lang="en">
 <head>
-<%- include('partials/head', { title: 'Admin', styles: ['admin', 'page-card', 'profile-menu', 'page-header', 'site-nav'] }) %>
+<%- include('partials/head', { title: 'Admin', styles: ['admin', 'admin-manage', 'page-card', 'profile-menu', 'page-header', 'site-nav'] }) %>
 </head>
 <body class="has-site-nav">
 
@@ -10,9 +10,9 @@
 <div class="admin page-card">
   <header class="admin-top">
     <div>
-      <p class="admin-eyebrow">Admin dashboard</p>
-      <h1>OKR metrics</h1>
-      <p class="admin-lede">How Preply is doing against this period's goals. Select an OKR to see its breakdown.</p>
+      <p class="admin-eyebrow">Admin</p>
+      <h1>Admin dashboard</h1>
+      <p class="admin-lede">Maintain the site's users and recipes, and see how Preply is doing against this period's goals.</p>
     </div>
     <a class="admin-back" href="/home">
       <svg viewBox="0 0 24 24" aria-hidden="true"><path d="m15 18-6-6 6-6"/></svg>
@@ -20,24 +20,45 @@
     </a>
   </header>
 
-  <%# One card per OKR, from OKRS in back/src/routes/admin.js. Tracked ones
-      link to their breakdown (views/admin-okr.ejs). %>
-  <main class="okr-grid" aria-label="OKRs">
-    <% okrs.forEach(function (okr) { %>
-    <% const tag = okr.tracked ? 'a' : 'div'; %>
-    <<%= tag %> class="okr-card<%= okr.tracked ? '' : ' is-placeholder' %>"<% if (okr.tracked) { %> href="<%= okr.href %>"<% } %>>
-      <div class="okr-card-top">
-        <span class="okr-label"><%= okr.label %></span>
-        <span class="okr-status <%= okr.status.tone %>"><%= okr.status.text %></span>
-      </div>
-      <h2><%= okr.title %></h2>
-      <p class="okr-card-value<%= okr.headline.value === '—' ? ' is-empty' : '' %>"><%= okr.headline.value %></p>
-      <p class="okr-card-caption"><%= okr.headline.caption %></p>
-      <% if (okr.tracked) { %>
-      <span class="okr-card-link">View breakdown<svg viewBox="0 0 24 24" aria-hidden="true"><path d="m9 18 6-6-6-6"/></svg></span>
-      <% } %>
-    </<%= tag %>>
-    <% }); %>
+  <main>
+    <%# Maintain buttons. This whole page is admin-only (routes/admin.js), so
+        regular users never see these. Each opens its own page. %>
+    <h2 class="admin-section-title">Maintain data</h2>
+    <section class="manage-grid" aria-label="Maintain data">
+      <a class="okr-card" href="/admin/users">
+        <div class="okr-card-top"><span class="okr-label">Maintain</span></div>
+        <h2>Maintain Users</h2>
+        <p class="okr-card-caption">Add, edit and delete user accounts, and choose who is an admin.</p>
+        <span class="okr-card-link">Open<svg viewBox="0 0 24 24" aria-hidden="true"><path d="m9 18 6-6-6-6"/></svg></span>
+      </a>
+      <a class="okr-card" href="/admin/recipes">
+        <div class="okr-card-top"><span class="okr-label">Maintain</span></div>
+        <h2>Maintain Recipes</h2>
+        <p class="okr-card-caption">Add, edit and delete recipes: titles, meal types, times, costs and photos.</p>
+        <span class="okr-card-link">Open<svg viewBox="0 0 24 24" aria-hidden="true"><path d="m9 18 6-6-6-6"/></svg></span>
+      </a>
+    </section>
+
+    <%# One card per OKR, from OKRS in back/src/routes/admin.js. Tracked ones
+        link to their breakdown (views/admin-okr.ejs). %>
+    <h2 class="admin-section-title">OKR metrics</h2>
+    <section class="okr-grid" aria-label="OKRs">
+      <% okrs.forEach(function (okr) { %>
+      <% const tag = okr.tracked ? 'a' : 'div'; %>
+      <<%= tag %> class="okr-card<%= okr.tracked ? '' : ' is-placeholder' %>"<% if (okr.tracked) { %> href="<%= okr.href %>"<% } %>>
+        <div class="okr-card-top">
+          <span class="okr-label"><%= okr.label %></span>
+          <span class="okr-status <%= okr.status.tone %>"><%= okr.status.text %></span>
+        </div>
+        <h2><%= okr.title %></h2>
+        <p class="okr-card-value<%= okr.headline.value === '—' ? ' is-empty' : '' %>"><%= okr.headline.value %></p>
+        <p class="okr-card-caption"><%= okr.headline.caption %></p>
+        <% if (okr.tracked) { %>
+        <span class="okr-card-link">View breakdown<svg viewBox="0 0 24 24" aria-hidden="true"><path d="m9 18 6-6-6-6"/></svg></span>
+        <% } %>
+      </<%= tag %>>
+      <% }); %>
+    </section>
   </main>
 </div>
 
