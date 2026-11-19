@@ -10,6 +10,16 @@ Deciding what to eat every day, and making sure the right groceries are in the h
 
 The full schema is `back/db/schema.sql` plus the files in `back/db/migrations/` (`npm run db:init` runs both).
 
+## Data Flow Diagrams
+
+**Level 0 (context diagram).** Preply as a single process and the outside parties it exchanges data with: users, admins, the Claude API (Anthropic), which checks AI-added recipes, and the mail server (SMTP), which sends password reset emails.
+
+![Level 0 context diagram for Preply](docs/level_0.png)
+
+**Level 1.** The system broken into its six main processes: accounts and sessions, discovering and liking recipes, the pantry, meal planning, adding recipes with AI, and catalog upkeep by admins. It also shows the data stores (D1 to D7) each process reads and writes.
+
+![Level 1 data flow diagram for Preply](docs/level_1.png)
+
 ## Folder Structure
 
 ```text
