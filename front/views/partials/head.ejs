@@ -1,0 +1,23 @@
+<%#
+  Everything inside <head> that pages share. Usage, inside <head>:
+    include('partials/head', { title: 'Pantry', styles: ['pantry', 'page-card'] })
+
+    title   - shown before " | Preply"
+    styles  - this page's files in /css, after base.css (font + brand colors);
+              sent as one file, see cssBundle() in back/src/assets.js
+
+  Logged-in pages also get no-back-cache.js. Every URL goes through asset()
+  (back/src/assets.js) so browsers can cache files and still see edits.
+%>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title><%= title %> | Preply</title>
+<meta name="description" content="Preply plans your week of meals, keeps track of your pantry and builds your shopping list.">
+<meta name="theme-color" content="#F7F4F1">
+<link rel="icon" type="image/svg+xml" href="<%= asset('/images/logo.svg') %>">
+<%# Same URL as the @font-face in base.css (no ?v=), or the font downloads twice %>
+<link rel="preload" href="/fonts/dm-sans-latin.woff2" as="font" type="font/woff2" crossorigin>
+<%# One request for all of this page's CSS. The profile menu also needs its popups' styles. %>
+<link rel="stylesheet" href="<%= cssBundle(['base', ...styles, ...(styles.includes('profile-menu') ? ['account-settings', 'onboarding'] : [])]) %>">
+<% if (locals.currentUser) { %><script src="<%= asset('/js/no-back-cache.js') %>" defer></script>
+<% } %>

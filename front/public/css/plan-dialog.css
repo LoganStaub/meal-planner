@@ -245,7 +245,7 @@
     margin: 0 auto 14px;
     border-radius: 50%;
     background-color: var(--accent-soft);
-    color: var(--accent);
+    color: var(--accent-ink);
 }
 
 .plan [hidden] {

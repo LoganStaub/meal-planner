@@ -1,23 +1,8 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
-    <title>Recipes | Preply</title>
-    <link rel="icon" type="image/svg+xml" href="/images/logo.svg">
-
-    <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=DM+Sans:opsz,wght@9..40,400;9..40,500;9..40,600;9..40,700&display=swap" rel="stylesheet">
-
-    <%# The Recipes page (it was called Search; the files keep that name).
-        calendar.css has the shared colors, page layout and nav; search.css adds this page's parts %>
-    <link rel="stylesheet" href="/css/calendar.css">
-    <link rel="stylesheet" href="/css/search.css">
-    <link rel="stylesheet" href="/css/page-header.css">
-    <link rel="stylesheet" href="/css/recipe-add.css">
-    <link rel="stylesheet" href="/css/profile-menu.css">
-    <script src="/js/no-back-cache.js"></script>
+<%# The Recipes page (it was called Search; the files keep that name). calendar.css has the shared colors, page layout and nav; search.css adds this page's parts %>
+<%- include('partials/head', { title: 'Recipes', styles: ['calendar', 'search', 'page-header', 'recipe-add', 'profile-menu'] }) %>
 </head>
 
 <body>
@@ -131,11 +116,11 @@
                 </div>
                 <% } else { %>
                 <ul class="recipe-grid">
-                    <% recipes.forEach(function (r) { %>
+                    <% recipes.forEach(function (r, i) { %>
                     <li class="recipe-card">
                         <div class="recipe-thumb">
                             <svg class="placeholder"><use href="#icon-image"/></svg>
-                            <% if (r.image) { %><img class="recipe-photo" src="<%= r.image %>" alt="" loading="lazy" onerror="this.remove()"><% } %>
+                            <% if (r.image) { %><img class="recipe-photo" src="<%= r.image %>" <%- srcset(r.image) %> sizes="(max-width: 520px) 100vw, 320px" width="640" height="400" alt="" <%- i === 0 ? 'fetchpriority="high"' : 'loading="lazy"' %> decoding="async" onerror="this.remove()"><% } %>
                         </div>
                         <div class="recipe-body">
                             <div class="recipe-tags">
@@ -162,7 +147,7 @@
         </main>
 
         <nav class="nav" aria-label="Main">
-            <p class="nav-brand"><img class="brand-logo" src="/images/logo.svg" alt="" width="28" height="28">Preply<span>.</span></p>
+            <p class="nav-brand"><img class="brand-logo" src="<%= asset('/images/logo.svg') %>" alt="" width="28" height="28">Preply<span>.</span></p>
             <ul>
                 <li><a class="nav-link" href="/calendar"><span class="nav-icon"><svg class="icon"><use href="#icon-calendar"/></svg></span>Meal Plan</a></li>
                 <li><a class="nav-link" href="/shopping"><span class="nav-icon"><svg class="icon"><use href="#icon-list"/></svg></span>Shopping</a></li>
@@ -263,9 +248,9 @@
     </dialog>
 
     <%- include('partials/profile-menu') %>
-    <script src="/js/events.js" defer></script>
-    <script src="/js/profile-menu.js" defer></script>
-    <script src="/js/recipe-add.js" defer></script>
-    <% if (plan) { %><script src="/js/search.js" defer></script><% } %>
+    <script src="<%= asset('/js/events.js') %>" defer></script>
+    <script src="<%= asset('/js/profile-menu.js') %>" defer></script>
+    <script src="<%= asset('/js/recipe-add.js') %>" defer></script>
+    <% if (plan) { %><script src="<%= asset('/js/search.js') %>" defer></script><% } %>
 </body>
 </html>

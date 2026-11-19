@@ -1,7 +1,7 @@
 .profile-trigger:focus-visible,
 .profile-menu-close:focus-visible,
 .profile-menu-row:focus-visible {
-  outline: 2px solid #D4552A;
+  outline: 2px solid var(--accent);
   outline-offset: 2px;
 }
 
@@ -39,7 +39,7 @@
 }
 .profile-menu-close svg { width: 17px; height: 17px; fill: none; stroke: currentColor; stroke-width: 2; stroke-linecap: round; }
 .profile-menu-identity { display: flex; align-items: center; gap: 12px; margin-top: 14px; }
-.profile-menu-avatar { display: grid; width: 48px; height: 48px; flex: 0 0 auto; place-items: center; color: #fff; background: var(--avatar-color, #D4552A); border-radius: 15px; font-weight: 700; }
+.profile-menu-avatar { display: grid; width: 48px; height: 48px; flex: 0 0 auto; place-items: center; color: #fff; background: var(--avatar-color, var(--accent)); border-radius: 15px; font-weight: 700; }
 .profile-menu-name { margin: 0; font-size: 15px; font-weight: 700; }
 .profile-menu-subtitle { margin: 3px 0 0; color: #5d6675; font-size: 12px; }
 .profile-menu-avatar { overflow: hidden; }
@@ -74,4 +74,4 @@ button.profile-menu-row:hover { background: #faf8f5; }
 .profile-menu-logout { margin-top: 16px; padding-top: 14px; border-top: 1px solid #ece7e2; }
 .profile-menu-logout button { width: 100%; padding: 9px 12px; color: #b42318; background: transparent; border: 1px solid #f1c4bf; border-radius: 999px; font: inherit; font-size: 13px; font-weight: 600; cursor: pointer; }
 .profile-menu-logout button:hover { background: #fef3f2; }
-.profile-menu-logout button:focus-visible { outline: 2px solid #D4552A; outline-offset: 2px; }
+.profile-menu-logout button:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }

@@ -1,19 +1,7 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
-    <title>Meal Plan | Preply</title>
-    <link rel="icon" type="image/svg+xml" href="/images/logo.svg">
-
-    <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=DM+Sans:opsz,wght@9..40,400;9..40,500;9..40,600;9..40,700&display=swap" rel="stylesheet">
-
-    <link rel="stylesheet" href="/css/calendar.css">
-    <link rel="stylesheet" href="/css/page-header.css">
-    <link rel="stylesheet" href="/css/profile-menu.css">
-    <script src="/js/no-back-cache.js"></script>
+<%- include('partials/head', { title: 'Meal Plan', styles: ['calendar', 'page-header', 'profile-menu'] }) %>
 </head>
 
 <body>
@@ -82,7 +70,7 @@
         </main>
 
         <nav class="nav" aria-label="Main">
-            <p class="nav-brand"><img class="brand-logo" src="/images/logo.svg" alt="" width="28" height="28">Preply<span>.</span></p>
+            <p class="nav-brand"><img class="brand-logo" src="<%= asset('/images/logo.svg') %>" alt="" width="28" height="28">Preply<span>.</span></p>
             <ul>
                 <li><a class="nav-link" href="/calendar" aria-current="page"><span class="nav-icon"><svg class="icon"><use href="#icon-calendar"/></svg></span>Meal Plan</a></li>
                 <li><a class="nav-link" href="/shopping"><span class="nav-icon"><svg class="icon"><use href="#icon-list"/></svg></span>Shopping</a></li>
@@ -131,8 +119,8 @@
     </dialog>
 
     <%- include('partials/profile-menu') %>
-    <script src="/js/events.js" defer></script>
-    <script src="/js/profile-menu.js" defer></script>
-    <script src="/js/calendar.js" defer></script>
+    <script src="<%= asset('/js/events.js') %>" defer></script>
+    <script src="<%= asset('/js/profile-menu.js') %>" defer></script>
+    <script src="<%= asset('/js/calendar.js') %>" defer></script>
 </body>
 </html>

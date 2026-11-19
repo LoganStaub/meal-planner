@@ -3,9 +3,6 @@
    Add to meal plan popup) expects. */
 
 :root {
-    --accent: #D4552A;
-    --accent-hover: #BC4720;
-    --accent-soft: #FCDCCD;
     --text: #1F2328;
     --text-muted: #5B6068;
     --page-bg: #F7F4F1;
@@ -288,7 +285,7 @@ button { font: inherit; color: inherit; }
     height: 30px;
     border-radius: 50%;
     background: var(--accent-soft);
-    color: var(--accent);
+    color: var(--accent-ink);
     font-size: 0.9rem;
     font-weight: 700;
     line-height: 1;
