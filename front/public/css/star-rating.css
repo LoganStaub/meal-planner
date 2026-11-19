@@ -5,9 +5,9 @@
 .stars { display: flex; }
 .star { display: grid; place-items: center; width: 30px; height: 30px; padding: 0; border: 0; border-radius: 8px; background: none; color: #D9DEE6; cursor: pointer; }
 .star svg { width: 20px; height: 20px; fill: currentColor; stroke: none; }
-.star.on { color: #D4552A; }
+.star.on { color: var(--accent); }
 .star:hover, .star:focus-visible { background: #FCDCCD; }
-.star:focus-visible { outline: 2px solid #D4552A; outline-offset: 1px; }
+.star:focus-visible { outline: 2px solid var(--accent); outline-offset: 1px; }
 .rating.saving .star { cursor: progress; }
 .rating-summary { color: #5D6675; font-size: 12px; font-weight: 600; }
 

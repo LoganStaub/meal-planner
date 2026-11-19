@@ -5,9 +5,6 @@
   --border: #d9dee6;
   --text: #1f2430;
   --muted: #5d6675;
-  --accent: #D4552A;
-  --accent-hover: #BC4720;
-  --accent-soft: #FCDCCD;
   --green: #3d6b3f;
   --green-soft: #d8ecd6;
   --slate: #5d6675;
@@ -116,7 +113,7 @@ h1 { font-size: 32px; font-weight: 600; letter-spacing: -.02em; margin: 8px 0 14
 }
 .chip.plenty { background: var(--green-soft); color: var(--green); }
 .chip.low    { background: var(--slate-soft); color: var(--slate); }
-.chip.none   { background: var(--accent-soft); color: var(--accent); }
+.chip.none   { background: var(--accent-soft); color: var(--accent-ink); }
 button.chip { cursor: pointer; transition: transform .1s, filter .15s; }
 /* Only an amount that can be clicked (edit mode) reacts to the mouse */
 button.chip:not(:disabled):hover { filter: brightness(.96); }
@@ -190,7 +187,7 @@ button.chip:not(:disabled):active { transform: scale(.96); }
 /* The Edit button stands out in the accent color so it's easy to find */
 .item-action.edit-start {
   display: inline-flex; align-items: center; gap: 6px;
-  border-color: var(--accent); background: var(--accent-soft); color: var(--accent);
+  border-color: var(--accent); background: var(--accent-soft); color: var(--accent-ink);
 }
 .item-action.edit-start:hover { background: var(--accent); color: #fff; }
 .edit-start svg { width: 14px; height: 14px; stroke-width: 2.2; }
@@ -254,7 +251,7 @@ button.chip:not(:disabled):active { transform: scale(.96); }
 .confirm-remove::backdrop { background: rgba(20, 16, 14, .45); backdrop-filter: blur(4px); }
 .confirm-remove-icon {
   display: grid; place-items: center; width: 52px; height: 52px; margin: 0 auto 14px;
-  border-radius: 50%; background: var(--accent-soft); color: var(--accent);
+  border-radius: 50%; background: var(--accent-soft); color: var(--accent-ink);
 }
 .confirm-remove-icon svg { width: 24px; height: 24px; }
 .confirm-remove h2 { font-size: 20px; font-weight: 700; }

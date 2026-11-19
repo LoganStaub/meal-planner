@@ -1,21 +1,9 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
-    <title>Home | Preply</title>
-    <link rel="icon" type="image/svg+xml" href="/images/logo.svg">
-
-    <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=DM+Sans:opsz,wght@9..40,400;9..40,500;9..40,600;9..40,700&display=swap" rel="stylesheet">
-
-    <link rel="stylesheet" href="/css/index.css">
-    <link rel="stylesheet" href="/css/plan-dialog.css">
-    <link rel="stylesheet" href="/css/page-card.css">
-    <link rel="stylesheet" href="/css/page-header.css">
-    <link rel="stylesheet" href="/css/profile-menu.css">
-    <script src="/js/no-back-cache.js"></script>
+<%- include('partials/head', { title: 'Home', styles: ['index', 'plan-dialog', 'page-card', 'page-header', 'profile-menu'] }) %>
+<%# Start loading today's picks with the HTML instead of after js/index.js runs; its fetch() reuses this %>
+<link rel="preload" href="/api/me/daily-picks" as="fetch" crossorigin>
 </head>
 
 <body>
@@ -41,7 +29,7 @@
 
             <!-- The current meal. Swipe left/right (or drag with the mouse) to change it. -->
             <article class="slide" id="slide">
-                <img class="photo" id="meal-photo" alt="" draggable="false">
+                <img class="photo" id="meal-photo" alt="" draggable="false" sizes="(max-width: 620px) 100vw, 620px" fetchpriority="high">
 
                 <div class="card" data-tour="home-card">
                     <p class="meta">
@@ -118,7 +106,7 @@
         </main>
 
         <nav class="nav" aria-label="Main">
-            <p class="nav-brand"><img class="brand-logo" src="/images/logo.svg" alt="" width="28" height="28">Preply<span>.</span></p>
+            <p class="nav-brand"><img class="brand-logo" src="<%= asset('/images/logo.svg') %>" alt="" width="28" height="28">Preply<span>.</span></p>
             <ul>
                 <li><a class="nav-link" href="/calendar"><span class="nav-icon"><svg class="icon"><use href="#icon-calendar"/></svg></span>Meal Plan</a></li>
                 <li><a class="nav-link" href="/shopping.html"><span class="nav-icon"><svg class="icon"><use href="#icon-list"/></svg></span>Shopping</a></li>
@@ -165,9 +153,9 @@
     </dialog>
 
     <%- include('partials/profile-menu') %>
-    <script src="/js/events.js" defer></script>
-    <script src="/js/profile-menu.js" defer></script>
-    <script src="/js/plan-dialog.js" defer></script>
-    <script src="/js/index.js" defer></script>
+    <script src="<%= asset('/js/events.js') %>" defer></script>
+    <script src="<%= asset('/js/profile-menu.js') %>" defer></script>
+    <script src="<%= asset('/js/plan-dialog.js') %>" defer></script>
+    <script src="<%= asset('/js/index.js') %>" defer></script>
 </body>
 </html>

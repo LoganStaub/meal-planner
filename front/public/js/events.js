@@ -16,8 +16,8 @@ window.logEvent = function logEvent(eventName, metadata = {}) {
             headers: { "Content-Type": "application/json" },
             body: JSON.stringify({ event_name: eventName, metadata }),
             keepalive: true,
-        }).catch((error) => console.error(`Could not log ${eventName}:`, error));
+        }).catch((error) => console.warn(`Could not log ${eventName}:`, error));
     } catch (error) {
-        console.error(`Could not log ${eventName}:`, error);
+        console.warn(`Could not log ${eventName}:`, error);
     }
 };

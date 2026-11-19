@@ -51,7 +51,7 @@ export function sendPasswordResetEmail({ to, firstName, link }) {
         <p>Someone asked to reset the password for your Preply account.</p>
         <p>
           <a href="${escapeHtml(link)}"
-             style="display: inline-block; padding: 12px 20px; background: #D4552A; color: #fff;
+             style="display: inline-block; padding: 12px 20px; background: #BC4720; color: #fff;
                     border-radius: 999px; text-decoration: none; font-weight: 600;">
             Choose a new password
           </a>

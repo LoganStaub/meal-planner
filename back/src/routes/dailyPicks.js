@@ -8,11 +8,12 @@
 // tap the heart.
 //
 // Each item has the fields js/index.js uses: recipe_id, recipe_title,
-// prep_time, recipe_class_desc, image_url, liked, rating_avg, rating_count,
+// prep_time, recipe_class_desc, image_url, image_srcset, liked, rating_avg, rating_count,
 // ingredient_count, in_pantry, to_buy and description.
 import { Router } from 'express'
 import { pool } from '../db.js'
 import { APP_TIME_ZONE } from '../canRate.js'
+import { srcsetList } from '../assets.js'
 
 const router = Router()
 
@@ -77,6 +78,7 @@ router.get('/', async (req, res) => {
   res.json(
     rows.map(({ ingredient_names, ...recipe }) => ({
       ...recipe,
+      image_srcset: srcsetList(recipe.image_url),
       description: describeIngredients(ingredient_names),
     }))
   )

@@ -16,11 +16,13 @@
     "db:seed-classics": "node scripts/seedClassicRecipes.js",
     "db:migrate": "node scripts/migrate.js",
     "user:role": "node scripts/setRole.js",
-    "user:password": "node scripts/setPassword.js"
+    "user:password": "node scripts/setPassword.js",
+    "images": "node scripts/optimizeImages.js"
   },
   "dependencies": {
     "@anthropic-ai/sdk": "^1.8.0",
     "bcryptjs": "^3.0.3",
+    "compression": "^1.8.1",
     "connect-redis": "^10.0.0",
     "dotenv": "^16.4.5",
     "ejs": "^7.0.2",
@@ -31,5 +33,8 @@
     "pg": "^8.13.0",
     "redis": "^6.3.1",
     "zod": "^4.6.7"
+  },
+  "devDependencies": {
+    "sharp": "^0.34.4"
   }
 }

@@ -4,8 +4,8 @@
   --liked-ink: #1f2430;
   --liked-muted: #5d6675;
   --liked-line: #d9dee6;
-  --liked-accent: #D4552A;
-  --liked-accent-soft: #FCDCCD;
+  --liked-accent: var(--accent);
+  --liked-accent-soft: var(--accent-soft);
   --liked-green: #3d6b3f;
   --liked-placeholder: #e6ebf1;
 }
@@ -41,6 +41,15 @@ body {
     linear-gradient(90deg, rgba(24, 29, 25, .55), rgba(24, 29, 25, .2) 55%, rgba(24, 29, 25, 0)),
     url("/images/mealio-liked-header-v2.jpg") center 54% / cover no-repeat,
     linear-gradient(135deg, #d9c9a8, #8fa37a);
+}
+/* Phones get the 960px copy (scripts/optimizeImages.js) */
+@media (max-width: 960px) {
+  .hero {
+    background-image:
+      linear-gradient(90deg, rgba(24, 29, 25, .55), rgba(24, 29, 25, .2) 55%, rgba(24, 29, 25, 0)),
+      url("/images/mealio-liked-header-v2-960.jpg"),
+      linear-gradient(135deg, #d9c9a8, #8fa37a);
+  }
 }
 .hero-text .eyebrow { margin-bottom: 6px; font-size: 11px; font-weight: 700; letter-spacing: .16em; text-transform: uppercase; opacity: .9; }
 .hero-text h1 { margin: 0; font-size: clamp(26px, 4vw, 38px); font-weight: 700; line-height: 1.1; }
@@ -78,7 +87,7 @@ body {
 .tags { display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 7px; font-size: 10px; font-weight: 700; letter-spacing: .06em; text-transform: uppercase; }
 .tags .time { color: var(--liked-accent); }
 .tags .diet { color: var(--liked-muted); }
-.card h3 { margin: 0 0 6px; font-size: 16px; font-weight: 700; line-height: 1.25; }
+.card h2 { margin: 0 0 6px; font-size: 16px; font-weight: 700; line-height: 1.25; }
 /* The stars (css/star-rating.css) sit above the card's link so they can be clicked */
 .card .rating { z-index: 1; margin-top: 8px; margin-left: -5px; }
 .card-foot { display: flex; justify-content: space-between; gap: 10px; align-items: center; padding: 11px 16px; border-top: 1px solid var(--liked-line); font-size: 11px; font-weight: 600; }

@@ -43,15 +43,25 @@
         obj_slide.style.visibility = "hidden";
 
 
-        // Called once the picks have loaded: one progress bar segment per meal,
-        // and start downloading every photo now so swiping doesn't wait on them
+        // Called once the picks have loaded: one progress bar segment per meal
         function SetUpMeals() {
             obj_progress.replaceChildren();
-            meals.forEach(function(meal) {
+            meals.forEach(function() {
                 obj_progress.appendChild(document.createElement("span"));
-                if (meal.image_url) new Image().src = meal.image_url;
             });
             document.getElementById("done-count").textContent = meals.length;
+        }
+
+        // Downloads the other picks' photos so swiping doesn't wait on them.
+        // Runs after the first photo is shown, so they don't slow it down.
+        function PreloadPhotos() {
+            meals.forEach(function(meal) {
+                if (!meal.image_url) return;
+                const img = new Image();
+                img.sizes = obj_photo.sizes;
+                img.srcset = meal.image_srcset || "";
+                img.src = meal.image_url;
+            });
         }
 
         // if a photo can't load, hide it and let the slide's gradient background show
@@ -65,9 +75,11 @@
 
             // a recipe with no photo yet shows the slide's gradient background
             if (meal.image_url) {
+                obj_photo.srcset = meal.image_srcset || "";
                 obj_photo.src = meal.image_url;
                 obj_photo.classList.remove("broken");
             } else {
+                obj_photo.removeAttribute("srcset");
                 obj_photo.removeAttribute("src");
                 obj_photo.classList.add("broken");
             }
@@ -415,6 +427,7 @@
 
             SetUpMeals();
             RenderMeal();
+            obj_photo.decode().catch(function() {}).then(PreloadPhotos);
             obj_slide.style.visibility = "";
             StartDiscoverClock();
         }

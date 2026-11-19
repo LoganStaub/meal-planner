@@ -2,6 +2,7 @@
 // Serves the API under /api and the frontend page at http://localhost:3000
 import 'dotenv/config'
 import express from 'express'
+import compression from 'compression'
 import session from 'express-session'
 import { RedisStore } from 'connect-redis'
 import { fileURLToPath } from 'node:url'
@@ -26,6 +27,7 @@ import mealFitRouter from './routes/mealFit.js'
 import { AVATAR_COLORS, DEFAULT_AVATAR_COLOR } from './avatarColors.js'
 import { APP_TIME_ZONE, rateColumns } from './canRate.js'
 import dailyPicksRouter from './routes/dailyPicks.js'
+import { asset, cssBundle, srcset, serveCssBundle, serveImages, serveStatic } from './assets.js'
 
 if (!process.env.SESSION_SECRET) {
   throw new Error('Missing SESSION_SECRET. Add it to .env (see .env.example).')
@@ -60,9 +62,12 @@ const app = express()
 // The profile icon colors for the Account settings popup (partials/account-dialog.ejs)
 app.locals.avatarColors = AVATAR_COLORS
 app.locals.defaultAvatarColor = DEFAULT_AVATAR_COLOR
+// Views link CSS/JS/images with asset()/cssBundle() and photos with srcset(). See assets.js.
+app.locals.asset = asset
+app.locals.cssBundle = cssBundle
+app.locals.srcset = srcset
 const PORT = process.env.PORT || 3000
 const viewsPath = fileURLToPath(new URL('../../front/views', import.meta.url))
-const publicPath = fileURLToPath(new URL('../../front/public', import.meta.url))
 
 const statuses = {
   plenty: { id: 0, label: 'Plenty left' },
@@ -77,6 +82,8 @@ app.set('views', viewsPath)
 // Behind a hosting proxy (Render, Railway, ...) this lets secure cookies work.
 if (process.env.NODE_ENV === 'production') app.set('trust proxy', 1)
 
+// gzip for HTML, CSS, JS and JSON (images and fonts are already compressed)
+app.use(compression())
 app.use(express.json())
 // Parses the login and signup form posts
 app.use(express.urlencoded({ extended: false }))
@@ -101,8 +108,10 @@ app.use(
   })
 )
 
-// CSS, images and scripts load without logging in, so the login page has its styles.
-app.use(express.static(publicPath))
+// CSS, images, fonts and scripts load without logging in, so the login page
+// has its styles. Cached by the browser and sent as WebP when possible (assets.js).
+app.get('/css/bundle.css', serveCssBundle)
+app.use(serveImages, serveStatic)
 
 // Pages and API responses depend on who is logged in, so browsers must not
 // keep copies. Without this, pressing Back after logging out shows the

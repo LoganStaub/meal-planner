@@ -92,7 +92,7 @@
 
 .plan-dismiss:hover {
     background-color: var(--accent-soft);
-    color: var(--accent);
+    color: var(--accent-ink);
 }
 
 .plan-dismiss .icon {
@@ -239,7 +239,7 @@
 
 .search-clear:hover {
     background-color: var(--accent-soft);
-    color: var(--accent);
+    color: var(--accent-ink);
 }
 
 .search-clear .icon {

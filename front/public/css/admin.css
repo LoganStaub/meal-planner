@@ -4,9 +4,9 @@
   --admin-surface: #fff;
   --admin-ink: #1f2430;
   --admin-muted: #5d6675;
-  --admin-accent: #D4552A;
-  --admin-accent-hover: #BC4720;
-  --admin-accent-soft: #FCDCCD;
+  --admin-accent: var(--accent);
+  --admin-accent-hover: var(--accent-hover);
+  --admin-accent-soft: var(--accent-soft);
 }
 
 * { box-sizing: border-box; }
@@ -159,7 +159,7 @@ a.okr-card:focus-visible { outline: 2px solid var(--admin-accent); outline-offse
   margin: 0 auto 20px;
   border-radius: 50%;
   background: var(--admin-accent-soft);
-  color: var(--admin-accent);
+  color: var(--accent-ink);
 }
 .denied-icon svg { width: 32px; height: 32px; fill: none; stroke: currentColor; stroke-width: 2; stroke-linecap: round; stroke-linejoin: round; }
 .denied h1 { margin: 0; font-size: clamp(24px, 3.5vw, 30px); font-weight: 700; line-height: 1.2; }

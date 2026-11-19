@@ -65,7 +65,7 @@
 }
 
 .page-header-logo:focus-visible {
-    outline: 2px solid #D4552A;
+    outline: 2px solid var(--accent);
     outline-offset: 3px;
 }
 
@@ -101,7 +101,7 @@
     border: 0;
     border-radius: 50%;
     /* --avatar-color: the color the user picked in Account settings */
-    background-color: var(--avatar-color, #D4552A);
+    background-color: var(--avatar-color, var(--accent));
     box-shadow: none;
     color: #FFFFFF;
     font-family: "DM Sans", system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
@@ -126,7 +126,7 @@
 }
 
 .account-button:hover {
-    background-color: var(--avatar-color, #BC4720);
+    background-color: var(--avatar-color, var(--accent-hover));
 }
 
 /* a picked color has no hand-made hover shade, so darken it a little */
@@ -135,6 +135,6 @@
 }
 
 .account-button:focus-visible {
-    outline: 2px solid #D4552A;
+    outline: 2px solid var(--accent);
     outline-offset: 3px;
 }
